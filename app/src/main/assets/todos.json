@@ -1,0 +1,8 @@
+[
+  { "id": 1, "title": "Buy groceries", "completed": false },
+  { "id": 2, "title": "Finish project report", "completed": true },
+  { "id": 3, "title": "Call the doctor", "completed": true },
+  { "id": 4, "title": "Clean the house", "completed": true },
+  { "id": 5, "title": "Read a book chapter", "completed": false }
+
+]
