@@ -19,6 +19,17 @@ class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
     private fun loadTodos() {
         todoList = repository.getTodos()
     }
+
+    fun addTodo(title: String) {
+        if (title.isBlank()) return
+        repository.addTodo(title.trim())
+        loadTodos()
+    }
+
+    fun toggleTodo(id: Int) {
+        repository.toggleTodo(id)
+        loadTodos()
+    }
 }
 
 class TodoViewModelFactory(
