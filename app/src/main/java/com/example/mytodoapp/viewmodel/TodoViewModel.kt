@@ -30,6 +30,16 @@ class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
         repository.toggleTodo(id)
         loadTodos()
     }
+
+    fun updateTodo(id: Int, newTitle: String) {
+        if (newTitle.isBlank()) return
+        repository.updateTodo(id, newTitle.trim())
+        loadTodos()
+    }
+    fun deleteTodo(id: Int) {
+        repository.deleteTodo(id)
+        loadTodos()
+    }
 }
 
 class TodoViewModelFactory(

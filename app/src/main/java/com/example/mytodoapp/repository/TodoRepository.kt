@@ -31,6 +31,17 @@ class TodoRepository(private val context: Context) {
         saveTodos(currentList)
     }
 
+    fun updateTodo(id: Int, newTitle: String) {
+        val currentList = getTodos().map {
+            if (it.id == id) it.copy(title = newTitle) else it
+        }
+        saveTodos(currentList)
+    }
+    fun deleteTodo(id: Int) {
+        val currentList = getTodos().filter { it.id != id }
+        saveTodos(currentList)
+    }
+
     private fun saveTodos(list: List<Todo>) {
         internalFile.writeText(Gson().toJson(list))
     }
