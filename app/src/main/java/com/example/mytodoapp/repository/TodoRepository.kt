@@ -4,57 +4,43 @@ import android.content.Context
 import com.example.mytodoapp.model.Todo
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import java.io.File
 
 class TodoRepository(private val context: Context) {
 
-    private val fileName = "todos.json"
-    private val internalFile = File(context.filesDir, fileName)
+    private val dao = AppDatabase.getDatabase(context).todoDao()
 
-    fun getTodos(): List<Todo> {
-        ensureFileExists()
-        val jsonString = internalFile.readText()
-        return parseJson(jsonString)
+    suspend fun getTodos(): List<Todo> {
+        migrateFromJsonIfNeeded()
+        return dao.getAllTodos()
     }
 
-    fun addTodo(title: String) {
-        val currentList = getTodos().toMutableList()
-        val newId = (currentList.maxOfOrNull { it.id } ?: 0) + 1
-        currentList.add(Todo(id = newId, title = title, completed = false))
-        saveTodos(currentList)
+    suspend fun addTodo(title: String) {
+        dao.insertTodo(Todo(title = title, completed = false))
     }
 
-    fun toggleTodo(id: Int) {
-        val currentList = getTodos().map {
-            if (it.id == id) it.copy(completed = !it.completed) else it
+    suspend fun toggleTodo(todo: Todo) {
+        dao.updateTodo(todo.copy(completed = !todo.completed))
+    }
+
+    suspend fun updateTodo(todo: Todo, newTitle: String) {
+        dao.updateTodo(todo.copy(title = newTitle))
+    }
+
+    suspend fun deleteTodo(todo: Todo) {
+        dao.deleteTodo(todo)
+    }
+
+
+    private suspend fun migrateFromJsonIfNeeded() {
+        if (dao.getCount() == 0) {
+            try {
+                val jsonString = context.assets.open("todos.json").bufferedReader().use { it.readText() }
+                val listType = object : TypeToken<List<Todo>>() {}.type
+                val jsonTodos: List<Todo> = Gson().fromJson(jsonString, listType)
+                jsonTodos.forEach { dao.insertTodo(Todo(title = it.title, completed = it.completed)) }
+            } catch (e: Exception) {
+
+            }
         }
-        saveTodos(currentList)
-    }
-
-    fun updateTodo(id: Int, newTitle: String) {
-        val currentList = getTodos().map {
-            if (it.id == id) it.copy(title = newTitle) else it
-        }
-        saveTodos(currentList)
-    }
-    fun deleteTodo(id: Int) {
-        val currentList = getTodos().filter { it.id != id }
-        saveTodos(currentList)
-    }
-
-    private fun saveTodos(list: List<Todo>) {
-        internalFile.writeText(Gson().toJson(list))
-    }
-
-    private fun ensureFileExists() {
-        if (!internalFile.exists()) {
-            val assetText = context.assets.open(fileName).bufferedReader().use { it.readText() }
-            internalFile.writeText(assetText)
-        }
-    }
-
-    private fun parseJson(jsonString: String): List<Todo> {
-        val listType = object : TypeToken<List<Todo>>() {}.type
-        return Gson().fromJson(jsonString, listType)
     }
 }

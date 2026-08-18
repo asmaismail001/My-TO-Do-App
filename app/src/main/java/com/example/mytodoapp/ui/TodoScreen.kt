@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.viewmodel.TodoViewModel
 
+// Color palette
 private val BackgroundColor = Color(0xFFF7F5FB)
 private val PrimaryPurple = Color(0xFF6C5DD3)
 private val CardCompleted = Color(0xFFE6F4EA)
@@ -37,7 +38,6 @@ fun TodoScreen(viewModel: TodoViewModel) {
     var editingTodo by remember { mutableStateOf<Todo?>(null) }
     var editText by remember { mutableStateOf("") }
 
-    // Delete confirmation state
     var showDeleteDialog by remember { mutableStateOf(false) }
     var deletingTodo by remember { mutableStateOf<Todo?>(null) }
 
@@ -84,7 +84,7 @@ fun TodoScreen(viewModel: TodoViewModel) {
                 items(viewModel.todoList, key = { it.id }) { todo ->
                     TodoItemRow(
                         todo = todo,
-                        onToggle = { viewModel.toggleTodo(todo.id) },
+                        onToggle = { viewModel.toggleTodo(todo) },
                         onEditClick = {
                             editingTodo = todo
                             editText = todo.title
@@ -148,7 +148,7 @@ fun TodoScreen(viewModel: TodoViewModel) {
             },
             confirmButton = {
                 TextButton(onClick = {
-                    editingTodo?.let { viewModel.updateTodo(it.id, editText) }
+                    editingTodo?.let { viewModel.updateTodo(it, editText) }
                     showEditDialog = false
                     editingTodo = null
                 }) {
@@ -171,7 +171,7 @@ fun TodoScreen(viewModel: TodoViewModel) {
             text = { Text("Are you sure you want to delete \"${deletingTodo?.title}\"?") },
             confirmButton = {
                 TextButton(onClick = {
-                    deletingTodo?.let { viewModel.deleteTodo(it.id) }
+                    deletingTodo?.let { viewModel.deleteTodo(it) }
                     showDeleteDialog = false
                     deletingTodo = null
                 }) {

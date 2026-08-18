@@ -4,8 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.repository.TodoRepository
+import kotlinx.coroutines.launch
 
 class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
 
@@ -17,28 +19,39 @@ class TodoViewModel(private val repository: TodoRepository) : ViewModel() {
     }
 
     private fun loadTodos() {
-        todoList = repository.getTodos()
+        viewModelScope.launch {
+            todoList = repository.getTodos()
+        }
     }
 
     fun addTodo(title: String) {
         if (title.isBlank()) return
-        repository.addTodo(title.trim())
-        loadTodos()
+        viewModelScope.launch {
+            repository.addTodo(title.trim())
+            loadTodos()
+        }
     }
 
-    fun toggleTodo(id: Int) {
-        repository.toggleTodo(id)
-        loadTodos()
+    fun toggleTodo(todo: Todo) {
+        viewModelScope.launch {
+            repository.toggleTodo(todo)
+            loadTodos()
+        }
     }
 
-    fun updateTodo(id: Int, newTitle: String) {
+    fun updateTodo(todo: Todo, newTitle: String) {
         if (newTitle.isBlank()) return
-        repository.updateTodo(id, newTitle.trim())
-        loadTodos()
+        viewModelScope.launch {
+            repository.updateTodo(todo, newTitle.trim())
+            loadTodos()
+        }
     }
-    fun deleteTodo(id: Int) {
-        repository.deleteTodo(id)
-        loadTodos()
+
+    fun deleteTodo(todo: Todo) {
+        viewModelScope.launch {
+            repository.deleteTodo(todo)
+            loadTodos()
+        }
     }
 }
 
