@@ -10,14 +10,11 @@ interface TodoDao {
     suspend fun getAllTodos(): List<Todo>
 
     @Insert
-    suspend fun insertTodo(todo: Todo)
+    suspend fun insertTodo(todo: Todo): Long
 
     @Update
     suspend fun updateTodo(todo: Todo)
 
     @Delete
     suspend fun deleteTodo(todo: Todo)
-
-    @Query("SELECT COUNT(*) FROM todos")
-    suspend fun getCount(): Int
 }
