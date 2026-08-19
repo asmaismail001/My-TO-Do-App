@@ -40,15 +40,10 @@ val PriorityLowText = PriorityLow
 
 data class TaskColorPair(val light: Color, val dark: Color)
 
+// Alternates between sage green and salmon pink, matching the app's theme
 val TaskColorPalette = listOf(
-    TaskColorPair(Color(0xFFFDF2EF), Color(0xFFF7DDD5)), // soft coral
-    TaskColorPair(Color(0xFFF0F7ED), Color(0xFFDCEDD3)), // soft green
-    TaskColorPair(Color(0xFFFDF7E9), Color(0xFFF7EAC4)), // soft gold
-    TaskColorPair(Color(0xFFF4F0FB), Color(0xFFE3D9F5)), // soft lavender
-    TaskColorPair(Color(0xFFEDF7F8), Color(0xFFD4ECEE)), // soft teal
-    TaskColorPair(Color(0xFFFCF0F4), Color(0xFFF6DCE5)), // soft pink
-    TaskColorPair(Color(0xFFEEF5FC), Color(0xFFD9E9FA)), // soft sky blue
-    TaskColorPair(Color(0xFFFBF2E9), Color(0xFFF3E1CB))  // soft peach
+    TaskColorPair(Color(0xFFEAF1E7), Color(0xFFCFE0C9)), // sage green
+    TaskColorPair(Color(0xFFFBEAE6), Color(0xFFF2CFC5))  // salmon pink
 )
 
 fun taskColorFor(id: Int, completed: Boolean): Color {
