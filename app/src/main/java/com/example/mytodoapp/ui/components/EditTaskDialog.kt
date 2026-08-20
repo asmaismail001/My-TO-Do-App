@@ -11,8 +11,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.mytodoapp.model.Priority
-import com.example.mytodoapp.ui.AccentPurple
 import com.example.mytodoapp.ui.DialogFieldBackground
+import com.example.mytodoapp.ui.SageGreen
 import com.example.mytodoapp.ui.TextMuted
 import com.example.mytodoapp.ui.TextPrimary
 import com.example.mytodoapp.ui.TextSecondary
@@ -29,6 +29,7 @@ fun EditTaskDialog(
     onPriorityChange: (Priority) -> Unit,
     dueTimeMillis: Long?,
     onDueTimeChange: (Long?) -> Unit,
+    createdAt: Long,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -49,7 +50,14 @@ fun EditTaskDialog(
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
                     color = TextPrimary,
-                    modifier = Modifier.padding(bottom = 18.dp)
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                Text(
+                    text = "Added: ${DateTimePickerUtil.formatDateTime(createdAt)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextMuted,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
 
                 TextField(
@@ -121,7 +129,7 @@ fun EditTaskDialog(
                     Button(
                         onClick = onConfirm,
                         shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)
+                        colors = ButtonDefaults.buttonColors(containerColor = SageGreen)
                     ) {
                         Text("Save")
                     }

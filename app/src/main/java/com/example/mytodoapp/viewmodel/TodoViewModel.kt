@@ -23,16 +23,14 @@ class TodoViewModel(
     var searchQuery by mutableStateOf("")
         private set
 
-    val filteredList: List<Todo>
-        get() {
-            if (searchQuery.isBlank()) return todoList
-            val query = searchQuery.trim().lowercase()
-            return todoList.filter {
-                it.title.lowercase().contains(query) ||
-                        it.description.lowercase().contains(query) ||
-                        it.priority.name.lowercase().contains(query)
-            }
-        }
+    val allTasks: List<Todo>
+        get() = applySearch(todoList)
+
+    val completedTasks: List<Todo>
+        get() = applySearch(todoList.filter { it.completed })
+
+    val dueTasks: List<Todo>
+        get() = applySearch(todoList.filter { !it.completed && it.dueTimeMillis != null })
 
     init {
         loadTodos()
@@ -40,6 +38,16 @@ class TodoViewModel(
 
     fun onSearchQueryChange(query: String) {
         searchQuery = query
+    }
+
+    private fun applySearch(list: List<Todo>): List<Todo> {
+        if (searchQuery.isBlank()) return list
+        val query = searchQuery.trim().lowercase()
+        return list.filter {
+            it.title.lowercase().contains(query) ||
+                    it.description.lowercase().contains(query) ||
+                    it.priority.name.lowercase().contains(query)
+        }
     }
 
     private fun loadTodos() {

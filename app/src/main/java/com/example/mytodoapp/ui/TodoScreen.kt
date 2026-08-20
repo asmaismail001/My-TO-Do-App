@@ -1,8 +1,6 @@
 package com.example.mytodoapp.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -14,15 +12,21 @@ import androidx.compose.ui.unit.dp
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.components.AddTaskDialog
+import com.example.mytodoapp.ui.components.BottomNavBar
+import com.example.mytodoapp.ui.components.CalendarView
 import com.example.mytodoapp.ui.components.DeleteTaskDialog
 import com.example.mytodoapp.ui.components.EditTaskDialog
-import com.example.mytodoapp.ui.components.TodoItemRow
+import com.example.mytodoapp.ui.components.TaskListContent
 import com.example.mytodoapp.ui.components.TodoSearchBar
+import com.example.mytodoapp.util.CalendarUtil
 import com.example.mytodoapp.viewmodel.TodoViewModel
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodoScreen(viewModel: TodoViewModel) {
+    var currentScreen by remember { mutableStateOf(Screen.ALL) }
+
     var showAddDialog by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
     var newDescription by remember { mutableStateOf("") }
@@ -39,6 +43,23 @@ fun TodoScreen(viewModel: TodoViewModel) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var deletingTodo by remember { mutableStateOf<Todo?>(null) }
 
+    var selectedDay by remember { mutableStateOf(Calendar.getInstance()) }
+    var visibleMonth by remember { mutableStateOf(Calendar.getInstance()) }
+
+    fun openEdit(todo: Todo) {
+        editingTodo = todo
+        editTitle = todo.title
+        editDescription = todo.description
+        editPriority = todo.priority
+        editDueTime = todo.dueTimeMillis
+        showEditDialog = true
+    }
+
+    fun openDelete(todo: Todo) {
+        deletingTodo = todo
+        showDeleteDialog = true
+    }
+
     Scaffold(
         containerColor = BackgroundColor,
         topBar = {
@@ -50,73 +71,116 @@ fun TodoScreen(viewModel: TodoViewModel) {
                 )
             )
         },
+        bottomBar = {
+            BottomNavBar(selected = currentScreen, onSelect = { currentScreen = it })
+        },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = SageGreen,
-                contentColor = Color.White
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Task")
+            if (currentScreen != Screen.CALENDAR) {
+                FloatingActionButton(
+                    onClick = { showAddDialog = true },
+                    containerColor = SageGreen,
+                    contentColor = Color.White
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Add Task")
+                }
             }
         }
     ) { paddingValues ->
-        val list = viewModel.filteredList
-        val completedCount = viewModel.todoList.count { it.completed }
-        val total = viewModel.todoList.size
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            TodoSearchBar(
-                query = viewModel.searchQuery,
-                onQueryChange = { viewModel.onSearchQueryChange(it) }
-            )
+            when (currentScreen) {
+                Screen.ALL -> {
+                    TodoSearchBar(
+                        query = viewModel.searchQuery,
+                        onQueryChange = { viewModel.onSearchQueryChange(it) }
+                    )
+                    val list = viewModel.allTasks
+                    val completedCount = viewModel.todoList.count { it.completed }
+                    val total = viewModel.todoList.size
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "$total tasks",
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "$completedCount completed",
-                    color = SuccessGreen,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "$total tasks",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "$completedCount completed",
+                            color = SuccessGreen,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 12.dp)
-            ) {
-                items(list, key = { it.id }) { todo ->
-                    TodoItemRow(
-                        todo = todo,
-                        onToggle = { viewModel.toggleTodo(todo) },
-                        onEditClick = {
-                            editingTodo = todo
-                            editTitle = todo.title
-                            editDescription = todo.description
-                            editPriority = todo.priority
-                            editDueTime = todo.dueTimeMillis
-                            showEditDialog = true
-                        },
-                        onDeleteClick = {
-                            deletingTodo = todo
-                            showDeleteDialog = true
-                        }
+                    TaskListContent(
+                        tasks = list,
+                        emptyMessage = "No tasks yet. Tap + to add one.",
+                        onToggle = { viewModel.toggleTodo(it) },
+                        onEditClick = { openEdit(it) },
+                        onDeleteClick = { openDelete(it) }
                     )
                 }
-                item { Spacer(modifier = Modifier.height(80.dp)) }
+
+                Screen.COMPLETED -> {
+                    TodoSearchBar(
+                        query = viewModel.searchQuery,
+                        onQueryChange = { viewModel.onSearchQueryChange(it) }
+                    )
+                    TaskListContent(
+                        tasks = viewModel.completedTasks,
+                        emptyMessage = "No completed tasks yet.",
+                        onToggle = { viewModel.toggleTodo(it) },
+                        onEditClick = { openEdit(it) },
+                        onDeleteClick = { openDelete(it) }
+                    )
+                }
+
+                Screen.DUE -> {
+                    TodoSearchBar(
+                        query = viewModel.searchQuery,
+                        onQueryChange = { viewModel.onSearchQueryChange(it) }
+                    )
+                    TaskListContent(
+                        tasks = viewModel.dueTasks,
+                        emptyMessage = "No tasks with a due date.",
+                        onToggle = { viewModel.toggleTodo(it) },
+                        onEditClick = { openEdit(it) },
+                        onDeleteClick = { openDelete(it) }
+                    )
+                }
+
+                Screen.CALENDAR -> {
+                    CalendarView(
+                        tasks = viewModel.todoList,
+                        selectedDay = selectedDay,
+                        onDaySelected = { selectedDay = it },
+                        visibleMonth = visibleMonth,
+                        onMonthChange = { visibleMonth = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val tasksForSelectedDay = viewModel.todoList.filter {
+                        it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, selectedDay.timeInMillis)
+                    }
+
+                    TaskListContent(
+                        tasks = tasksForSelectedDay,
+                        emptyMessage = "No tasks on this day.",
+                        onToggle = { viewModel.toggleTodo(it) },
+                        onEditClick = { openEdit(it) },
+                        onDeleteClick = { openDelete(it) }
+                    )
+                }
             }
         }
     }
@@ -159,6 +223,7 @@ fun TodoScreen(viewModel: TodoViewModel) {
             onPriorityChange = { editPriority = it },
             dueTimeMillis = editDueTime,
             onDueTimeChange = { editDueTime = it },
+            createdAt = editingTodo?.createdAt ?: System.currentTimeMillis(),
             onConfirm = {
                 editingTodo?.let { viewModel.updateTodo(it, editTitle, editDescription, editPriority, editDueTime) }
                 showEditDialog = false

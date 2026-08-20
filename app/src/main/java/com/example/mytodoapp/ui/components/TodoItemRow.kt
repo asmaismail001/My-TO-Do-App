@@ -4,7 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,7 +32,7 @@ fun TodoItemRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
+            .padding(vertical = 5.dp)
             .clickable { onEditClick() },
         color = cardColor,
         shape = RoundedCornerShape(16.dp)
@@ -46,17 +46,33 @@ fun TodoItemRow(
             Checkbox(
                 checked = todo.completed,
                 onCheckedChange = { onToggle() },
-                modifier = Modifier.padding(top = 2.dp)
+                colors = CheckboxDefaults.colors(
+                    checkedColor = TextSecondary,
+                    uncheckedColor = TextMuted
+                ),
+                modifier = Modifier
+                    .padding(top = 2.dp)
+                    .size(20.dp)
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = todo.title,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary,
-                    textDecoration = if (todo.completed) TextDecoration.LineThrough else TextDecoration.None
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = todo.title,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextPrimary,
+                        textDecoration = if (todo.completed) TextDecoration.LineThrough else TextDecoration.None,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    PriorityDot(priority = todo.priority)
+                }
 
                 if (todo.description.isNotBlank()) {
                     Text(
@@ -69,30 +85,30 @@ fun TodoItemRow(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    PriorityBadge(priority = todo.priority)
-
-                    if (todo.dueTimeMillis != null) {
-                        Text(
-                            text = "  •  Due ${DateTimePickerUtil.formatDateTime(todo.dueTimeMillis)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextMuted
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = "Added ${DateTimePickerUtil.formatDateTime(todo.createdAt)}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted,
-                    modifier = Modifier.padding(top = 3.dp)
+                    color = TextMuted
                 )
+
+                if (todo.dueTimeMillis != null) {
+                    Text(
+                        text = "Due ${DateTimePickerUtil.formatDateTime(todo.dueTimeMillis)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextMuted
+                    )
+                }
             }
 
-            IconButton(onClick = onDeleteClick, modifier = Modifier.size(22.dp)) {
-                Icon(Icons.Filled.Close, contentDescription = "Delete Task", tint = TextMuted)
+            IconButton(onClick = onDeleteClick, modifier = Modifier.size(28.dp)) {
+                Icon(
+                    imageVector = Icons.Outlined.DeleteOutline,
+                    contentDescription = "Delete Task",
+                    tint = TextMuted,
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
