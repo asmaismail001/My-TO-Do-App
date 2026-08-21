@@ -3,6 +3,10 @@
     android:height="108dp"
     android:viewportWidth="512"
     android:viewportHeight="512">
+  <!-- Round background themed to Ferozi/Teal -->
+  <path
+      android:pathData="M256,256m-256,0a256,256 0,1 1,512 0a256,256 0,1 1,-512 0"
+      android:fillColor="#0A8585"/>
   <!-- Main white progress curve -->
   <path
       android:pathData="M170,290 C210,340 230,360 260,360 C290,360 330,220 370,180"

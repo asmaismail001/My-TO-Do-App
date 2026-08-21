@@ -19,7 +19,7 @@ class ReminderReceiver : BroadcastReceiver() {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Task Reminder")
-            .setContentText("\"$taskTitle\" is due in 30 minutes and still incomplete!")
+            .setContentText("\"$taskTitle\" is due in 1 hour and still incomplete!")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
@@ -38,7 +38,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 "Task Reminders",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Reminds you 30 minutes before a task is due"
+                description = "Reminds you 1 hour before a task is due"
             }
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)

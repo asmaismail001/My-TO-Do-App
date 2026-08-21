@@ -1,9 +1,13 @@
 package com.example.mytodoapp.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -11,14 +15,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.mytodoapp.model.Priority
-import com.example.mytodoapp.ui.DialogFieldBackground
-import com.example.mytodoapp.ui.SageGreen
-import com.example.mytodoapp.ui.TextMuted
-import com.example.mytodoapp.ui.TextPrimary
-import com.example.mytodoapp.ui.TextSecondary
+import com.example.mytodoapp.ui.Accent
+import com.example.mytodoapp.ui.LocalIsDarkTheme
+import com.example.mytodoapp.ui.cardBorderColorFor
+import com.example.mytodoapp.ui.surfaceColorFor
+import com.example.mytodoapp.ui.textMutedFor
+import com.example.mytodoapp.ui.textPrimaryFor
+import com.example.mytodoapp.ui.textSecondaryFor
 import com.example.mytodoapp.util.DateTimePickerUtil
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskDialog(
     title: String,
@@ -33,97 +38,127 @@ fun AddTaskDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val isDark = LocalIsDarkTheme.current
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = Color.White
+            shape = RoundedCornerShape(24.dp),
+            color = surfaceColorFor(isDark),
+            border = BorderStroke(1.dp, cardBorderColorFor(isDark)),
+            tonalElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(24.dp)
                     .fillMaxWidth()
             ) {
                 Text(
                     text = "New Task",
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
-                    color = TextPrimary,
-                    modifier = Modifier.padding(bottom = 18.dp)
+                    color = textPrimaryFor(isDark),
+                    modifier = Modifier.padding(bottom = 20.dp)
                 )
 
-                TextField(
+                OutlinedTextField(
                     value = title,
                     onValueChange = onTitleChange,
-                    placeholder = { Text("Title", color = TextMuted) },
+                    label = { Text("Title") },
+                    placeholder = { Text("Enter task title...", color = textMutedFor(isDark)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = DialogFieldBackground,
-                        unfocusedContainerColor = DialogFieldBackground,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Accent,
+                        unfocusedBorderColor = cardBorderColorFor(isDark),
+                        focusedLabelColor = Accent,
+                        unfocusedLabelColor = textSecondaryFor(isDark),
+                        focusedTextColor = textPrimaryFor(isDark),
+                        unfocusedTextColor = textPrimaryFor(isDark),
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
                     )
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-                TextField(
+                OutlinedTextField(
                     value = description,
                     onValueChange = onDescriptionChange,
-                    placeholder = { Text("Description", color = TextMuted) },
+                    label = { Text("Description") },
+                    placeholder = { Text("Add more details...", color = textMutedFor(isDark)) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(80.dp),
+                        .height(100.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = DialogFieldBackground,
-                        unfocusedContainerColor = DialogFieldBackground,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Accent,
+                        unfocusedBorderColor = cardBorderColorFor(isDark),
+                        focusedLabelColor = Accent,
+                        unfocusedLabelColor = textSecondaryFor(isDark),
+                        focusedTextColor = textPrimaryFor(isDark),
+                        unfocusedTextColor = textPrimaryFor(isDark),
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
                     )
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
                 PrioritySelector(selected = priority, onSelect = onPriorityChange)
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                Surface(
+                OutlinedCard(
                     onClick = {
                         DateTimePickerUtil.pickDateTime(context) { picked -> onDueTimeChange(picked) }
                     },
                     shape = RoundedCornerShape(12.dp),
-                    color = DialogFieldBackground,
+                    border = BorderStroke(1.dp, cardBorderColorFor(isDark)),
+                    colors = CardDefaults.outlinedCardColors(containerColor = if (isDark) Color(0xFF1E293B) else Color(0xFFF8F9FA)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = dueTimeMillis?.let { "Due: ${DateTimePickerUtil.formatDateTime(it)}" }
-                            ?: "Add due date & time",
-                        color = TextSecondary,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.CalendarToday,
+                            contentDescription = null,
+                            tint = if (dueTimeMillis != null) Accent else textSecondaryFor(isDark),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = dueTimeMillis?.let { "Due: ${DateTimePickerUtil.formatDateTime(it)}" }
+                                ?: "Add due date & time",
+                            color = if (dueTimeMillis != null) textPrimaryFor(isDark) else textSecondaryFor(isDark),
+                            fontWeight = if (dueTimeMillis != null) FontWeight.SemiBold else FontWeight.Normal,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Cancel", color = TextSecondary)
+                    TextButton(
+                        onClick = onDismiss,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Cancel", color = textSecondaryFor(isDark), fontWeight = FontWeight.Medium)
                     }
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = onConfirm,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = SageGreen)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Accent),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
                     ) {
-                        Text("Add")
+                        Text("Add Task", fontWeight = FontWeight.Bold)
                     }
                 }
             }

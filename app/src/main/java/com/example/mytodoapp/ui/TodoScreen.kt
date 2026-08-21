@@ -1,12 +1,21 @@
 package com.example.mytodoapp.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mytodoapp.model.Priority
@@ -16,15 +25,35 @@ import com.example.mytodoapp.ui.components.BottomNavBar
 import com.example.mytodoapp.ui.components.CalendarView
 import com.example.mytodoapp.ui.components.DeleteTaskDialog
 import com.example.mytodoapp.ui.components.EditTaskDialog
+import com.example.mytodoapp.ui.components.SettingsDrawerContent
 import com.example.mytodoapp.ui.components.TaskListContent
 import com.example.mytodoapp.ui.components.TodoSearchBar
 import com.example.mytodoapp.util.CalendarUtil
+import com.example.mytodoapp.util.PreferencesManager
 import com.example.mytodoapp.viewmodel.TodoViewModel
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodoScreen(viewModel: TodoViewModel) {
+    val context = LocalContext.current
+    val prefs = remember { PreferencesManager(context) }
+
+    var isDarkTheme by remember { mutableStateOf(prefs.isDarkTheme()) }
+    var notificationsEnabled by remember { mutableStateOf(prefs.areNotificationsEnabled()) }
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? -> viewModel.exportTasks(context, uri) }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? -> viewModel.importTasks(context, uri) }
+
     var currentScreen by remember { mutableStateOf(Screen.ALL) }
 
     var showAddDialog by remember { mutableStateOf(false) }
@@ -60,126 +89,176 @@ fun TodoScreen(viewModel: TodoViewModel) {
         showDeleteDialog = true
     }
 
-    Scaffold(
-        containerColor = BackgroundColor,
-        topBar = {
-            TopAppBar(
-                title = { Text("My To-Do App", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SalmonPink,
-                    titleContentColor = Color.White
+    CompositionLocalProvider(LocalIsDarkTheme provides isDarkTheme) {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                SettingsDrawerContent(
+                    isDarkTheme = isDarkTheme,
+                    onDarkThemeChange = {
+                        isDarkTheme = it
+                        prefs.setDarkTheme(it)
+                    },
+                    notificationsEnabled = notificationsEnabled,
+                    onNotificationsChange = {
+                        notificationsEnabled = it
+                        prefs.setNotificationsEnabled(it)
+                    },
+                    onExportClick = { exportLauncher.launch("todo_backup.json") },
+                    onImportClick = { importLauncher.launch(arrayOf("application/json")) }
                 )
-            )
-        },
-        bottomBar = {
-            BottomNavBar(selected = currentScreen, onSelect = { currentScreen = it })
-        },
-        floatingActionButton = {
-            if (currentScreen != Screen.CALENDAR) {
-                FloatingActionButton(
-                    onClick = { showAddDialog = true },
-                    containerColor = SageGreen,
-                    contentColor = Color.White
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add Task")
-                }
             }
-        }
-    ) { paddingValues ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
         ) {
-            when (currentScreen) {
-                Screen.ALL -> {
-                    TodoSearchBar(
-                        query = viewModel.searchQuery,
-                        onQueryChange = { viewModel.onSearchQueryChange(it) }
-                    )
-                    val list = viewModel.allTasks
-                    val completedCount = viewModel.todoList.count { it.completed }
-                    val total = viewModel.todoList.size
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "$total tasks",
-                            color = TextPrimary,
-                            fontWeight = FontWeight.SemiBold,
-                            style = MaterialTheme.typography.titleMedium
+            Scaffold(
+                containerColor = backgroundColorFor(isDarkTheme),
+                topBar = {
+                    TopAppBar(
+                        title = { Text("Task Manager", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge) },
+                        navigationIcon = {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Filled.Menu, contentDescription = "Settings", tint = textPrimaryFor(isDarkTheme))
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = backgroundColorFor(isDarkTheme),
+                            titleContentColor = textPrimaryFor(isDarkTheme)
                         )
-                        Text(
-                            text = "$completedCount completed",
-                            color = SuccessGreen,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    )
+                },
+                bottomBar = {
+                    BottomNavBar(selected = currentScreen, onSelect = { currentScreen = it })
+                },
+                floatingActionButton = {
+                    if (currentScreen != Screen.CALENDAR) {
+                        FloatingActionButton(
+                            onClick = { showAddDialog = true },
+                            containerColor = Accent,
+                            contentColor = Color.White
+                        ) {
+                            Icon(Icons.Filled.Add, contentDescription = "Add Task")
+                        }
                     }
-
-                    TaskListContent(
-                        tasks = list,
-                        emptyMessage = "No tasks yet. Tap + to add one.",
-                        onToggle = { viewModel.toggleTodo(it) },
-                        onEditClick = { openEdit(it) },
-                        onDeleteClick = { openDelete(it) }
-                    )
                 }
+            ) { paddingValues ->
 
-                Screen.COMPLETED -> {
-                    TodoSearchBar(
-                        query = viewModel.searchQuery,
-                        onQueryChange = { viewModel.onSearchQueryChange(it) }
-                    )
-                    TaskListContent(
-                        tasks = viewModel.completedTasks,
-                        emptyMessage = "No completed tasks yet.",
-                        onToggle = { viewModel.toggleTodo(it) },
-                        onEditClick = { openEdit(it) },
-                        onDeleteClick = { openDelete(it) }
-                    )
-                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    when (currentScreen) {
+                        Screen.ALL -> {
+                            TodoSearchBar(
+                                query = viewModel.searchQuery,
+                                onQueryChange = { viewModel.onSearchQueryChange(it) }
+                            )
+                            val list = viewModel.allTasks
+                            val completedCount = viewModel.todoList.count { it.completed }
+                            val total = viewModel.todoList.size
 
-                Screen.DUE -> {
-                    TodoSearchBar(
-                        query = viewModel.searchQuery,
-                        onQueryChange = { viewModel.onSearchQueryChange(it) }
-                    )
-                    TaskListContent(
-                        tasks = viewModel.dueTasks,
-                        emptyMessage = "No tasks with a due date.",
-                        onToggle = { viewModel.toggleTodo(it) },
-                        onEditClick = { openEdit(it) },
-                        onDeleteClick = { openDelete(it) }
-                    )
-                }
+                            val progress = if (total > 0) completedCount.toFloat() / total.toFloat() else 0f
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = surfaceColorFor(isDarkTheme)),
+                                border = BorderStroke(1.dp, cardBorderColorFor(isDarkTheme))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Today's Progress",
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = textPrimaryFor(isDarkTheme)
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = if (total == 0) "No tasks for today" else "$completedCount of $total tasks completed",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = textSecondaryFor(isDarkTheme)
+                                        )
+                                        if (total > 0) {
+                                            Spacer(modifier = Modifier.height(10.dp))
+                                            LinearProgressIndicator(
+                                                progress = { progress },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(6.dp)
+                                                    .clip(RoundedCornerShape(3.dp)),
+                                                color = Accent,
+                                                trackColor = if (isDarkTheme) Color(0xFF222836) else Color(0xFFEEF0F3)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
 
-                Screen.CALENDAR -> {
-                    CalendarView(
-                        tasks = viewModel.todoList,
-                        selectedDay = selectedDay,
-                        onDaySelected = { selectedDay = it },
-                        visibleMonth = visibleMonth,
-                        onMonthChange = { visibleMonth = it }
-                    )
+                            TaskListContent(
+                                tasks = list,
+                                emptyMessage = "No tasks yet. Tap + to add one.",
+                                onToggle = { viewModel.toggleTodo(it) },
+                                onEditClick = { openEdit(it) },
+                                onDeleteClick = { openDelete(it) }
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Screen.COMPLETED -> {
+                            TodoSearchBar(
+                                query = viewModel.searchQuery,
+                                onQueryChange = { viewModel.onSearchQueryChange(it) }
+                            )
+                            TaskListContent(
+                                tasks = viewModel.completedTasks,
+                                emptyMessage = "No completed tasks yet.",
+                                onToggle = { viewModel.toggleTodo(it) },
+                                onEditClick = { openEdit(it) },
+                                onDeleteClick = { openDelete(it) }
+                            )
+                        }
 
-                    val tasksForSelectedDay = viewModel.todoList.filter {
-                        it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, selectedDay.timeInMillis)
+                        Screen.PENDING -> {
+                            TodoSearchBar(
+                                query = viewModel.searchQuery,
+                                onQueryChange = { viewModel.onSearchQueryChange(it) }
+                            )
+                            TaskListContent(
+                                tasks = viewModel.pendingTasks,
+                                emptyMessage = "No pending tasks. You're all caught up!",
+                                onToggle = { viewModel.toggleTodo(it) },
+                                onEditClick = { openEdit(it) },
+                                onDeleteClick = { openDelete(it) }
+                            )
+                        }
+
+                        Screen.CALENDAR -> {
+                            CalendarView(
+                                tasks = viewModel.todoList,
+                                selectedDay = selectedDay,
+                                onDaySelected = { selectedDay = it },
+                                visibleMonth = visibleMonth,
+                                onMonthChange = { visibleMonth = it }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            val tasksForSelectedDay = viewModel.todoList.filter {
+                                it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, selectedDay.timeInMillis)
+                            }
+
+                            TaskListContent(
+                                tasks = tasksForSelectedDay,
+                                emptyMessage = "No tasks on this day.",
+                                onToggle = { viewModel.toggleTodo(it) },
+                                onEditClick = { openEdit(it) },
+                                onDeleteClick = { openDelete(it) }
+                            )
+                        }
                     }
-
-                    TaskListContent(
-                        tasks = tasksForSelectedDay,
-                        emptyMessage = "No tasks on this day.",
-                        onToggle = { viewModel.toggleTodo(it) },
-                        onEditClick = { openEdit(it) },
-                        onDeleteClick = { openDelete(it) }
-                    )
                 }
             }
         }

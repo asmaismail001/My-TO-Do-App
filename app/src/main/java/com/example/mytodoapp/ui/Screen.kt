@@ -1,5 +1,5 @@
 package com.example.mytodoapp.ui
 
 enum class Screen {
-    ALL, COMPLETED, DUE, CALENDAR
+    ALL, COMPLETED, PENDING, CALENDAR
 }

@@ -1,6 +1,7 @@
 package com.example.mytodoapp.viewmodel
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,6 +11,8 @@ import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.notification.NotificationScheduler
 import com.example.mytodoapp.repository.TodoRepository
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
 
 class TodoViewModel(
@@ -29,8 +32,8 @@ class TodoViewModel(
     val completedTasks: List<Todo>
         get() = applySearch(todoList.filter { it.completed })
 
-    val dueTasks: List<Todo>
-        get() = applySearch(todoList.filter { !it.completed && it.dueTimeMillis != null })
+    val pendingTasks: List<Todo>
+        get() = applySearch(todoList.filter { !it.completed })
 
     init {
         loadTodos()
@@ -100,6 +103,40 @@ class TodoViewModel(
             NotificationScheduler.cancelReminder(appContext, todo.id)
             repository.deleteTodo(todo)
             loadTodos()
+        }
+    }
+
+    fun exportTasks(context: Context, uri: Uri?) {
+        if (uri == null) return
+        viewModelScope.launch {
+            try {
+                val json = Gson().toJson(todoList)
+                context.contentResolver.openOutputStream(uri)?.use { stream ->
+                    stream.write(json.toByteArray())
+                }
+            } catch (e: Exception) {
+                // export failed silently
+            }
+        }
+    }
+
+    fun importTasks(context: Context, uri: Uri?) {
+        if (uri == null) return
+        viewModelScope.launch {
+            try {
+                val json = context.contentResolver.openInputStream(uri)
+                    ?.bufferedReader()?.use { it.readText() }
+                if (json != null) {
+                    val listType = object : TypeToken<List<Todo>>() {}.type
+                    val imported: List<Todo> = Gson().fromJson(json, listType)
+                    imported.forEach {
+                        repository.addTodo(it.title, it.description, it.priority, it.dueTimeMillis)
+                    }
+                    loadTodos()
+                }
+            } catch (e: Exception) {
+                // import failed silently
+            }
         }
     }
 }

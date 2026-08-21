@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MaterialTheme {
+            com.example.mytodoapp.ui.theme.MyTODoAppTheme(dynamicColor = false) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     var showSplash by remember { mutableStateOf(true) }
 

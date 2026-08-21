@@ -15,7 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mytodoapp.model.Todo
-import com.example.mytodoapp.ui.TextMuted
+import com.example.mytodoapp.ui.LocalIsDarkTheme
+import com.example.mytodoapp.ui.textMutedFor
 
 @Composable
 fun TaskListContent(
@@ -25,13 +26,15 @@ fun TaskListContent(
     onEditClick: (Todo) -> Unit,
     onDeleteClick: (Todo) -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
+
     if (tasks.isEmpty()) {
         Column(
             modifier = Modifier.fillMaxSize().padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(emptyMessage, color = TextMuted, style = MaterialTheme.typography.bodyMedium)
+            Text(emptyMessage, color = textMutedFor(isDark), style = MaterialTheme.typography.bodyMedium)
         }
         return
     }

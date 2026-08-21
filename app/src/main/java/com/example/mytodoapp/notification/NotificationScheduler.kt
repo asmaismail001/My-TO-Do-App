@@ -7,11 +7,16 @@ import android.content.Intent
 
 object NotificationScheduler {
 
-    private const val REMINDER_OFFSET_MILLIS = 30 * 60 * 1000L
+    private const val REMINDER_OFFSET_MILLIS = 60 * 60 * 1000L
 
     fun scheduleReminder(context: Context, taskId: Int, taskTitle: String, dueTimeMillis: Long) {
-        val reminderTime = dueTimeMillis - REMINDER_OFFSET_MILLIS
-        if (reminderTime <= System.currentTimeMillis()) return
+        val currentTime = System.currentTimeMillis()
+        if (dueTimeMillis <= currentTime) return
+
+        var reminderTime = dueTimeMillis - REMINDER_OFFSET_MILLIS
+        if (reminderTime <= currentTime) {
+            reminderTime = currentTime + 1000L
+        }
 
         val intent = Intent(context, ReminderReceiver::class.java).apply {
             putExtra("taskTitle", taskTitle)

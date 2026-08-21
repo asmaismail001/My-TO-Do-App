@@ -29,7 +29,7 @@ fun PriorityBadge(priority: Priority) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         androidx.compose.foundation.layout.Box(
             modifier = Modifier
-                .size(7.dp)
+                .size(3.dp)
                 .background(dotColor, CircleShape)
         )
         androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(start = 5.dp))

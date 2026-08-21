@@ -1,9 +1,11 @@
 package com.example.mytodoapp.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
@@ -11,15 +13,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.mytodoapp.model.Todo
-import com.example.mytodoapp.ui.SageGreen
-import com.example.mytodoapp.ui.SalmonPink
-import com.example.mytodoapp.ui.TextMuted
-import com.example.mytodoapp.ui.TextPrimary
-import com.example.mytodoapp.ui.TextSecondary
+import com.example.mytodoapp.ui.Accent
+import com.example.mytodoapp.ui.LocalIsDarkTheme
+import com.example.mytodoapp.ui.cardBorderColorFor
+import com.example.mytodoapp.ui.surfaceColorFor
+import com.example.mytodoapp.ui.textMutedFor
+import com.example.mytodoapp.ui.textPrimaryFor
+import com.example.mytodoapp.ui.textSecondaryFor
 import com.example.mytodoapp.util.CalendarUtil
 import java.util.Calendar
 
@@ -31,13 +37,22 @@ fun CalendarView(
     visibleMonth: Calendar,
     onMonthChange: (Calendar) -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    val isDark = LocalIsDarkTheme.current
 
-        // Month header with navigation
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(surfaceColorFor(isDark))
+            .border(1.dp, cardBorderColorFor(isDark), RoundedCornerShape(20.dp))
+            .padding(vertical = 12.dp, horizontal = 8.dp)
+    ) {
+        // Month Selector Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -45,38 +60,56 @@ fun CalendarView(
                 val newMonth = (visibleMonth.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
                 onMonthChange(newMonth)
             }) {
-                Icon(Icons.Filled.ChevronLeft, contentDescription = "Previous month", tint = TextSecondary)
+                Icon(
+                    imageVector = Icons.Filled.ChevronLeft,
+                    contentDescription = "Previous month",
+                    tint = textSecondaryFor(isDark)
+                )
             }
             Text(
                 text = CalendarUtil.monthYearLabel(visibleMonth),
-                fontWeight = FontWeight.SemiBold,
-                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                color = textPrimaryFor(isDark),
                 style = MaterialTheme.typography.titleMedium
             )
             IconButton(onClick = {
                 val newMonth = (visibleMonth.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
                 onMonthChange(newMonth)
             }) {
-                Icon(Icons.Filled.ChevronRight, contentDescription = "Next month", tint = TextSecondary)
+                Icon(
+                    imageVector = Icons.Filled.ChevronRight,
+                    contentDescription = "Next month",
+                    tint = textSecondaryFor(isDark)
+                )
             }
         }
 
-        // Weekday labels
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+        // Weekday Labels Row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        ) {
             listOf("S", "M", "T", "W", "T", "F", "S").forEach { day ->
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    Text(day, color = TextMuted, style = MaterialTheme.typography.labelSmall)
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = day,
+                        color = textMutedFor(isDark),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp)
+                    )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
-
         val gridDays = CalendarUtil.getMonthGrid(visibleMonth)
 
-        // 6 rows of 7 days
+        // Day Grid
         for (week in 0 until 6) {
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 for (dayIndex in 0 until 7) {
                     val day = gridDays[week * 7 + dayIndex]
                     val inCurrentMonth = CalendarUtil.isSameMonth(day, visibleMonth)
@@ -86,42 +119,61 @@ fun CalendarView(
                     val hasTasks = tasks.any {
                         it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, day.timeInMillis)
                     }
+
                     Box(
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
-                            .padding(2.dp)
-                            .background(
-                                when {
-                                    isSelected -> SageGreen
-                                    isToday -> SageGreen.copy(alpha = 0.15f)
-                                    else -> Color.Transparent
-                                },
-                                shape = CircleShape
-                            )
-                            .clickable { onDaySelected(day) },
+                            .padding(1.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = day.get(Calendar.DAY_OF_MONTH).toString(),
-                                color = when {
-                                    isSelected -> Color.White
-                                    !inCurrentMonth -> TextMuted.copy(alpha = 0.4f)
-                                    else -> TextPrimary
-                                },
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .clickable { onDaySelected(day) }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .background(
+                                        when {
+                                            isSelected -> Accent
+                                            isToday -> Accent.copy(alpha = 0.12f)
+                                            else -> Color.Transparent
+                                        },
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = day.get(Calendar.DAY_OF_MONTH).toString(),
+                                    color = when {
+                                        isSelected -> Color.White
+                                        isToday -> Accent
+                                        !inCurrentMonth -> textMutedFor(isDark).copy(alpha = 0.3f)
+                                        else -> textPrimaryFor(isDark)
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(2.dp))
+
                             if (hasTasks) {
                                 Box(
                                     modifier = Modifier
-                                        .padding(top = 1.dp)
                                         .size(4.dp)
                                         .background(
-                                            if (isSelected) Color.White else SalmonPink,
-                                            CircleShape
+                                            if (isSelected) Accent else Accent.copy(alpha = 0.6f),
+                                            shape = CircleShape
                                         )
                                 )
+                            } else {
+                                Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
                     }
@@ -130,4 +182,3 @@ fun CalendarView(
         }
     }
 }
-
