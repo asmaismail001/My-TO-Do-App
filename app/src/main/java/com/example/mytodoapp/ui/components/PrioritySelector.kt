@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.ui.LocalIsDarkTheme
-import com.example.mytodoapp.ui.cardBorderColorFor
+import com.example.mytodoapp.ui.Accent
 import com.example.mytodoapp.ui.surfaceColorFor
 import com.example.mytodoapp.ui.textPrimaryFor
 import com.example.mytodoapp.ui.textSecondaryFor
@@ -45,7 +45,7 @@ fun PrioritySelector(
                 .background(if (isDark) Color(0xFF222836) else Color(0xFFF3F4F6))
                 .border(
                     width = 1.dp,
-                    color = cardBorderColorFor(isDark),
+                    color = Accent.copy(alpha = 0.35f),
                     shape = RoundedCornerShape(12.dp)
                 )
                 .clickable { expanded = !expanded }
@@ -86,7 +86,7 @@ fun PrioritySelector(
                 modifier = Modifier
                     .fillMaxWidth(0.6f)
                     .background(surfaceColorFor(isDark))
-                    .border(1.dp, cardBorderColorFor(isDark), RoundedCornerShape(12.dp))
+                    .border(1.dp, Accent.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
             ) {
                 Priority.values().forEach { priority ->
                     DropdownMenuItem(

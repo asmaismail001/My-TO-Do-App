@@ -18,7 +18,6 @@ import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.ui.Accent
 import com.example.mytodoapp.ui.AttachmentPicker
 import com.example.mytodoapp.ui.LocalIsDarkTheme
-import com.example.mytodoapp.ui.cardBorderColorFor
 import com.example.mytodoapp.ui.surfaceColorFor
 import com.example.mytodoapp.ui.textMutedFor
 import com.example.mytodoapp.ui.textPrimaryFor
@@ -47,7 +46,7 @@ fun AddTaskDialog(
         Surface(
             shape = RoundedCornerShape(24.dp),
             color = surfaceColorFor(isDark),
-            border = BorderStroke(1.dp, cardBorderColorFor(isDark)),
+            border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f)),
             tonalElevation = 6.dp
         ) {
             Column(
@@ -73,7 +72,7 @@ fun AddTaskDialog(
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Accent,
-                        unfocusedBorderColor = cardBorderColorFor(isDark),
+                        unfocusedBorderColor = Accent.copy(alpha = 0.35f),
                         focusedLabelColor = Accent,
                         unfocusedLabelColor = textSecondaryFor(isDark),
                         focusedTextColor = textPrimaryFor(isDark),
@@ -96,7 +95,7 @@ fun AddTaskDialog(
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Accent,
-                        unfocusedBorderColor = cardBorderColorFor(isDark),
+                        unfocusedBorderColor = Accent.copy(alpha = 0.35f),
                         focusedLabelColor = Accent,
                         unfocusedLabelColor = textSecondaryFor(isDark),
                         focusedTextColor = textPrimaryFor(isDark),
@@ -117,7 +116,7 @@ fun AddTaskDialog(
                         DateTimePickerUtil.pickDateTime(context) { picked -> onDueTimeChange(picked) }
                     },
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, cardBorderColorFor(isDark)),
+                    border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f)),
                     colors = CardDefaults.outlinedCardColors(containerColor = if (isDark) Color(0xFF1E293B) else Color(0xFFF8F9FA)),
                     modifier = Modifier.fillMaxWidth()
                 ) {

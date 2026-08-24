@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.FontWeight
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.LocalIsDarkTheme
@@ -92,6 +93,12 @@ fun FocusTimerDialog(
             timer?.cancel()
             onDismiss()
         },
+        modifier = Modifier.border(
+            width = 1.dp,
+            color = Accent.copy(alpha = 0.35f),
+            shape = RoundedCornerShape(28.dp)
+        ),
+        shape = RoundedCornerShape(28.dp),
         title = { Text(if (isBreak) "Break time" else "Focusing on: ${todo.title}") },
         text = {
             val isDark = LocalIsDarkTheme.current

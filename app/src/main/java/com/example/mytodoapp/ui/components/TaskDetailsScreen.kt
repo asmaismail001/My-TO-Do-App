@@ -77,7 +77,7 @@ fun TaskDetailsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = surfaceColorFor(isDark)),
-                border = BorderStroke(1.dp, cardBorderColorFor(isDark))
+                border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f))
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
@@ -131,7 +131,7 @@ fun TaskDetailsScreen(
 
                     // Description (if present)
                     if (todo.description.isNotBlank()) {
-                        HorizontalDivider(color = cardBorderColorFor(isDark).copy(alpha = 0.5f), thickness = 1.dp)
+                        HorizontalDivider(color = Accent.copy(alpha = 0.2f), thickness = 1.dp)
                         Column {
                             Text(
                                 text = "Description",
@@ -155,7 +155,7 @@ fun TaskDetailsScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = surfaceColorFor(isDark)),
-                border = BorderStroke(1.dp, cardBorderColorFor(isDark))
+                border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f))
             ) {
                 Row(
                     modifier = Modifier
@@ -185,7 +185,7 @@ fun TaskDetailsScreen(
                         modifier = Modifier
                             .width(1.dp)
                             .height(36.dp)
-                            .background(cardBorderColorFor(isDark))
+                            .background(Accent.copy(alpha = 0.35f))
                     )
 
                     Column(
@@ -217,7 +217,7 @@ fun TaskDetailsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = surfaceColorFor(isDark)),
-                    border = BorderStroke(1.dp, cardBorderColorFor(isDark))
+                    border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f))
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -259,7 +259,7 @@ fun TaskDetailsScreen(
                     .wrapContentHeight(),
                 shape = RoundedCornerShape(24.dp),
                 color = surfaceColorFor(isDark),
-                border = BorderStroke(1.dp, cardBorderColorFor(isDark))
+                border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f))
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
