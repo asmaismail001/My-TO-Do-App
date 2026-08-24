@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.background
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.components.AddTaskDialog
@@ -207,6 +209,7 @@ fun TodoScreen(viewModel: TodoViewModel) {
                             val total = viewModel.todoList.size
 
                             val progress = if (total > 0) completedCount.toFloat() / total.toFloat() else 0f
+                            val percentage = (progress * 100).toInt()
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -217,7 +220,8 @@ fun TodoScreen(viewModel: TodoViewModel) {
                             ) {
                                 Row(
                                     modifier = Modifier.padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
@@ -242,6 +246,23 @@ fun TodoScreen(viewModel: TodoViewModel) {
                                                     .clip(RoundedCornerShape(3.dp)),
                                                 color = Accent,
                                                 trackColor = if (isDarkTheme) Color(0xFF222836) else Color(0xFFEEF0F3)
+                                            )
+                                        }
+                                    }
+
+                                    if (total > 0) {
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Accent.copy(alpha = 0.15f))
+                                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = "$percentage%",
+                                                color = Accent,
+                                                fontWeight = FontWeight.Bold,
+                                                style = MaterialTheme.typography.titleMedium
                                             )
                                         }
                                     }

@@ -22,6 +22,7 @@ import com.example.mytodoapp.ui.LocalIsDarkTheme
 import com.example.mytodoapp.ui.textPrimaryFor
 import com.example.mytodoapp.ui.Accent
 
+
 private const val BREAK_MILLIS = 5 * 60 * 1000L
 
 @Composable
@@ -111,7 +112,7 @@ fun FocusTimerDialog(
                         },
                         modifier = Modifier.fillMaxSize(),
                         strokeWidth = 6.dp,
-                        color = if (isBreak) Accent else SuccessGreen
+                        color = Accent
                     )
                     Text(
                         text = String.format("%02d:%02d", minutes, seconds),
@@ -128,11 +129,11 @@ fun FocusTimerDialog(
                         OutlinedButton(
                             onClick = { adjustDuration(-5) },
                             shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, SuccessGreen),
+                            border = BorderStroke(1.dp, Accent),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                             modifier = Modifier.height(32.dp).width(44.dp)
                         ) {
-                            Text("−", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = SuccessGreen)
+                            Text("−", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Accent)
                         }
 
                         Text(
@@ -146,11 +147,11 @@ fun FocusTimerDialog(
                         OutlinedButton(
                             onClick = { adjustDuration(5) },
                             shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, SuccessGreen),
+                            border = BorderStroke(1.dp, Accent),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                             modifier = Modifier.height(32.dp).width(44.dp)
                         ) {
-                            Text("+", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = SuccessGreen)
+                            Text("+", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Accent)
                         }
                     }
                 }
