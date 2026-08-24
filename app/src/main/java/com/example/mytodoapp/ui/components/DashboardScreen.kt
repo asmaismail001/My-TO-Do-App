@@ -27,7 +27,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import android.graphics.ImageDecoder
-import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -41,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.*
 import com.example.mytodoapp.util.CalendarUtil
@@ -57,7 +57,9 @@ fun DashboardScreen(
     onToggle: (Todo) -> Unit,
     onEditClick: (Todo) -> Unit,
     onDeleteClick: (Todo) -> Unit,
-    onAddTaskClick: () -> Unit
+    onAddTaskClick: () -> Unit,
+    onFocusOpen: (Todo) -> Unit,
+    onTodoClick: (Todo) -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
     val context = LocalContext.current
@@ -67,7 +69,7 @@ fun DashboardScreen(
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
+    ) { uri: android.net.Uri? ->
         if (uri != null) {
             viewModel.updateProfilePictureUri(uri.toString())
         }
@@ -131,7 +133,7 @@ fun DashboardScreen(
                         )
                     }
 
-                    // Welcome Profile Avatar loading gallery image on click
+                    // Profile Avatar loading gallery image on click
                     Box(
                         modifier = Modifier
                             .size(40.dp)
@@ -601,7 +603,9 @@ fun DashboardScreen(
                             todo = todo,
                             onToggle = { onToggle(todo) },
                             onEditClick = { onEditClick(todo) },
-                            onDeleteClick = { onDeleteClick(todo) }
+                            onDeleteClick = { onDeleteClick(todo) },
+                            onFocusClick = { onFocusOpen(todo) },
+                            onTodoClick = { onTodoClick(todo) }
                         )
                     }
                 }
@@ -783,7 +787,7 @@ fun rememberBitmapFromUri(uriStr: String?): ImageBitmap? {
     return remember(uriStr) {
         if (uriStr == null) return@remember null
         try {
-            val uri = Uri.parse(uriStr)
+            val uri = uriStr.toUri()
             val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 val source = ImageDecoder.createSource(context.contentResolver, uri)
                 ImageDecoder.decodeBitmap(source)
@@ -792,7 +796,7 @@ fun rememberBitmapFromUri(uriStr: String?): ImageBitmap? {
                 MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
             }
             bitmap.asImageBitmap()
-        } catch (e: java.lang.Exception) {
+        } catch (_: java.lang.Exception) {
             null
         }
     }

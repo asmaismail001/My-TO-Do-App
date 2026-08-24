@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,7 +45,9 @@ fun TodoItemRow(
     todo: Todo,
     onToggle: () -> Unit,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onFocusClick: () -> Unit,
+    onTodoClick: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
 
@@ -60,7 +63,7 @@ fun TodoItemRow(
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f))
     ) {
-        Box(modifier = Modifier.fillMaxSize().clickable { onEditClick() }) {
+        Box(modifier = Modifier.fillMaxSize().clickable { onTodoClick() }) {
             // Content Layout
             Row(
                 modifier = Modifier
@@ -109,8 +112,16 @@ fun TodoItemRow(
                             color = if (todo.completed) textMutedFor(isDark) else textPrimaryFor(isDark),
                             textDecoration = if (todo.completed) TextDecoration.LineThrough else TextDecoration.None,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
+                        if (!todo.attachmentUri.isNullOrEmpty()) {
+                            Text(
+                                text = "📎",
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(start = 2.dp)
+                            )
+                        }
                     }
 
                     if (todo.description.isNotBlank()) {
@@ -198,6 +209,24 @@ fun TodoItemRow(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // Focus Timer Action Button
+                    if (!todo.completed) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .clickable { onFocusClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Timer,
+                                contentDescription = "Start Focus Session",
+                                tint = Accent,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
                     // Edit Action Button
                     Box(
                         modifier = Modifier

@@ -14,7 +14,8 @@ class TodoRepository(private val context: Context) {
         title: String,
         description: String,
         priority: Priority,
-        dueTimeMillis: Long?
+        dueTimeMillis: Long?,
+        attachmentUri: String? = null
     ): Todo {
         val todo = Todo(
             title = title,
@@ -22,7 +23,8 @@ class TodoRepository(private val context: Context) {
             priority = priority,
             completed = false,
             createdAt = System.currentTimeMillis(),
-            dueTimeMillis = dueTimeMillis
+            dueTimeMillis = dueTimeMillis,
+            attachmentUri = attachmentUri
         )
         val newId = dao.insertTodo(todo)
         return todo.copy(id = newId.toInt())
@@ -37,14 +39,16 @@ class TodoRepository(private val context: Context) {
         newTitle: String,
         newDescription: String,
         newPriority: Priority,
-        newDueTimeMillis: Long?
+        newDueTimeMillis: Long?,
+        newAttachmentUri: String? = todo.attachmentUri
     ) {
         dao.updateTodo(
             todo.copy(
                 title = newTitle,
                 description = newDescription,
                 priority = newPriority,
-                dueTimeMillis = newDueTimeMillis
+                dueTimeMillis = newDueTimeMillis,
+                attachmentUri = newAttachmentUri
             )
         )
     }

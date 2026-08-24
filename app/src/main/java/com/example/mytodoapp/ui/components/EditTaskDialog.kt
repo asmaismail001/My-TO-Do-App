@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.ui.Accent
+import com.example.mytodoapp.ui.AttachmentPicker
 import com.example.mytodoapp.ui.LocalIsDarkTheme
 import com.example.mytodoapp.ui.cardBorderColorFor
 import com.example.mytodoapp.ui.surfaceColorFor
@@ -34,6 +35,8 @@ fun EditTaskDialog(
     onPriorityChange: (Priority) -> Unit,
     dueTimeMillis: Long?,
     onDueTimeChange: (Long?) -> Unit,
+    attachmentUri: String?,
+    onAttachmentChange: (String?) -> Unit,
     createdAt: Long,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
@@ -145,6 +148,13 @@ fun EditTaskDialog(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                AttachmentPicker(
+                    attachmentUri = attachmentUri,
+                    onAttachmentChanged = onAttachmentChange
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 

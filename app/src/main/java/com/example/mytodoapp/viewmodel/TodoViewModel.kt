@@ -16,6 +16,7 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import com.example.mytodoapp.util.PreferencesManager
+import java.io.File
 
 enum class DashboardPeriod { DAILY, WEEKLY, MONTHLY }
 
@@ -75,7 +76,7 @@ class TodoViewModel(
         cal.set(Calendar.MINUTE, 0)
         cal.set(Calendar.SECOND, 0)
         cal.set(Calendar.MILLISECOND, 0)
-        
+
         val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
         val diff = if (dayOfWeek == Calendar.SUNDAY) {
             -6
@@ -135,7 +136,7 @@ class TodoViewModel(
         val start = getStartOfWeek(date)
         val dayNames = arrayOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
         val dayAbbrevs = arrayOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-        
+
         return (0..6).map { offset ->
             val dayCal = (start.clone() as Calendar).apply {
                 add(Calendar.DAY_OF_MONTH, offset)
@@ -156,7 +157,7 @@ class TodoViewModel(
     fun getMonthlyChartData(date: Calendar): List<MonthlyChartData> {
         val year = date.get(Calendar.YEAR)
         val month = date.get(Calendar.MONTH)
-        
+
         val monthTasks = todoList.filter { todo ->
             val targetTime = todo.dueTimeMillis ?: todo.createdAt
             val todoCal = Calendar.getInstance().apply { timeInMillis = targetTime }
@@ -221,10 +222,67 @@ class TodoViewModel(
         }
     }
 
-    fun addTodo(title: String, description: String, priority: Priority, dueTimeMillis: Long?) {
+    private fun saveAttachmentLocally(context: Context, sourceUriStr: String): String? {
+        try {
+            val uri = Uri.parse(sourceUriStr)
+            if (uri.scheme == "file" && uri.path?.contains(context.filesDir.absolutePath) == true) {
+                return sourceUriStr
+            }
+            val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+            val attachmentsDir = File(context.filesDir, "attachments")
+            if (!attachmentsDir.exists()) {
+                attachmentsDir.mkdirs()
+            }
+            val fileExtension = getFileExtension(context, uri) ?: "jpg"
+            val destFile = File(attachmentsDir, "attachment_${System.currentTimeMillis()}.${fileExtension}")
+            destFile.outputStream().use { outputStream ->
+                inputStream.copyTo(outputStream)
+            }
+            return Uri.fromFile(destFile).toString()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    private fun getFileExtension(context: Context, uri: Uri): String? {
+        return if (uri.scheme == android.content.ContentResolver.SCHEME_CONTENT) {
+            val mimeType = context.contentResolver.getType(uri)
+            android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+        } else {
+            android.webkit.MimeTypeMap.getFileExtensionFromUrl(uri.toString())
+        }
+    }
+
+    private fun deleteAttachmentLocally(context: Context, uriStr: String?) {
+        if (uriStr == null) return
+        try {
+            val uri = Uri.parse(uriStr)
+            if (uri.scheme == "file") {
+                val path = uri.path
+                if (path != null && path.contains(context.filesDir.absolutePath)) {
+                    val file = File(path)
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun addTodo(
+        title: String,
+        description: String,
+        priority: Priority,
+        dueTimeMillis: Long?,
+        attachmentUri: String? = null
+    ) {
         if (title.isBlank()) return
         viewModelScope.launch {
-            val savedTodo = repository.addTodo(title.trim(), description.trim(), priority, dueTimeMillis)
+            val localUriStr = attachmentUri?.let { saveAttachmentLocally(appContext, it) }
+            val savedTodo = repository.addTodo(title.trim(), description.trim(), priority, dueTimeMillis, localUriStr)
             if (dueTimeMillis != null) {
                 NotificationScheduler.scheduleReminder(appContext, savedTodo.id, savedTodo.title, dueTimeMillis)
             }
@@ -247,11 +305,18 @@ class TodoViewModel(
         newTitle: String,
         newDescription: String,
         newPriority: Priority,
-        newDueTimeMillis: Long?
+        newDueTimeMillis: Long?,
+        newAttachmentUri: String? = todo.attachmentUri
     ) {
         if (newTitle.isBlank()) return
         viewModelScope.launch {
-            repository.updateTodo(todo, newTitle.trim(), newDescription.trim(), newPriority, newDueTimeMillis)
+            val finalAttachmentUri = if (newAttachmentUri != todo.attachmentUri) {
+                deleteAttachmentLocally(appContext, todo.attachmentUri)
+                newAttachmentUri?.let { saveAttachmentLocally(appContext, it) }
+            } else {
+                newAttachmentUri
+            }
+            repository.updateTodo(todo, newTitle.trim(), newDescription.trim(), newPriority, newDueTimeMillis, finalAttachmentUri)
             NotificationScheduler.cancelReminder(appContext, todo.id)
             if (newDueTimeMillis != null) {
                 NotificationScheduler.scheduleReminder(appContext, todo.id, newTitle.trim(), newDueTimeMillis)
@@ -263,6 +328,7 @@ class TodoViewModel(
     fun deleteTodo(todo: Todo) {
         viewModelScope.launch {
             NotificationScheduler.cancelReminder(appContext, todo.id)
+            deleteAttachmentLocally(appContext, todo.attachmentUri)
             repository.deleteTodo(todo)
             loadTodos()
         }
@@ -276,7 +342,7 @@ class TodoViewModel(
                 context.contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.write(json.toByteArray())
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // export failed silently
             }
         }
@@ -292,11 +358,11 @@ class TodoViewModel(
                     val listType = object : TypeToken<List<Todo>>() {}.type
                     val imported: List<Todo> = Gson().fromJson(json, listType)
                     imported.forEach {
-                        repository.addTodo(it.title, it.description, it.priority, it.dueTimeMillis)
+                        repository.addTodo(it.title, it.description, it.priority, it.dueTimeMillis, it.attachmentUri)
                     }
                     loadTodos()
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // import failed silently
             }
         }

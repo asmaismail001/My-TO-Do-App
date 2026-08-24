@@ -24,7 +24,9 @@ fun TaskListContent(
     emptyMessage: String,
     onToggle: (Todo) -> Unit,
     onEditClick: (Todo) -> Unit,
-    onDeleteClick: (Todo) -> Unit
+    onDeleteClick: (Todo) -> Unit,
+    onFocusClick: (Todo) -> Unit,
+    onTodoClick: (Todo) -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
 
@@ -49,7 +51,9 @@ fun TaskListContent(
                 todo = todo,
                 onToggle = { onToggle(todo) },
                 onEditClick = { onEditClick(todo) },
-                onDeleteClick = { onDeleteClick(todo) }
+                onDeleteClick = { onDeleteClick(todo) },
+                onFocusClick = { onFocusClick(todo) },
+                onTodoClick = { onTodoClick(todo) }
             )
         }
         item { Spacer(modifier = Modifier.height(80.dp)) }

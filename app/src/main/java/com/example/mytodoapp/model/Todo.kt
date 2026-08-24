@@ -14,5 +14,6 @@ data class Todo(
     val priority: Priority = Priority.MEDIUM,
     val completed: Boolean,
     val createdAt: Long = System.currentTimeMillis(),
-    val dueTimeMillis: Long? = null
+    val dueTimeMillis: Long? = null,
+    val attachmentUri: String? = null
 )

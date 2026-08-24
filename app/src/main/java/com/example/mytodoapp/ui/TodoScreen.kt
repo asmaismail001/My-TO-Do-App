@@ -1,6 +1,7 @@
 package com.example.mytodoapp.ui
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -28,6 +29,7 @@ import com.example.mytodoapp.ui.components.DeleteTaskDialog
 import com.example.mytodoapp.ui.components.EditTaskDialog
 import com.example.mytodoapp.ui.components.SettingsDrawerContent
 import com.example.mytodoapp.ui.components.TaskListContent
+import com.example.mytodoapp.ui.components.TaskDetailsScreen
 import com.example.mytodoapp.ui.components.TodoSearchBar
 import com.example.mytodoapp.util.CalendarUtil
 import com.example.mytodoapp.util.PreferencesManager
@@ -56,12 +58,21 @@ fun TodoScreen(viewModel: TodoViewModel) {
     ) { uri: Uri? -> viewModel.importTasks(context, uri) }
 
     var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
+    var previousScreen by remember { mutableStateOf(Screen.DASHBOARD) }
+    var selectedTodoForDetails by remember { mutableStateOf<Todo?>(null) }
+
+    val navigateToDetails: (Todo) -> Unit = { todo ->
+        previousScreen = currentScreen
+        selectedTodoForDetails = todo
+        currentScreen = Screen.TASK_DETAILS
+    }
 
     var showAddDialog by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
     var newDescription by remember { mutableStateOf("") }
     var newPriority by remember { mutableStateOf(Priority.MEDIUM) }
     var newDueTime by remember { mutableStateOf<Long?>(null) }
+    var newAttachmentUri by remember { mutableStateOf<String?>(null) }
 
     var showEditDialog by remember { mutableStateOf(false) }
     var editingTodo by remember { mutableStateOf<Todo?>(null) }
@@ -69,9 +80,12 @@ fun TodoScreen(viewModel: TodoViewModel) {
     var editDescription by remember { mutableStateOf("") }
     var editPriority by remember { mutableStateOf(Priority.MEDIUM) }
     var editDueTime by remember { mutableStateOf<Long?>(null) }
+    var editAttachmentUri by remember { mutableStateOf<String?>(null) }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var deletingTodo by remember { mutableStateOf<Todo?>(null) }
+
+    var focusTimerTodo by remember { mutableStateOf<Todo?>(null) }
 
     var selectedDay by remember { mutableStateOf(Calendar.getInstance()) }
     var visibleMonth by remember { mutableStateOf(Calendar.getInstance()) }
@@ -82,12 +96,20 @@ fun TodoScreen(viewModel: TodoViewModel) {
         editDescription = todo.description
         editPriority = todo.priority
         editDueTime = todo.dueTimeMillis
+        editAttachmentUri = todo.attachmentUri
         showEditDialog = true
     }
 
     fun openDelete(todo: Todo) {
         deletingTodo = todo
         showDeleteDialog = true
+    }
+
+    if (currentScreen == Screen.TASK_DETAILS) {
+        BackHandler {
+            currentScreen = previousScreen
+            selectedTodoForDetails = null
+        }
     }
 
     CompositionLocalProvider(LocalIsDarkTheme provides isDarkTheme) {
@@ -118,30 +140,34 @@ fun TodoScreen(viewModel: TodoViewModel) {
             Scaffold(
                 containerColor = backgroundColorFor(isDarkTheme),
                 topBar = {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = if (currentScreen == Screen.DASHBOARD) "Dashboard" else "Task Manager",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleLarge
+                    if (currentScreen != Screen.TASK_DETAILS) {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    text = if (currentScreen == Screen.DASHBOARD) "Dashboard" else "Task Manager",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                    Icon(Icons.Filled.Menu, contentDescription = "Settings", tint = textPrimaryFor(isDarkTheme))
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = backgroundColorFor(isDarkTheme),
+                                titleContentColor = textPrimaryFor(isDarkTheme)
                             )
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(Icons.Filled.Menu, contentDescription = "Settings", tint = textPrimaryFor(isDarkTheme))
-                            }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = backgroundColorFor(isDarkTheme),
-                            titleContentColor = textPrimaryFor(isDarkTheme)
                         )
-                    )
+                    }
                 },
                 bottomBar = {
-                    BottomNavBar(selected = currentScreen, onSelect = { currentScreen = it })
+                    if (currentScreen != Screen.TASK_DETAILS) {
+                        BottomNavBar(selected = currentScreen, onSelect = { currentScreen = it })
+                    }
                 },
                 floatingActionButton = {
-                    if (currentScreen != Screen.CALENDAR && currentScreen != Screen.DASHBOARD) {
+                    if (currentScreen != Screen.CALENDAR && currentScreen != Screen.DASHBOARD && currentScreen != Screen.TASK_DETAILS) {
                         FloatingActionButton(
                             onClick = { showAddDialog = true },
                             containerColor = Accent,
@@ -165,7 +191,9 @@ fun TodoScreen(viewModel: TodoViewModel) {
                                 onToggle = { viewModel.toggleTodo(it) },
                                 onEditClick = { openEdit(it) },
                                 onDeleteClick = { openDelete(it) },
-                                onAddTaskClick = { showAddDialog = true }
+                                onAddTaskClick = { showAddDialog = true },
+                                onFocusOpen = { focusTimerTodo = it },
+                                onTodoClick = navigateToDetails
                             )
                         }
 
@@ -225,7 +253,9 @@ fun TodoScreen(viewModel: TodoViewModel) {
                                 emptyMessage = "No tasks yet. Tap + to add one.",
                                 onToggle = { viewModel.toggleTodo(it) },
                                 onEditClick = { openEdit(it) },
-                                onDeleteClick = { openDelete(it) }
+                                onDeleteClick = { openDelete(it) },
+                                onFocusClick = { focusTimerTodo = it },
+                                onTodoClick = navigateToDetails
                             )
                         }
 
@@ -239,7 +269,9 @@ fun TodoScreen(viewModel: TodoViewModel) {
                                 emptyMessage = "No completed tasks yet.",
                                 onToggle = { viewModel.toggleTodo(it) },
                                 onEditClick = { openEdit(it) },
-                                onDeleteClick = { openDelete(it) }
+                                onDeleteClick = { openDelete(it) },
+                                onFocusClick = { focusTimerTodo = it },
+                                onTodoClick = navigateToDetails
                             )
                         }
 
@@ -253,7 +285,9 @@ fun TodoScreen(viewModel: TodoViewModel) {
                                 emptyMessage = "No pending tasks. You're all caught up!",
                                 onToggle = { viewModel.toggleTodo(it) },
                                 onEditClick = { openEdit(it) },
-                                onDeleteClick = { openDelete(it) }
+                                onDeleteClick = { openDelete(it) },
+                                onFocusClick = { focusTimerTodo = it },
+                                onTodoClick = navigateToDetails
                             )
                         }
 
@@ -277,8 +311,23 @@ fun TodoScreen(viewModel: TodoViewModel) {
                                 emptyMessage = "No tasks on this day.",
                                 onToggle = { viewModel.toggleTodo(it) },
                                 onEditClick = { openEdit(it) },
-                                onDeleteClick = { openDelete(it) }
+                                onDeleteClick = { openDelete(it) },
+                                onFocusClick = { focusTimerTodo = it },
+                                onTodoClick = navigateToDetails
                             )
+                        }
+
+                        Screen.TASK_DETAILS -> {
+                            selectedTodoForDetails?.let { todo ->
+                                TaskDetailsScreen(
+                                    todo = todo,
+                                    onBack = {
+                                        currentScreen = previousScreen
+                                        selectedTodoForDetails = null
+                                    },
+                                    isDark = isDarkTheme
+                                )
+                            }
                         }
                     }
                 }
@@ -296,12 +345,15 @@ fun TodoScreen(viewModel: TodoViewModel) {
             onPriorityChange = { newPriority = it },
             dueTimeMillis = newDueTime,
             onDueTimeChange = { newDueTime = it },
+            attachmentUri = newAttachmentUri,
+            onAttachmentChange = { newAttachmentUri = it },
             onConfirm = {
-                viewModel.addTodo(newTitle, newDescription, newPriority, newDueTime)
+                viewModel.addTodo(newTitle, newDescription, newPriority, newDueTime, newAttachmentUri)
                 newTitle = ""
                 newDescription = ""
                 newPriority = Priority.MEDIUM
                 newDueTime = null
+                newAttachmentUri = null
                 showAddDialog = false
             },
             onDismiss = {
@@ -310,6 +362,7 @@ fun TodoScreen(viewModel: TodoViewModel) {
                 newDescription = ""
                 newPriority = Priority.MEDIUM
                 newDueTime = null
+                newAttachmentUri = null
             }
         )
     }
@@ -324,9 +377,13 @@ fun TodoScreen(viewModel: TodoViewModel) {
             onPriorityChange = { editPriority = it },
             dueTimeMillis = editDueTime,
             onDueTimeChange = { editDueTime = it },
+            attachmentUri = editAttachmentUri,
+            onAttachmentChange = { editAttachmentUri = it },
             createdAt = editingTodo?.createdAt ?: System.currentTimeMillis(),
             onConfirm = {
-                editingTodo?.let { viewModel.updateTodo(it, editTitle, editDescription, editPriority, editDueTime) }
+                editingTodo?.let {
+                    viewModel.updateTodo(it, editTitle, editDescription, editPriority, editDueTime, editAttachmentUri)
+                }
                 showEditDialog = false
                 editingTodo = null
             },
@@ -349,6 +406,14 @@ fun TodoScreen(viewModel: TodoViewModel) {
                 showDeleteDialog = false
                 deletingTodo = null
             }
+        )
+    }
+
+    focusTimerTodo?.let { todo ->
+        FocusTimerDialog(
+            todo = todo,
+            onDismiss = { focusTimerTodo = null },
+            onSessionComplete = { /* optional: show a snackbar or increment a stat */ }
         )
     }
 }
