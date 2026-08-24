@@ -38,7 +38,12 @@ object NotificationScheduler {
                 pendingIntent
             )
         } catch (e: SecurityException) {
-            // Exact alarm permission not granted
+            // Exact alarm permission not granted, fallback to non-exact alarm
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                reminderTime,
+                pendingIntent
+            )
         }
     }
 

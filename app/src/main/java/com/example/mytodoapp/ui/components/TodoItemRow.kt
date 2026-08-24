@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -57,7 +58,7 @@ fun TodoItemRow(
             .alpha(cardAlpha),
         color = surfaceColorFor(isDark),
         shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, cardBorderColorFor(isDark))
+        border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f))
     ) {
         Box(modifier = Modifier.fillMaxSize().clickable { onEditClick() }) {
             // Content Layout
@@ -192,19 +193,42 @@ fun TodoItemRow(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Delete Action Button
-                IconButton(
-                    onClick = onDeleteClick,
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .size(32.dp)
+                Row(
+                    modifier = Modifier.align(Alignment.CenterVertically),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.DeleteOutline,
-                        contentDescription = "Delete Task",
-                        tint = textMutedFor(isDark),
-                        modifier = Modifier.size(20.dp)
-                    )
+                    // Edit Action Button
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .clickable { onEditClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Edit,
+                            contentDescription = "Edit Task",
+                            tint = textMutedFor(isDark),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // Delete Action Button
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .clickable { onDeleteClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteOutline,
+                            contentDescription = "Delete Task",
+                            tint = textMutedFor(isDark),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }

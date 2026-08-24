@@ -23,6 +23,7 @@ import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.components.AddTaskDialog
 import com.example.mytodoapp.ui.components.BottomNavBar
 import com.example.mytodoapp.ui.components.CalendarView
+import com.example.mytodoapp.ui.components.DashboardScreen
 import com.example.mytodoapp.ui.components.DeleteTaskDialog
 import com.example.mytodoapp.ui.components.EditTaskDialog
 import com.example.mytodoapp.ui.components.SettingsDrawerContent
@@ -54,7 +55,7 @@ fun TodoScreen(viewModel: TodoViewModel) {
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? -> viewModel.importTasks(context, uri) }
 
-    var currentScreen by remember { mutableStateOf(Screen.ALL) }
+    var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
 
     var showAddDialog by remember { mutableStateOf(false) }
     var newTitle by remember { mutableStateOf("") }
@@ -94,6 +95,11 @@ fun TodoScreen(viewModel: TodoViewModel) {
             drawerState = drawerState,
             drawerContent = {
                 SettingsDrawerContent(
+                    currentScreen = currentScreen,
+                    onScreenSelect = { screen ->
+                        currentScreen = screen
+                        scope.launch { drawerState.close() }
+                    },
                     isDarkTheme = isDarkTheme,
                     onDarkThemeChange = {
                         isDarkTheme = it
@@ -113,7 +119,13 @@ fun TodoScreen(viewModel: TodoViewModel) {
                 containerColor = backgroundColorFor(isDarkTheme),
                 topBar = {
                     TopAppBar(
-                        title = { Text("Task Manager", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge) },
+                        title = {
+                            Text(
+                                text = if (currentScreen == Screen.DASHBOARD) "Dashboard" else "Task Manager",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
                         navigationIcon = {
                             IconButton(onClick = { scope.launch { drawerState.open() } }) {
                                 Icon(Icons.Filled.Menu, contentDescription = "Settings", tint = textPrimaryFor(isDarkTheme))
@@ -129,7 +141,7 @@ fun TodoScreen(viewModel: TodoViewModel) {
                     BottomNavBar(selected = currentScreen, onSelect = { currentScreen = it })
                 },
                 floatingActionButton = {
-                    if (currentScreen != Screen.CALENDAR) {
+                    if (currentScreen != Screen.CALENDAR && currentScreen != Screen.DASHBOARD) {
                         FloatingActionButton(
                             onClick = { showAddDialog = true },
                             containerColor = Accent,
@@ -147,6 +159,16 @@ fun TodoScreen(viewModel: TodoViewModel) {
                         .padding(paddingValues)
                 ) {
                     when (currentScreen) {
+                        Screen.DASHBOARD -> {
+                            DashboardScreen(
+                                viewModel = viewModel,
+                                onToggle = { viewModel.toggleTodo(it) },
+                                onEditClick = { openEdit(it) },
+                                onDeleteClick = { openDelete(it) },
+                                onAddTaskClick = { showAddDialog = true }
+                            )
+                        }
+
                         Screen.ALL -> {
                             TodoSearchBar(
                                 query = viewModel.searchQuery,

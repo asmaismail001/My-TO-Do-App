@@ -3,10 +3,12 @@ package com.example.mytodoapp.ui.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.List
 import androidx.compose.material3.*
@@ -39,6 +41,18 @@ fun BottomNavBar(selected: Screen, onSelect: (Screen) -> Unit) {
             )
         }
     ) {
+        NavigationBarItem(
+            selected = selected == Screen.DASHBOARD,
+            onClick = { onSelect(Screen.DASHBOARD) },
+            icon = {
+                Icon(
+                    imageVector = if (selected == Screen.DASHBOARD) Icons.Filled.Dashboard else Icons.Outlined.Dashboard,
+                    contentDescription = "Dashboard"
+                )
+            },
+            label = { Text("Dashboard") },
+            colors = navColors(isDark)
+        )
         NavigationBarItem(
             selected = selected == Screen.ALL,
             onClick = { onSelect(Screen.ALL) },

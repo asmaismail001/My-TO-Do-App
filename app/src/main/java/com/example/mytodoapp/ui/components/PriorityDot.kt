@@ -20,13 +20,13 @@ import com.example.mytodoapp.ui.PriorityLow
 fun PriorityDot(priority: Priority) {
     when (priority) {
         Priority.HIGH -> androidx.compose.foundation.layout.Box(
-            modifier = Modifier.size(9.dp).background(PriorityHigh, CircleShape)
+            modifier = Modifier.size(7.dp).background(PriorityHigh, CircleShape)
         )
         Priority.MEDIUM -> androidx.compose.foundation.layout.Box(
-            modifier = Modifier.size(9.dp).background(PriorityMedium, CircleShape)
+            modifier = Modifier.size(7.dp).background(PriorityMedium, CircleShape)
         )
         Priority.LOW -> androidx.compose.foundation.layout.Box(
-            modifier = Modifier.size(9.dp).background(PriorityLow, CircleShape)
+            modifier = Modifier.size(7.dp).background(PriorityLow, CircleShape)
         )
     }
 }

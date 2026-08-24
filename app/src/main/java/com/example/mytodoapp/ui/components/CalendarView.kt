@@ -127,54 +127,39 @@ fun CalendarView(
                             .padding(1.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
+                        Box(
                             modifier = Modifier
-                                .fillMaxSize()
+                                .size(34.dp)
                                 .clip(CircleShape)
-                                .clickable { onDaySelected(day) }
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .background(
-                                        when {
-                                            isSelected -> Accent
-                                            isToday -> Accent.copy(alpha = 0.12f)
-                                            else -> Color.Transparent
-                                        },
-                                        shape = CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = day.get(Calendar.DAY_OF_MONTH).toString(),
-                                    color = when {
-                                        isSelected -> Color.White
-                                        isToday -> Accent
-                                        !inCurrentMonth -> textMutedFor(isDark).copy(alpha = 0.3f)
-                                        else -> textPrimaryFor(isDark)
+                                .background(
+                                    when {
+                                        isSelected -> Accent
+                                        isToday -> Accent.copy(alpha = 0.12f)
+                                        else -> Color.Transparent
                                     },
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
+                                    shape = CircleShape
                                 )
-                            }
-
-                            Spacer(modifier = Modifier.height(2.dp))
-
-                            if (hasTasks) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(4.dp)
-                                        .background(
-                                            if (isSelected) Accent else Accent.copy(alpha = 0.6f),
-                                            shape = CircleShape
-                                        )
-                                )
-                            } else {
-                                Spacer(modifier = Modifier.height(4.dp))
-                            }
+                                .let {
+                                    if (hasTasks && !isSelected) {
+                                        it.border(width = 1.dp, color = Accent, shape = CircleShape)
+                                    } else {
+                                        it
+                                    }
+                                }
+                                .clickable { onDaySelected(day) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = day.get(Calendar.DAY_OF_MONTH).toString(),
+                                color = when {
+                                    isSelected -> Color.White
+                                    isToday -> Accent
+                                    !inCurrentMonth -> textMutedFor(isDark).copy(alpha = 0.3f)
+                                    else -> textPrimaryFor(isDark)
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal
+                            )
                         }
                     }
                 }
