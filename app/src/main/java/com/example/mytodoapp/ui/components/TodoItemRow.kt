@@ -192,7 +192,7 @@ fun TodoItemRow(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Due: ${DateTimePickerUtil.formatDateTime(todo.dueTimeMillis)}",
+                                    text = DateTimePickerUtil.formatTimeRange(todo.dueTimeMillis, todo.endTimeMillis),
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                     fontWeight = FontWeight.SemiBold,
                                     color = dueText

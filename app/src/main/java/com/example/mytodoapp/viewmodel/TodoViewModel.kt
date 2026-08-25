@@ -216,7 +216,7 @@ class TodoViewModel(
         }
     }
 
-    private fun loadTodos() {
+    fun loadTodos() {
         viewModelScope.launch {
             todoList = repository.getTodos()
         }
@@ -272,19 +272,49 @@ class TodoViewModel(
         }
     }
 
+    fun checkTimeConflict(startTime: Long?, endTime: Long?, excludeTaskId: Int = 0): Todo? {
+        if (startTime == null || endTime == null) return null
+        return todoList.firstOrNull { todo ->
+            todo.id != excludeTaskId &&
+            todo.dueTimeMillis != null &&
+            todo.endTimeMillis != null &&
+            startTime < todo.endTimeMillis &&
+            todo.dueTimeMillis < endTime
+        }
+    }
+
     fun addTodo(
         title: String,
         description: String,
         priority: Priority,
         dueTimeMillis: Long?,
-        attachmentUri: String? = null
+        endTimeMillis: Long? = null,
+        attachmentUri: String? = null,
+        notificationEnabled: Boolean = false,
+        notificationMinutesBefore: Int = 10
     ) {
         if (title.isBlank()) return
         viewModelScope.launch {
             val localUriStr = attachmentUri?.let { saveAttachmentLocally(appContext, it) }
-            val savedTodo = repository.addTodo(title.trim(), description.trim(), priority, dueTimeMillis, localUriStr)
-            if (dueTimeMillis != null) {
-                NotificationScheduler.scheduleReminder(appContext, savedTodo.id, savedTodo.title, dueTimeMillis)
+            val savedTodo = repository.addTodo(
+                title.trim(),
+                description.trim(),
+                priority,
+                dueTimeMillis,
+                endTimeMillis,
+                localUriStr,
+                notificationEnabled,
+                notificationMinutesBefore
+            )
+            if (notificationEnabled && dueTimeMillis != null) {
+                NotificationScheduler.scheduleReminder(
+                    appContext,
+                    savedTodo.id,
+                    savedTodo.title,
+                    dueTimeMillis,
+                    endTimeMillis,
+                    notificationMinutesBefore
+                )
             }
             loadTodos()
         }
@@ -294,7 +324,20 @@ class TodoViewModel(
         viewModelScope.launch {
             repository.toggleTodo(todo)
             if (!todo.completed) {
+                // If it was incomplete, it is now completed -> cancel the reminder
                 NotificationScheduler.cancelReminder(appContext, todo.id)
+            } else {
+                // If it was completed, it is now incomplete -> reschedule if enabled
+                if (todo.notificationEnabled && todo.dueTimeMillis != null) {
+                    NotificationScheduler.scheduleReminder(
+                        appContext,
+                        todo.id,
+                        todo.title,
+                        todo.dueTimeMillis,
+                        todo.endTimeMillis,
+                        todo.notificationMinutesBefore
+                    )
+                }
             }
             loadTodos()
         }
@@ -306,7 +349,10 @@ class TodoViewModel(
         newDescription: String,
         newPriority: Priority,
         newDueTimeMillis: Long?,
-        newAttachmentUri: String? = todo.attachmentUri
+        newEndTimeMillis: Long?,
+        newAttachmentUri: String? = todo.attachmentUri,
+        newNotificationEnabled: Boolean = todo.notificationEnabled,
+        newNotificationMinutesBefore: Int = todo.notificationMinutesBefore
     ) {
         if (newTitle.isBlank()) return
         viewModelScope.launch {
@@ -316,10 +362,27 @@ class TodoViewModel(
             } else {
                 newAttachmentUri
             }
-            repository.updateTodo(todo, newTitle.trim(), newDescription.trim(), newPriority, newDueTimeMillis, finalAttachmentUri)
+            repository.updateTodo(
+                todo,
+                newTitle.trim(),
+                newDescription.trim(),
+                newPriority,
+                newDueTimeMillis,
+                newEndTimeMillis,
+                finalAttachmentUri,
+                newNotificationEnabled,
+                newNotificationMinutesBefore
+            )
             NotificationScheduler.cancelReminder(appContext, todo.id)
-            if (newDueTimeMillis != null) {
-                NotificationScheduler.scheduleReminder(appContext, todo.id, newTitle.trim(), newDueTimeMillis)
+            if (newNotificationEnabled && newDueTimeMillis != null) {
+                NotificationScheduler.scheduleReminder(
+                    appContext,
+                    todo.id,
+                    newTitle.trim(),
+                    newDueTimeMillis,
+                    newEndTimeMillis,
+                    newNotificationMinutesBefore
+                )
             }
             loadTodos()
         }
@@ -358,7 +421,16 @@ class TodoViewModel(
                     val listType = object : TypeToken<List<Todo>>() {}.type
                     val imported: List<Todo> = Gson().fromJson(json, listType)
                     imported.forEach {
-                        repository.addTodo(it.title, it.description, it.priority, it.dueTimeMillis, it.attachmentUri)
+                        repository.addTodo(
+                            title = it.title,
+                            description = it.description,
+                            priority = it.priority,
+                            dueTimeMillis = it.dueTimeMillis,
+                            endTimeMillis = it.endTimeMillis,
+                            attachmentUri = it.attachmentUri,
+                            notificationEnabled = it.notificationEnabled,
+                            notificationMinutesBefore = if (it.notificationMinutesBefore > 0) it.notificationMinutesBefore else 10
+                        )
                     }
                     loadTodos()
                 }

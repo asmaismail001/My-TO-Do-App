@@ -10,8 +10,11 @@ import java.util.Locale
 
 object DateTimePickerUtil {
 
-    fun pickDateTime(context: Context, onPicked: (Long) -> Unit) {
+    fun pickDateTime(context: Context, initialTime: Long? = null, onPicked: (Long) -> Unit) {
         val calendar = Calendar.getInstance()
+        if (initialTime != null && initialTime > 0) {
+            calendar.timeInMillis = initialTime
+        }
         DatePickerDialog(
             context,
             { _, year, month, day ->
@@ -20,6 +23,7 @@ object DateTimePickerUtil {
                     { _, hour, minute ->
                         val selected = Calendar.getInstance()
                         selected.set(year, month, day, hour, minute, 0)
+                        selected.set(Calendar.MILLISECOND, 0)
                         onPicked(selected.timeInMillis)
                     },
                     calendar.get(Calendar.HOUR_OF_DAY),
@@ -36,5 +40,19 @@ object DateTimePickerUtil {
     fun formatDateTime(millis: Long): String {
         val sdf = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
         return sdf.format(Date(millis))
+    }
+
+    fun formatTimeRange(startMillis: Long?, endMillis: Long?): String {
+        if (startMillis == null || startMillis <= 0) return ""
+        val timeFormat = SimpleDateFormat("h:mm a", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("d MMM", Locale.getDefault())
+        val startStr = timeFormat.format(Date(startMillis))
+        val endStr = if (endMillis != null && endMillis > 0) timeFormat.format(Date(endMillis)) else ""
+        val dateStr = dateFormat.format(Date(startMillis))
+        return if (endStr.isNotEmpty()) {
+            "$dateStr, $startStr – $endStr"
+        } else {
+            "$dateStr, $startStr"
+        }
     }
 }

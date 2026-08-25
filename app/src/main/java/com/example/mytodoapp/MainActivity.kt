@@ -1,9 +1,13 @@
 package com.example.mytodoapp
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,6 +45,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        requestIgnoreBatteryOptimizations()
+
         setContent {
             com.example.mytodoapp.ui.theme.MyTODoAppTheme(dynamicColor = false) {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -60,6 +66,22 @@ class MainActivity : ComponentActivity() {
                         TodoScreen(viewModel = viewModel)
                     }
                 }
+            }
+        }
+    }
+
+
+    private fun requestIgnoreBatteryOptimizations() {
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+            try {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+                startActivity(intent)
+            } catch (e: Exception) {
+                // Some OEMs block this intent; fail silently, user can still
+                // enable it manually from system Settings > Battery.
             }
         }
     }

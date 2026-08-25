@@ -15,5 +15,8 @@ data class Todo(
     val completed: Boolean,
     val createdAt: Long = System.currentTimeMillis(),
     val dueTimeMillis: Long? = null,
-    val attachmentUri: String? = null
+    val endTimeMillis: Long? = null,
+    val attachmentUri: String? = null,
+    val notificationEnabled: Boolean = false,
+    val notificationMinutesBefore: Int = 10
 )

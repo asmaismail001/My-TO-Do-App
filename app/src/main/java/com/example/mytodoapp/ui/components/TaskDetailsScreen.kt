@@ -157,56 +157,118 @@ fun TaskDetailsScreen(
                 colors = CardDefaults.cardColors(containerColor = surfaceColorFor(isDark)),
                 border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f))
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Due Date",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = textSecondaryFor(isDark),
-                            fontWeight = FontWeight.Bold
+                    // Start Date & Time
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Start Date",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = textSecondaryFor(isDark),
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            val dateStr = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+                                .format(Date(todo.dueTimeMillis ?: todo.createdAt))
+                            Text(
+                                text = dateStr,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = textPrimaryFor(isDark)
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(36.dp)
+                                .background(Accent.copy(alpha = 0.35f))
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        val dateStr = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
-                            .format(Date(todo.dueTimeMillis ?: todo.createdAt))
-                        Text(
-                            text = dateStr,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = textPrimaryFor(isDark)
-                        )
+
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = 16.dp)
+                        ) {
+                            Text(
+                                text = "Start Time",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = textSecondaryFor(isDark),
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            val timeStr = SimpleDateFormat("hh:mm a", Locale.getDefault())
+                                .format(Date(todo.dueTimeMillis ?: todo.createdAt))
+                            Text(
+                                text = timeStr,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = textPrimaryFor(isDark)
+                            )
+                        }
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(36.dp)
-                            .background(Accent.copy(alpha = 0.35f))
-                    )
+                    if (todo.endTimeMillis != null) {
+                        HorizontalDivider(color = Accent.copy(alpha = 0.2f), thickness = 1.dp)
 
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 16.dp)
-                    ) {
-                        Text(
-                            text = "Due Time",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = textSecondaryFor(isDark),
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        val timeStr = SimpleDateFormat("hh:mm a", Locale.getDefault())
-                            .format(Date(todo.dueTimeMillis ?: todo.createdAt))
-                        Text(
-                            text = timeStr,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = textPrimaryFor(isDark)
-                        )
+                        // Due Date & Time
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Due Date",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = textSecondaryFor(isDark),
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                val dateStr = SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault())
+                                    .format(Date(todo.endTimeMillis))
+                                Text(
+                                    text = dateStr,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = textPrimaryFor(isDark)
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .width(1.dp)
+                                    .height(36.dp)
+                                    .background(Accent.copy(alpha = 0.35f))
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 16.dp)
+                            ) {
+                                Text(
+                                    text = "Due Time",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = textSecondaryFor(isDark),
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                val timeStr = SimpleDateFormat("hh:mm a", Locale.getDefault())
+                                    .format(Date(todo.endTimeMillis))
+                                Text(
+                                    text = timeStr,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = textPrimaryFor(isDark)
+                                )
+                            }
+                        }
                     }
                 }
             }
