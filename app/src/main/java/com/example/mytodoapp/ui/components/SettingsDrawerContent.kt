@@ -19,7 +19,7 @@ import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import com.example.mytodoapp.ui.Screen
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,8 +40,9 @@ import com.example.mytodoapp.ui.textSecondaryFor
 fun SettingsDrawerContent(
     currentScreen: Screen,
     onScreenSelect: (Screen) -> Unit,
+    themeMode: String,
+    onThemeModeChange: (String) -> Unit,
     isDarkTheme: Boolean,
-    onDarkThemeChange: (Boolean) -> Unit,
     notificationsEnabled: Boolean,
     onNotificationsChange: (Boolean) -> Unit,
     onExportClick: () -> Unit,
@@ -156,23 +157,68 @@ fun SettingsDrawerContent(
             )
 
             SettingItemCard(isDarkTheme = isDarkTheme) {
-                SettingRow(
-                    icon = Icons.Outlined.DarkMode,
-                    title = "Dark Theme",
-                    subtitle = "Sleek dark interface",
-                    isDarkTheme = isDarkTheme
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Switch(
-                        checked = isDarkTheme,
-                        onCheckedChange = onDarkThemeChange,
-                        colors = SwitchDefaults.colors(
-                            checkedTrackColor = Accent,
-                            checkedThumbColor = Color.White,
-                            uncheckedTrackColor = textMutedFor(isDarkTheme).copy(alpha = 0.3f),
-                            uncheckedBorderColor = Color.Transparent
-                        ),
-                        modifier = Modifier.scale(0.85f)
+                    Icon(
+                        imageVector = Icons.Outlined.DarkMode,
+                        contentDescription = null,
+                        tint = textSecondaryFor(isDarkTheme),
+                        modifier = Modifier.size(20.dp)
                     )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Theme Mode",
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = textPrimaryFor(isDarkTheme)
+                        )
+                        Text(
+                            text = when (themeMode) {
+                                "light" -> "Light Theme"
+                                "dark" -> "Dark Theme"
+                                else -> "System Default"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = textMutedFor(isDarkTheme)
+                        )
+                    }
+                    var dropdownExpanded by remember { mutableStateOf(false) }
+                    Box {
+                        TextButton(
+                            onClick = { dropdownExpanded = true },
+                            colors = ButtonDefaults.textButtonColors(contentColor = Accent),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            val displayText = when (themeMode) {
+                                "light" -> "Light ▼"
+                                "dark" -> "Dark ▼"
+                                else -> "System ▼"
+                            }
+                            Text(text = displayText, fontWeight = FontWeight.Bold)
+                        }
+                        DropdownMenu(
+                            expanded = dropdownExpanded,
+                            onDismissRequest = { dropdownExpanded = false },
+                            modifier = Modifier.background(surfaceColorFor(isDarkTheme))
+                        ) {
+                            listOf(
+                                "system" to "System Default",
+                                "light" to "Light",
+                                "dark" to "Dark"
+                            ).forEach { (mode, label) ->
+                                DropdownMenuItem(
+                                    text = { Text(label, color = textPrimaryFor(isDarkTheme)) },
+                                    onClick = {
+                                        onThemeModeChange(mode)
+                                        dropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
@@ -241,7 +287,7 @@ private fun SettingItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(if (isDarkTheme) Color(0xFF1F2633) else Color(0xFFF3F4F6))
+            .background(if (isDarkTheme) Color(0xFF242424) else Color(0xFFF3F4F6))
             .border(1.dp, cardBorderColorFor(isDarkTheme), RoundedCornerShape(12.dp))
             .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
@@ -297,7 +343,7 @@ private fun CompactDrawerItem(
             .fillMaxWidth()
             .height(44.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(if (isDarkTheme) Color(0xFF1F2633).copy(alpha = 0.5f) else Color(0xFFF3F4F6).copy(alpha = 0.5f))
+            .background(if (isDarkTheme) Color(0xFF242424).copy(alpha = 0.5f) else Color(0xFFF3F4F6).copy(alpha = 0.5f))
             .border(1.dp, cardBorderColorFor(isDarkTheme).copy(alpha = 0.8f), RoundedCornerShape(10.dp))
             .clickable { onClick() }
             .padding(horizontal = 14.dp),
@@ -330,7 +376,7 @@ private fun CompactNavigationItem(
     val bg = if (isSelected) {
         Accent.copy(alpha = 0.12f)
     } else {
-        if (isDarkTheme) Color(0xFF1F2633).copy(alpha = 0.4f) else Color(0xFFF3F4F6).copy(alpha = 0.4f)
+        if (isDarkTheme) Color(0xFF242424).copy(alpha = 0.4f) else Color(0xFFF3F4F6).copy(alpha = 0.4f)
     }
     val borderCol = if (isSelected) {
         Accent.copy(alpha = 0.4f)

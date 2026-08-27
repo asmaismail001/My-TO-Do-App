@@ -1,20 +1,26 @@
 package com.example.mytodoapp.notification
 
+import android.Manifest
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import com.example.mytodoapp.MainActivity
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.repository.AppDatabase
+import com.example.mytodoapp.util.PreferencesManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -23,26 +29,35 @@ class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pendingResult = goAsync()
         val action = intent.action
-        val taskId = intent.getIntExtra("taskId", 0)
+        val taskId = resolveTaskId(intent)
+
+        android.util.Log.d(
+            "ReminderReceiver",
+            "onReceive action=$action taskId=$taskId extras=${intent.extras?.keySet()} data=${intent.data}"
+        )
 
         if (action == ACTION_COMPLETE) {
+            android.util.Log.d("ReminderReceiver", "ACTION_COMPLETE for taskId=$taskId")
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(taskId)
 
             val dao = AppDatabase.getDatabase(context).todoDao()
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val todos = dao.getAllTodos()
-                    val todo = todos.find { it.id == taskId }
+                    val todo = dao.getTodoById(taskId)
                     if (todo != null) {
                         dao.updateTodo(todo.copy(completed = true))
                         NotificationScheduler.cancelReminder(context, taskId)
-                        // Trigger UI reload if app is open
                         val refreshIntent = Intent("com.example.mytodoapp.REFRESH_TODOS").apply {
                             `package` = context.packageName
                         }
                         context.sendBroadcast(refreshIntent)
+                        android.util.Log.d("ReminderReceiver", "Task $taskId marked completed")
+                    } else {
+                        android.util.Log.w("ReminderReceiver", "Task $taskId not found for complete action")
                     }
+                } catch (e: Exception) {
+                    android.util.Log.e("ReminderReceiver", "Failed to mark task completed", e)
                 } finally {
                     pendingResult.finish()
                 }
@@ -54,21 +69,53 @@ class ReminderReceiver : BroadcastReceiver() {
         val dueTimeMillis = intent.getLongExtra("dueTimeMillis", 0L)
         val endTimeMillis = intent.getLongExtra("endTimeMillis", 0L)
 
-        // Query database to ensure the task still exists and is not complete
         val dao = AppDatabase.getDatabase(context).todoDao()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val todos = dao.getAllTodos()
-                val todo = todos.find { it.id == taskId }
-                if (todo != null && !todo.completed) {
-                    withContext(Dispatchers.Main) {
-                        showNotification(context, todo, taskTitle, dueTimeMillis, endTimeMillis)
+                val todo = if (taskId > 0) dao.getTodoById(taskId) else null
+                android.util.Log.d(
+                    "ReminderReceiver",
+                    "DB lookup taskId=$taskId found=${todo != null} completed=${todo?.completed == true}"
+                )
+                when {
+                    todo != null && todo.completed -> {
+                        android.util.Log.d("ReminderReceiver", "Task $taskId already completed. Skipping.")
+                    }
+                    todo != null -> {
+                        val start = todo.dueTimeMillis ?: dueTimeMillis
+                        val end = todo.endTimeMillis ?: endTimeMillis
+                        showNotification(context, todo, todo.title, start, end)
+                    }
+                    taskId > 0 -> {
+                        android.util.Log.w(
+                            "ReminderReceiver",
+                            "Task $taskId missing from DB; posting from intent extras anyway"
+                        )
+                        val fallback = Todo(
+                            id = taskId,
+                            title = taskTitle,
+                            completed = false,
+                            dueTimeMillis = dueTimeMillis.takeIf { it > 0 },
+                            endTimeMillis = endTimeMillis.takeIf { it > 0 }
+                        )
+                        showNotification(context, fallback, taskTitle, dueTimeMillis, endTimeMillis)
+                    }
+                    else -> {
+                        android.util.Log.e("ReminderReceiver", "No taskId on intent; cannot post notification")
                     }
                 }
+            } catch (e: Exception) {
+                android.util.Log.e("ReminderReceiver", "Error processing reminder", e)
             } finally {
                 pendingResult.finish()
             }
         }
+    }
+
+    private fun resolveTaskId(intent: Intent): Int {
+        val extraId = intent.getIntExtra("taskId", 0)
+        if (extraId > 0) return extraId
+        return intent.data?.lastPathSegment?.toIntOrNull() ?: 0
     }
 
     private fun showNotification(
@@ -78,17 +125,58 @@ class ReminderReceiver : BroadcastReceiver() {
         dueTimeMillis: Long,
         endTimeMillis: Long
     ) {
-        createNotificationChannel(context)
+        android.util.Log.d(
+            "ReminderReceiver",
+            "showNotification taskId=${todo.id} title=$taskTitle"
+        )
+
+        if (!PreferencesManager(context).areNotificationsEnabled()) {
+            android.util.Log.w("ReminderReceiver", "In-app notifications toggle is OFF. Skipping post.")
+            return
+        }
+
+        ensureChannel(context)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val granted = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                android.util.Log.e("ReminderReceiver", "POST_NOTIFICATIONS is not granted. Cannot post.")
+                return
+            }
+        }
+
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !manager.areNotificationsEnabled()) {
+            android.util.Log.e("ReminderReceiver", "App notifications are disabled in system settings.")
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = manager.getNotificationChannel(CHANNEL_ID)
+            if (channel != null && channel.importance == NotificationManager.IMPORTANCE_NONE) {
+                android.util.Log.e("ReminderReceiver", "Channel $CHANNEL_ID is blocked by the user.")
+                return
+            }
+        }
 
         val timeSlotStr = formatTimeRange(dueTimeMillis, endTimeMillis)
 
-        // Intent to launch transparent Snooze dialog activity
+        val openAppIntent = MainActivity.taskDetailsIntent(context, todo.id)
+        val contentPendingIntent = PendingIntent.getActivity(
+            context,
+            todo.id,
+            openAppIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val snoozeIntent = Intent(context, SnoozeActivity::class.java).apply {
             putExtra("taskId", todo.id)
             putExtra("taskTitle", taskTitle)
             putExtra("dueTimeMillis", dueTimeMillis)
             putExtra("endTimeMillis", endTimeMillis)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         val snoozePendingIntent = PendingIntent.getActivity(
             context,
@@ -97,9 +185,10 @@ class ReminderReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Intent to complete the task in background
         val completeIntent = Intent(context, ReminderReceiver::class.java).apply {
-            this.action = ACTION_COMPLETE
+            action = ACTION_COMPLETE
+            data = UriFor(todo.id)
+            setPackage(context.packageName)
             putExtra("taskId", todo.id)
         }
         val completePendingIntent = PendingIntent.getBroadcast(
@@ -112,19 +201,26 @@ class ReminderReceiver : BroadcastReceiver() {
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(com.example.mytodoapp.R.drawable.ic_notification)
             .setContentTitle(todo.title)
-            .setContentText(timeSlotStr)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setContentText(timeSlotStr.ifBlank { "Task reminder" })
+            .setStyle(NotificationCompat.BigTextStyle().bigText(timeSlotStr.ifBlank { "Task reminder" }))
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
+            .setContentIntent(contentPendingIntent)
             .addAction(com.example.mytodoapp.R.drawable.ic_notification, "Snooze", snoozePendingIntent)
             .addAction(com.example.mytodoapp.R.drawable.ic_notification, "Complete", completePendingIntent)
             .build()
 
         try {
-            NotificationManagerCompat.from(context).notify(todo.id, notification)
+            android.util.Log.d("ReminderReceiver", "Posting notification id=${todo.id} on channel=$CHANNEL_ID")
+            manager.notify(todo.id, notification)
+            android.util.Log.d("ReminderReceiver", "Notification posted successfully for taskId=${todo.id}")
         } catch (e: SecurityException) {
-            // Notification permission not granted
+            android.util.Log.e("ReminderReceiver", "SecurityException posting notification", e)
+        } catch (e: Exception) {
+            android.util.Log.e("ReminderReceiver", "Failed to post notification", e)
         }
     }
 
@@ -142,8 +238,22 @@ class ReminderReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun createNotificationChannel(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    companion object {
+        // New id so a previously-created low-importance channel cannot mute reminders.
+        const val CHANNEL_ID = "task_reminder_channel_v2"
+        const val ACTION_COMPLETE = "com.example.mytodoapp.ACTION_COMPLETE"
+        const val ACTION_REMINDER = "com.example.mytodoapp.ACTION_REMINDER"
+
+        private fun UriFor(taskId: Int) = android.net.Uri.parse("todo://reminder/$taskId")
+
+        fun ensureChannel(context: Context) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+            val manager = context.getSystemService(NotificationManager::class.java)
+            val sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "Task Reminders",
@@ -153,15 +263,10 @@ class ReminderReceiver : BroadcastReceiver() {
                 enableVibration(true)
                 enableLights(true)
                 setShowBadge(true)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                setSound(sound, audioAttributes)
             }
-            val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
-    }
-
-    companion object {
-        const val CHANNEL_ID = "task_reminder_channel"
-        const val ACTION_COMPLETE = "com.example.mytodoapp.ACTION_COMPLETE"
-        const val ACTION_REMINDER = "com.example.mytodoapp.ACTION_REMINDER"
     }
 }

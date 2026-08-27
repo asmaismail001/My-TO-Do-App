@@ -308,7 +308,7 @@ fun EditTaskDialog(
 
                 if (notificationEnabled) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    var showCustomInput by remember { mutableStateOf(notificationMinutesBefore !in listOf(5, 10, 15, 30, 60, 120)) }
+                    var showCustomInput by remember { mutableStateOf(notificationMinutesBefore !in listOf(0, 1, 5, 10, 15, 30, 60, 120)) }
                     var customInputText by remember { mutableStateOf(if (showCustomInput) notificationMinutesBefore.toString() else "") }
 
                     Row(
@@ -323,6 +323,8 @@ fun EditTaskDialog(
                         )
                         var dropdownExpanded by remember { mutableStateOf(false) }
                         val options = listOf(
+                            0 to "At start time",
+                            1 to "1 minute before",
                             5 to "5 minutes before",
                             10 to "10 minutes before",
                             15 to "15 minutes before",

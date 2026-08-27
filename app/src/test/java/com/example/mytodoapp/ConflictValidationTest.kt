@@ -1,8 +1,11 @@
 package com.example.mytodoapp
 
 import com.example.mytodoapp.model.Todo
+import com.example.mytodoapp.util.TimeConflict
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
-import org.junit.Assert.*
 
 class ConflictValidationTest {
 
@@ -12,23 +15,16 @@ class ConflictValidationTest {
         excludeTaskId: Int = 0,
         todoList: List<Todo>
     ): Todo? {
-        if (startTime == null || endTime == null) return null
-        return todoList.firstOrNull { todo ->
-            todo.id != excludeTaskId &&
-            todo.dueTimeMillis != null &&
-            todo.endTimeMillis != null &&
-            startTime < todo.endTimeMillis &&
-            todo.dueTimeMillis < endTime
-        }
+        return TimeConflict.findOverlappingTask(startTime, endTime, todoList, excludeTaskId)
     }
 
-    private fun createTodo(id: Int, start: Long, end: Long): Todo {
+    private fun createTodo(id: Int, start: Long, end: Long, completed: Boolean = false): Todo {
         return Todo(
             id = id,
             title = "Task $id",
             dueTimeMillis = start,
             endTimeMillis = end,
-            completed = false
+            completed = completed
         )
     }
 
@@ -62,5 +58,27 @@ class ConflictValidationTest {
 
         // 8. Self-editing: exclude ID = 1 (allowed)
         assertNull(checkTimeConflict(5000L, 6000L, excludeTaskId = 1, todoList = existingTasks))
+    }
+
+    @Test
+    fun completedTaskDoesNotBlockTheSameSlot() {
+        val existingTasks = listOf(
+            createTodo(1, 5000L, 6000L, completed = true)
+        )
+
+        assertNull(checkTimeConflict(5000L, 6000L, todoList = existingTasks))
+        assertNull(checkTimeConflict(5500L, 6500L, todoList = existingTasks))
+    }
+
+    @Test
+    fun completedOverlapIsSkippedInFavorOfPendingConflict() {
+        val existingTasks = listOf(
+            createTodo(1, 5000L, 6000L, completed = true),
+            createTodo(2, 5500L, 6500L, completed = false)
+        )
+
+        val conflict = checkTimeConflict(5000L, 6000L, todoList = existingTasks)
+        assertNotNull(conflict)
+        assertEquals(2, conflict!!.id)
     }
 }

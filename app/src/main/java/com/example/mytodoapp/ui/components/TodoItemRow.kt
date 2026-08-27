@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -50,6 +51,12 @@ fun TodoItemRow(
     onTodoClick: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
+    val formatDateTime = remember {
+        { millis: Long ->
+            val sdf = java.text.SimpleDateFormat("d MMM • h:mm a", java.util.Locale.getDefault())
+            sdf.format(java.util.Date(millis))
+        }
+    }
 
     val cardAlpha = if (todo.completed) 0.65f else 1.0f
 
@@ -135,20 +142,13 @@ fun TodoItemRow(
                         )
                     }
 
-                    // Metadata row
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(top = 10.dp)
+                    // Metadata row (Start Time and Due Time stacked vertically)
+                    Column(
+                        modifier = Modifier.padding(top = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        // Added Date
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(if (isDark) Color(0xFF222836) else Color(0xFFF3F4F6))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
+                        // Start Time Section
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Outlined.AccessTime,
                                 contentDescription = null,
@@ -157,46 +157,51 @@ fun TodoItemRow(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = DateTimePickerUtil.formatDateTime(todo.createdAt),
+                                text = "Start: " + formatDateTime(todo.dueTimeMillis ?: todo.createdAt),
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = textSecondaryFor(isDark)
                             )
                         }
 
-                        // Due Date Badge
-                        if (todo.dueTimeMillis != null) {
-                            val isOverdue = todo.dueTimeMillis < System.currentTimeMillis() && !todo.completed
-                            val dueBg = if (isOverdue) {
-                                if (isDark) Color(0xFF450A0A) else Color(0xFFFEE2E2)
+                        // Due Time Section (Thin, compact box below Start Time)
+                        if (todo.endTimeMillis != null) {
+                            val dueMillis = todo.endTimeMillis!!
+                            val isOverdue = dueMillis < System.currentTimeMillis() && !todo.completed
+                            val dueBg = if (isDark) {
+                                Color(0xFFB8EDE4)
+                            } else if (isOverdue) {
+                                Color(0xFFFEE2E2)
                             } else {
-                                if (isDark) Color(0xFF1E3A8A).copy(alpha = 0.4f) else Color(0xFFE0F2FE)
+                                Color(0xFFE0F2FE)
                             }
-                            val dueText = if (isOverdue) {
-                                if (isDark) Color(0xFFF87171) else Color(0xFFEF4444)
+                            val dueText = if (isDark) {
+                                Color(0xFF115E59)
+                            } else if (isOverdue) {
+                                Color(0xFFEF4444)
                             } else {
-                                if (isDark) Color(0xFF38BDF8) else Color(0xFF0284C7)
+                                Color(0xFF0284C7)
                             }
 
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(dueBg)
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = dueBg,
+                                border = BorderStroke(0.5.dp, dueText.copy(alpha = 0.4f)),
+                                modifier = Modifier.wrapContentSize()
                             ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.CalendarToday,
-                                    contentDescription = null,
-                                    tint = dueText,
-                                    modifier = Modifier.size(11.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = DateTimePickerUtil.formatTimeRange(todo.dueTimeMillis, todo.endTimeMillis),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = dueText
-                                )
+                                Column(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = "Due",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 9.sp),
+                                        color = dueText
+                                    )
+                                    Text(
+                                        text = formatDateTime(dueMillis),
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                        color = if (isDark) Color(0xFF134E4A) else Color(0xFF111827)
+                                    )
+                                }
                             }
                         }
                     }

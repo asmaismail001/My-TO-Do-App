@@ -53,11 +53,23 @@ import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodoScreen(viewModel: TodoViewModel) {
+fun TodoScreen(
+    viewModel: TodoViewModel,
+    openTaskId: Int? = null,
+    onOpenTaskConsumed: () -> Unit = {}
+) {
     val context = LocalContext.current
     val prefs = remember { PreferencesManager(context) }
 
-    var isDarkTheme by remember { mutableStateOf(prefs.isDarkTheme()) }
+    var themeMode by remember { mutableStateOf(prefs.getThemeMode()) }
+    val systemInDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val isDarkTheme = remember(themeMode, systemInDark) {
+        when (themeMode) {
+            "light" -> false
+            "dark" -> true
+            else -> systemInDark
+        }
+    }
     var notificationsEnabled by remember { mutableStateOf(prefs.areNotificationsEnabled()) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -198,6 +210,16 @@ fun TodoScreen(viewModel: TodoViewModel) {
         }
     }
 
+    LaunchedEffect(openTaskId, viewModel.todoList) {
+        val id = openTaskId ?: return@LaunchedEffect
+        if (id <= 0) return@LaunchedEffect
+        val todo = viewModel.todoList.find { it.id == id } ?: return@LaunchedEffect
+        previousScreen = if (currentScreen == Screen.TASK_DETAILS) previousScreen else currentScreen
+        selectedTodoForDetails = todo
+        currentScreen = Screen.TASK_DETAILS
+        onOpenTaskConsumed()
+    }
+
     CompositionLocalProvider(LocalIsDarkTheme provides isDarkTheme) {
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -208,15 +230,17 @@ fun TodoScreen(viewModel: TodoViewModel) {
                         currentScreen = screen
                         scope.launch { drawerState.close() }
                     },
-                    isDarkTheme = isDarkTheme,
-                    onDarkThemeChange = {
-                        isDarkTheme = it
-                        prefs.setDarkTheme(it)
+                    themeMode = themeMode,
+                    onThemeModeChange = { mode ->
+                        themeMode = mode
+                        prefs.setThemeMode(mode)
                     },
+                    isDarkTheme = isDarkTheme,
                     notificationsEnabled = notificationsEnabled,
                     onNotificationsChange = {
                         notificationsEnabled = it
                         prefs.setNotificationsEnabled(it)
+                        viewModel.onGlobalNotificationsChanged(it)
                     },
                     onExportClick = { exportLauncher.launch("todo_backup.json") },
                     onImportClick = { importLauncher.launch(arrayOf("application/json")) }
@@ -253,11 +277,12 @@ fun TodoScreen(viewModel: TodoViewModel) {
                     }
                 },
                 floatingActionButton = {
-                    if (currentScreen != Screen.CALENDAR && currentScreen != Screen.DASHBOARD && currentScreen != Screen.TASK_DETAILS) {
+                    if (currentScreen != Screen.TASK_DETAILS) {
                         FloatingActionButton(
                             onClick = { showAddDialog = true },
                             containerColor = Accent,
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            shape = androidx.compose.foundation.shape.CircleShape
                         ) {
                             Icon(Icons.Filled.Add, contentDescription = "Add Task")
                         }
@@ -495,7 +520,11 @@ fun TodoScreen(viewModel: TodoViewModel) {
             attachmentUri = newAttachmentUri,
             onAttachmentChange = { newAttachmentUri = it },
             onConfirm = {
-                if (newDueTime != null && newEndTime != null && newEndTime!! <= newDueTime!!) {
+                if (newNotificationEnabled && newDueTime == null) {
+                    validationErrorTitle = "Start time required"
+                    validationErrorMessage = "Set a start date and time so the reminder can fire before the task starts."
+                    showValidationErrorDialog = true
+                } else if (newDueTime != null && newEndTime != null && newEndTime!! <= newDueTime!!) {
                     validationErrorTitle = "Invalid Task Time"
                     validationErrorMessage = "Due time must be later than the start time."
                     showValidationErrorDialog = true
@@ -586,7 +615,11 @@ fun TodoScreen(viewModel: TodoViewModel) {
             onAttachmentChange = { editAttachmentUri = it },
             createdAt = editingTodo?.createdAt ?: System.currentTimeMillis(),
             onConfirm = {
-                if (editDueTime != null && editEndTime != null && editEndTime!! <= editDueTime!!) {
+                if (editNotificationEnabled && editDueTime == null) {
+                    validationErrorTitle = "Start time required"
+                    validationErrorMessage = "Set a start date and time so the reminder can fire before the task starts."
+                    showValidationErrorDialog = true
+                } else if (editDueTime != null && editEndTime != null && editEndTime!! <= editDueTime!!) {
                     validationErrorTitle = "Invalid Task Time"
                     validationErrorMessage = "Due time must be later than the start time."
                     showValidationErrorDialog = true

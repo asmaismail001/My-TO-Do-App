@@ -18,15 +18,15 @@ val TextSecondary = Color(0xFF4B5563)
 val TextMuted = Color(0xFF9CA3AF)
 
 // Dark theme
-val BackgroundColorDark = Color(0xFF0E1516)
-val SurfaceColorDark = Color(0xFF152022)
-val SearchBarBackgroundDark = Color(0xFF222836)
-val DialogFieldBackgroundDark = Color(0xFF222836)
-val CardBorderColorDark = Color(0xFF2E3545)
+val BackgroundColorDark = Color(0xFF121212)
+val SurfaceColorDark = Color(0xFF1E1E1E)
+val SearchBarBackgroundDark = Color(0xFF262626)
+val DialogFieldBackgroundDark = Color(0xFF262626)
+val CardBorderColorDark = Color(0xFF2A2A2A)
 
-val TextPrimaryDark = Color(0xFFF9FAFB)
-val TextSecondaryDark = Color(0xFFD1D5DB)
-val TextMutedDark = Color(0xFF6B7280)
+val TextPrimaryDark = Color(0xFFE2E8F0)
+val TextSecondaryDark = Color(0xFF94A3B8)
+val TextMutedDark = Color(0xFF64748B)
 
 val DeleteRed = Color(0xFFEF4444)
 val SuccessGreen = Color(0xFF10B981) // completed uses modern green if needed, or accent

@@ -18,7 +18,8 @@ import kotlinx.coroutines.launch
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED &&
-            intent.action != Intent.ACTION_MY_PACKAGE_REPLACED
+            intent.action != Intent.ACTION_MY_PACKAGE_REPLACED &&
+            intent.action != "android.intent.action.QUICKBOOT_POWERON"
         ) {
             return
         }
@@ -28,19 +29,17 @@ class BootReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val dao = AppDatabase.getDatabase(appContext).todoDao()
-                val now = System.currentTimeMillis()
                 val todos = dao.getAllTodos()
                 todos.forEach { todo ->
                     if (!todo.completed &&
                         todo.notificationEnabled &&
-                        todo.dueTimeMillis != null &&
-                        todo.dueTimeMillis > now
+                        (todo.endTimeMillis != null || todo.dueTimeMillis != null)
                     ) {
                         NotificationScheduler.scheduleReminder(
                             appContext,
                             todo.id,
                             todo.title,
-                            todo.dueTimeMillis,
+                            todo.dueTimeMillis ?: 0L,
                             todo.endTimeMillis,
                             todo.notificationMinutesBefore
                         )

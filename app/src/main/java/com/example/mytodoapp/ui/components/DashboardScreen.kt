@@ -173,7 +173,7 @@ fun DashboardScreen(
                             .padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
                                 text = "Today's Status",
                                 fontWeight = FontWeight.Bold,
@@ -192,16 +192,6 @@ fun DashboardScreen(
                                 color = textSecondaryFor(isDark)
                             )
                         }
-
-                        // Short mini-button to add task
-                        Button(
-                            onClick = onAddTaskClick,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Accent),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-                        ) {
-                            Text("New Task", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
                     }
                 }
             }
@@ -214,7 +204,7 @@ fun DashboardScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .clip(RoundedCornerShape(14.dp))
-                    .background(if (isDark) Color(0xFF152022) else Color(0xFFE5E7EB))
+                    .background(if (isDark) Color(0xFF1E1E1E) else Color(0xFFE5E7EB))
                     .padding(4.dp)
             ) {
                 val periods = listOf(
@@ -630,7 +620,7 @@ fun CompletionRing(
         modifier = modifier
     ) {
         val isDark = LocalIsDarkTheme.current
-        val ringTrack = if (isDark) Color(0xFF1E2633) else Color(0xFFEEF0F3)
+        val ringTrack = if (isDark) Color(0xFF242424) else Color(0xFFEEF0F3)
 
         Canvas(modifier = Modifier.fillMaxSize()) {
             val strokeWidth = 10.dp.toPx()
@@ -739,7 +729,7 @@ fun WeeklyBarChart(
                                 .fillMaxHeight(fraction)
                                 .width(12.dp)
                                 .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                                .background(if (isDark) Color(0xFF222836) else Color(0xFFE5E7EB))
+                                .background(if (isDark) Color(0xFF242424) else Color(0xFFE5E7EB))
                         ) {
                             // Pending Portion
                             Box(
@@ -762,7 +752,7 @@ fun WeeklyBarChart(
                                 .height(8.dp)
                                 .width(12.dp)
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(if (isDark) Color(0xFF1A212D) else Color(0xFFEEF0F3))
+                                .background(if (isDark) Color(0xFF1E1E1E) else Color(0xFFEEF0F3))
                         )
                     }
                 }

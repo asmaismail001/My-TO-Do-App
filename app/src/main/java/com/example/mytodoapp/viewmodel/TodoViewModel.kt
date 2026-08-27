@@ -16,6 +16,7 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import com.example.mytodoapp.util.PreferencesManager
+import com.example.mytodoapp.util.TimeConflict
 import java.io.File
 
 enum class DashboardPeriod { DAILY, WEEKLY, MONTHLY }
@@ -219,6 +220,7 @@ class TodoViewModel(
     fun loadTodos() {
         viewModelScope.launch {
             todoList = repository.getTodos()
+            rescheduleEnabledReminders(todoList)
         }
     }
 
@@ -273,14 +275,12 @@ class TodoViewModel(
     }
 
     fun checkTimeConflict(startTime: Long?, endTime: Long?, excludeTaskId: Int = 0): Todo? {
-        if (startTime == null || endTime == null) return null
-        return todoList.firstOrNull { todo ->
-            todo.id != excludeTaskId &&
-            todo.dueTimeMillis != null &&
-            todo.endTimeMillis != null &&
-            startTime < todo.endTimeMillis &&
-            todo.dueTimeMillis < endTime
-        }
+        return TimeConflict.findOverlappingTask(
+            startTime,
+            endTime,
+            todoList,
+            excludeTaskId
+        )
     }
 
     fun addTodo(
@@ -306,14 +306,24 @@ class TodoViewModel(
                 notificationEnabled,
                 notificationMinutesBefore
             )
-            if (notificationEnabled && dueTimeMillis != null) {
+            if (notificationEnabled && (dueTimeMillis != null || endTimeMillis != null)) {
+                android.util.Log.d(
+                    "TodoViewModel",
+                    "Task created id=${savedTodo.id} notificationEnabled=true " +
+                        "start=$dueTimeMillis minutesBefore=$notificationMinutesBefore"
+                )
                 NotificationScheduler.scheduleReminder(
                     appContext,
                     savedTodo.id,
                     savedTodo.title,
-                    dueTimeMillis,
+                    dueTimeMillis ?: 0L,
                     endTimeMillis,
                     notificationMinutesBefore
+                )
+            } else {
+                android.util.Log.d(
+                    "TodoViewModel",
+                    "Task created id=${savedTodo.id} notificationEnabled=$notificationEnabled start=$dueTimeMillis"
                 )
             }
             loadTodos()
@@ -328,12 +338,12 @@ class TodoViewModel(
                 NotificationScheduler.cancelReminder(appContext, todo.id)
             } else {
                 // If it was completed, it is now incomplete -> reschedule if enabled
-                if (todo.notificationEnabled && todo.dueTimeMillis != null) {
+                if (todo.notificationEnabled && (todo.dueTimeMillis != null || todo.endTimeMillis != null)) {
                     NotificationScheduler.scheduleReminder(
                         appContext,
                         todo.id,
                         todo.title,
-                        todo.dueTimeMillis,
+                        todo.dueTimeMillis ?: 0L,
                         todo.endTimeMillis,
                         todo.notificationMinutesBefore
                     )
@@ -374,12 +384,12 @@ class TodoViewModel(
                 newNotificationMinutesBefore
             )
             NotificationScheduler.cancelReminder(appContext, todo.id)
-            if (newNotificationEnabled && newDueTimeMillis != null) {
+            if (newNotificationEnabled && (newDueTimeMillis != null || newEndTimeMillis != null)) {
                 NotificationScheduler.scheduleReminder(
                     appContext,
                     todo.id,
                     newTitle.trim(),
-                    newDueTimeMillis,
+                    newDueTimeMillis ?: 0L,
                     newEndTimeMillis,
                     newNotificationMinutesBefore
                 )
@@ -394,6 +404,31 @@ class TodoViewModel(
             deleteAttachmentLocally(appContext, todo.attachmentUri)
             repository.deleteTodo(todo)
             loadTodos()
+        }
+    }
+
+    fun onGlobalNotificationsChanged(enabled: Boolean) {
+        viewModelScope.launch {
+            if (!enabled) {
+                todoList.forEach { NotificationScheduler.cancelReminder(appContext, it.id) }
+            } else {
+                rescheduleEnabledReminders(todoList)
+            }
+        }
+    }
+
+    private fun rescheduleEnabledReminders(todos: List<Todo>) {
+        todos.forEach { todo ->
+            if (!todo.completed && todo.notificationEnabled && (todo.dueTimeMillis != null || todo.endTimeMillis != null)) {
+                NotificationScheduler.scheduleReminder(
+                    appContext,
+                    todo.id,
+                    todo.title,
+                    todo.dueTimeMillis ?: 0L,
+                    todo.endTimeMillis,
+                    todo.notificationMinutesBefore
+                )
+            }
         }
     }
 
@@ -421,7 +456,7 @@ class TodoViewModel(
                     val listType = object : TypeToken<List<Todo>>() {}.type
                     val imported: List<Todo> = Gson().fromJson(json, listType)
                     imported.forEach {
-                        repository.addTodo(
+                        val saved = repository.addTodo(
                             title = it.title,
                             description = it.description,
                             priority = it.priority,
@@ -431,6 +466,18 @@ class TodoViewModel(
                             notificationEnabled = it.notificationEnabled,
                             notificationMinutesBefore = if (it.notificationMinutesBefore > 0) it.notificationMinutesBefore else 10
                         )
+                        if (saved.notificationEnabled && !saved.completed &&
+                            (saved.endTimeMillis != null || saved.dueTimeMillis != null)
+                        ) {
+                            NotificationScheduler.scheduleReminder(
+                                appContext,
+                                saved.id,
+                                saved.title,
+                                saved.dueTimeMillis ?: 0L,
+                                saved.endTimeMillis,
+                                saved.notificationMinutesBefore
+                            )
+                        }
                     }
                     loadTodos()
                 }

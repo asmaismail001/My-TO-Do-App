@@ -99,7 +99,14 @@ fun FocusTimerDialog(
             shape = RoundedCornerShape(28.dp)
         ),
         shape = RoundedCornerShape(28.dp),
-        title = { Text(if (isBreak) "Break time" else "Focusing on: ${todo.title}") },
+        containerColor = if (LocalIsDarkTheme.current) androidx.compose.ui.graphics.Color(0xFF262626) else androidx.compose.ui.graphics.Color.White,
+        title = {
+            val isDark = LocalIsDarkTheme.current
+            Text(
+                text = if (isBreak) "Break time" else "Focusing on: ${todo.title}",
+                color = textPrimaryFor(isDark)
+            )
+        },
         text = {
             val isDark = LocalIsDarkTheme.current
             Column(

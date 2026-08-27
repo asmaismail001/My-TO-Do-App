@@ -30,7 +30,7 @@ fun TodoSearchBar(query: String, onQueryChange: (String) -> Unit) {
             .height(46.dp),
         shape = RoundedCornerShape(23.dp),
         colors = CardDefaults.cardColors(containerColor = searchBarBackgroundFor(isDark)),
-        border = BorderStroke(1.dp, cardBorderColorFor(isDark))
+        border = BorderStroke(0.5.dp, com.example.mytodoapp.ui.Accent.copy(alpha = 0.4f))
     ) {
         Row(
             modifier = Modifier

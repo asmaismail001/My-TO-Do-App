@@ -2,10 +2,25 @@ package com.example.mytodoapp.util
 
 import android.content.Context
 
-class PreferencesManager(context: Context) {
+class PreferencesManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
-    fun isDarkTheme(): Boolean = prefs.getBoolean("dark_theme", false)
+    fun getThemeMode(): String = prefs.getString("theme_mode", "system") ?: "system"
+    fun setThemeMode(mode: String) {
+        prefs.edit().putString("theme_mode", mode).apply()
+    }
+
+    fun isDarkTheme(): Boolean {
+        return when (getThemeMode()) {
+            "light" -> false
+            "dark" -> true
+            else -> {
+                val uiMode = context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                uiMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+            }
+        }
+    }
+
     fun setDarkTheme(enabled: Boolean) {
         prefs.edit().putBoolean("dark_theme", enabled).apply()
     }
