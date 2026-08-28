@@ -47,6 +47,7 @@ import com.example.mytodoapp.ui.components.TodoSearchBar
 import com.example.mytodoapp.util.CalendarUtil
 import com.example.mytodoapp.util.DateTimePickerUtil
 import com.example.mytodoapp.util.PreferencesManager
+import com.example.mytodoapp.viewmodel.SwapTimeResult
 import com.example.mytodoapp.viewmodel.TodoViewModel
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -218,6 +219,11 @@ fun TodoScreen(
         selectedTodoForDetails = todo
         currentScreen = Screen.TASK_DETAILS
         onOpenTaskConsumed()
+    }
+
+    LaunchedEffect(viewModel.todoList) {
+        val current = selectedTodoForDetails ?: return@LaunchedEffect
+        selectedTodoForDetails = viewModel.todoList.find { it.id == current.id } ?: current
     }
 
     CompositionLocalProvider(LocalIsDarkTheme provides isDarkTheme) {
@@ -455,7 +461,18 @@ fun TodoScreen(
                                         currentScreen = previousScreen
                                         selectedTodoForDetails = null
                                     },
-                                    isDark = isDarkTheme
+                                    isDark = isDarkTheme,
+                                    eligibleSwapTasks = viewModel.eligibleSwapTasks(todo),
+                                    onConfirmSwap = { other ->
+                                        viewModel.swapTimeSlots(todo, other) { result ->
+                                            if (result == SwapTimeResult.CONFLICT || result == SwapTimeResult.INVALID) {
+                                                validationErrorTitle = "Time swap unavailable"
+                                                validationErrorMessage =
+                                                    "One of the new time slots is already occupied by another task."
+                                                showValidationErrorDialog = true
+                                            }
+                                        }
+                                    }
                                 )
                             }
                         }

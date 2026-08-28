@@ -21,6 +21,8 @@ import java.io.File
 
 enum class DashboardPeriod { DAILY, WEEKLY, MONTHLY }
 
+enum class SwapTimeResult { SUCCESS, CONFLICT, INVALID }
+
 data class MonthlyChartData(
     val segmentLabel: String,
     val completedCount: Int,
@@ -281,6 +283,73 @@ class TodoViewModel(
             todoList,
             excludeTaskId
         )
+    }
+
+    fun eligibleSwapTasks(forTask: Todo): List<Todo> {
+        if (forTask.completed || forTask.dueTimeMillis == null || forTask.endTimeMillis == null) {
+            return emptyList()
+        }
+        return todoList
+            .filter { other ->
+                !other.completed &&
+                    other.id != forTask.id &&
+                    other.dueTimeMillis != null &&
+                    other.endTimeMillis != null
+            }
+            .sortedBy { it.dueTimeMillis }
+    }
+
+    fun swapTimeSlots(source: Todo, other: Todo, onComplete: (SwapTimeResult) -> Unit) {
+        viewModelScope.launch {
+            val latest = repository.getTodos()
+            val taskA = latest.find { it.id == source.id }
+            val taskB = latest.find { it.id == other.id }
+            if (taskA == null || taskB == null ||
+                taskA.completed || taskB.completed ||
+                taskA.dueTimeMillis == null || taskA.endTimeMillis == null ||
+                taskB.dueTimeMillis == null || taskB.endTimeMillis == null
+            ) {
+                onComplete(SwapTimeResult.INVALID)
+                return@launch
+            }
+
+            if (TimeConflict.findSwapConflict(taskA, taskB, latest) != null) {
+                onComplete(SwapTimeResult.CONFLICT)
+                return@launch
+            }
+
+            val swappedA = taskA.copy(
+                dueTimeMillis = taskB.dueTimeMillis,
+                endTimeMillis = taskB.endTimeMillis
+            )
+            val swappedB = taskB.copy(
+                dueTimeMillis = taskA.dueTimeMillis,
+                endTimeMillis = taskA.endTimeMillis
+            )
+
+            repository.swapTodoTimes(swappedA, swappedB)
+            rescheduleReminderFor(swappedA)
+            rescheduleReminderFor(swappedB)
+            todoList = repository.getTodos()
+            onComplete(SwapTimeResult.SUCCESS)
+        }
+    }
+
+    private fun rescheduleReminderFor(todo: Todo) {
+        NotificationScheduler.cancelReminder(appContext, todo.id)
+        if (!todo.completed &&
+            todo.notificationEnabled &&
+            (todo.dueTimeMillis != null || todo.endTimeMillis != null)
+        ) {
+            NotificationScheduler.scheduleReminder(
+                appContext,
+                todo.id,
+                todo.title,
+                todo.dueTimeMillis ?: 0L,
+                todo.endTimeMillis,
+                todo.notificationMinutesBefore
+            )
+        }
     }
 
     fun addTodo(

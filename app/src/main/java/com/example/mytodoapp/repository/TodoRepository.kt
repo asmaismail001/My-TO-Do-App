@@ -1,12 +1,14 @@
 package com.example.mytodoapp.repository
 
 import android.content.Context
+import androidx.room.withTransaction
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.model.Todo
 
 class TodoRepository(private val context: Context) {
 
-    private val dao = AppDatabase.getDatabase(context).todoDao()
+    private val database = AppDatabase.getDatabase(context)
+    private val dao = database.todoDao()
 
     suspend fun getTodos(): List<Todo> = dao.getAllTodos()
 
@@ -67,5 +69,12 @@ class TodoRepository(private val context: Context) {
 
     suspend fun deleteTodo(todo: Todo) {
         dao.deleteTodo(todo)
+    }
+
+    suspend fun swapTodoTimes(first: Todo, second: Todo) {
+        database.withTransaction {
+            dao.updateTodo(first)
+            dao.updateTodo(second)
+        }
     }
 }

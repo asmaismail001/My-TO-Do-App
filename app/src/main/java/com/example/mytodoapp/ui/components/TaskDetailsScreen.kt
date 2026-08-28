@@ -32,9 +32,14 @@ import java.util.Locale
 fun TaskDetailsScreen(
     todo: Todo,
     onBack: () -> Unit,
-    isDark: Boolean
+    isDark: Boolean,
+    eligibleSwapTasks: List<Todo> = emptyList(),
+    onConfirmSwap: (Todo) -> Unit = {}
 ) {
     var showFullPreview by remember { mutableStateOf(false) }
+    var showSwapPicker by remember { mutableStateOf(false) }
+    var swapTarget by remember { mutableStateOf<Todo?>(null) }
+    val canSwapTime = !todo.completed && todo.dueTimeMillis != null && todo.endTimeMillis != null
 
     Scaffold(
         containerColor = backgroundColorFor(isDark),
@@ -270,6 +275,18 @@ fun TaskDetailsScreen(
                             }
                         }
                     }
+
+                    if (canSwapTime) {
+                        HorizontalDivider(color = Accent.copy(alpha = 0.2f), thickness = 1.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            SwapTimeActionButton(
+                                onClick = { showSwapPicker = true }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -311,6 +328,32 @@ fun TaskDetailsScreen(
                 }
             }
         }
+    }
+
+    if (showSwapPicker) {
+        SwapTimePickerSheet(
+            isDark = isDark,
+            candidates = eligibleSwapTasks,
+            onSelect = { selected ->
+                swapTarget = selected
+                showSwapPicker = false
+            },
+            onDismiss = { showSwapPicker = false }
+        )
+    }
+
+    swapTarget?.let { other ->
+        SwapTimeConfirmDialog(
+            isDark = isDark,
+            source = todo,
+            other = other,
+            onConfirm = {
+                val selected = other
+                swapTarget = null
+                onConfirmSwap(selected)
+            },
+            onDismiss = { swapTarget = null }
+        )
     }
 
     if (showFullPreview && !todo.attachmentUri.isNullOrEmpty()) {
