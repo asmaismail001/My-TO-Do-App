@@ -9,6 +9,12 @@ interface TodoDao {
     @Query("SELECT * FROM todos")
     suspend fun getAllTodos(): List<Todo>
 
+    @Query("SELECT * FROM todos WHERE userId = :userId")
+    suspend fun getAllTodosForUser(userId: String): List<Todo>
+
+    @Query("UPDATE todos SET userId = :userId WHERE userId IS NULL")
+    suspend fun assignOrphanTasksToUser(userId: String)
+
     @Query("SELECT * FROM todos WHERE id = :id LIMIT 1")
     suspend fun getTodoById(id: Int): Todo?
 

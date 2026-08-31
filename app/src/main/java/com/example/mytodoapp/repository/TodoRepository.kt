@@ -10,7 +10,17 @@ class TodoRepository(private val context: Context) {
     private val database = AppDatabase.getDatabase(context)
     private val dao = database.todoDao()
 
-    suspend fun getTodos(): List<Todo> = dao.getAllTodos()
+    suspend fun getTodos(userId: String? = null): List<Todo> {
+        return if (userId != null) {
+            dao.getAllTodosForUser(userId)
+        } else {
+            dao.getAllTodos()
+        }
+    }
+
+    suspend fun claimOrphanTasks(userId: String) {
+        dao.assignOrphanTasksToUser(userId)
+    }
 
     suspend fun addTodo(
         title: String,
@@ -20,7 +30,8 @@ class TodoRepository(private val context: Context) {
         endTimeMillis: Long? = null,
         attachmentUri: String? = null,
         notificationEnabled: Boolean = false,
-        notificationMinutesBefore: Int = 10
+        notificationMinutesBefore: Int = 10,
+        userId: String? = null
     ): Todo {
         val todo = Todo(
             title = title,
@@ -32,7 +43,8 @@ class TodoRepository(private val context: Context) {
             endTimeMillis = endTimeMillis,
             attachmentUri = attachmentUri,
             notificationEnabled = notificationEnabled,
-            notificationMinutesBefore = notificationMinutesBefore
+            notificationMinutesBefore = notificationMinutesBefore,
+            userId = userId
         )
         val newId = dao.insertTodo(todo)
         return todo.copy(id = newId.toInt())

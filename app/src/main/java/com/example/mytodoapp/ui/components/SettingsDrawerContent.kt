@@ -18,6 +18,8 @@ import androidx.compose.material.icons.outlined.HourglassEmpty
 import androidx.compose.material.icons.outlined.List
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import com.example.mytodoapp.ui.Screen
@@ -46,7 +48,8 @@ fun SettingsDrawerContent(
     notificationsEnabled: Boolean,
     onNotificationsChange: (Boolean) -> Unit,
     onExportClick: () -> Unit,
-    onImportClick: () -> Unit
+    onImportClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
     ModalDrawerSheet(
         modifier = Modifier
@@ -140,6 +143,16 @@ fun SettingsDrawerContent(
                 isSelected = currentScreen == Screen.CALENDAR,
                 isDarkTheme = isDarkTheme,
                 onClick = { onScreenSelect(Screen.CALENDAR) }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CompactNavigationItem(
+                label = "My Profile",
+                icon = Icons.Outlined.Person,
+                isSelected = currentScreen == Screen.PROFILE || currentScreen == Screen.EDIT_PROFILE,
+                isDarkTheme = isDarkTheme,
+                onClick = { onScreenSelect(Screen.PROFILE) }
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -273,6 +286,27 @@ fun SettingsDrawerContent(
                 icon = Icons.Outlined.FileDownload,
                 isDarkTheme = isDarkTheme,
                 onClick = onImportClick
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+            HorizontalDivider(color = cardBorderColorFor(isDarkTheme).copy(alpha = 0.5f))
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Logout Section
+            Text(
+                text = "ACCOUNT",
+                fontWeight = FontWeight.Bold,
+                color = textMutedFor(isDarkTheme),
+                style = MaterialTheme.typography.labelSmall,
+                letterSpacing = 1.sp,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+
+            CompactDrawerItem(
+                label = "Log Out",
+                icon = Icons.Outlined.Logout,
+                isDarkTheme = isDarkTheme,
+                onClick = onLogoutClick
             )
         }
     }

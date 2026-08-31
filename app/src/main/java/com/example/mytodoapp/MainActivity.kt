@@ -88,11 +88,23 @@ class MainActivity : ComponentActivity() {
                         }
                     } else {
                         val repository = TodoRepository(applicationContext)
+                        val authRepository = com.example.mytodoapp.repository.AuthRepository(applicationContext)
+                        val profileRepository = com.example.mytodoapp.repository.ProfileRepository(applicationContext)
+
                         val viewModel: TodoViewModel = viewModel(
                             factory = TodoViewModelFactory(repository, applicationContext)
                         )
+                        val authViewModel: com.example.mytodoapp.viewmodel.AuthViewModel = viewModel(
+                            factory = com.example.mytodoapp.viewmodel.AuthViewModelFactory(authRepository, repository)
+                        )
+                        val profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel = viewModel(
+                            factory = com.example.mytodoapp.viewmodel.ProfileViewModelFactory(authRepository, profileRepository)
+                        )
+
                         TodoScreen(
                             viewModel = viewModel,
+                            authViewModel = authViewModel,
+                            profileViewModel = profileViewModel,
                             openTaskId = taskIdToOpen,
                             onOpenTaskConsumed = { pendingOpenTaskId.value = null }
                         )

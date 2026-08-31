@@ -50,6 +50,7 @@ class TodoViewModel(
 ) : ViewModel() {
 
     private val prefsManager = PreferencesManager(appContext)
+    private val sessionManager = com.example.mytodoapp.util.SessionManager(appContext)
 
     var profilePictureUri by mutableStateOf<String?>(prefsManager.getProfilePictureUri())
         private set
@@ -221,7 +222,8 @@ class TodoViewModel(
 
     fun loadTodos() {
         viewModelScope.launch {
-            todoList = repository.getTodos()
+            val userId = sessionManager.getUserId()
+            todoList = repository.getTodos(userId)
             rescheduleEnabledReminders(todoList)
         }
     }
@@ -301,7 +303,8 @@ class TodoViewModel(
 
     fun swapTimeSlots(source: Todo, other: Todo, onComplete: (SwapTimeResult) -> Unit) {
         viewModelScope.launch {
-            val latest = repository.getTodos()
+            val userId = sessionManager.getUserId()
+            val latest = repository.getTodos(userId)
             val taskA = latest.find { it.id == source.id }
             val taskB = latest.find { it.id == other.id }
             if (taskA == null || taskB == null ||
@@ -330,7 +333,7 @@ class TodoViewModel(
             repository.swapTodoTimes(swappedA, swappedB)
             rescheduleReminderFor(swappedA)
             rescheduleReminderFor(swappedB)
-            todoList = repository.getTodos()
+            todoList = repository.getTodos(userId)
             onComplete(SwapTimeResult.SUCCESS)
         }
     }
@@ -365,6 +368,7 @@ class TodoViewModel(
         if (title.isBlank()) return
         viewModelScope.launch {
             val localUriStr = attachmentUri?.let { saveAttachmentLocally(appContext, it) }
+            val userId = sessionManager.getUserId()
             val savedTodo = repository.addTodo(
                 title.trim(),
                 description.trim(),
@@ -373,7 +377,8 @@ class TodoViewModel(
                 endTimeMillis,
                 localUriStr,
                 notificationEnabled,
-                notificationMinutesBefore
+                notificationMinutesBefore,
+                userId
             )
             if (notificationEnabled && (dueTimeMillis != null || endTimeMillis != null)) {
                 android.util.Log.d(

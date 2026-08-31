@@ -56,6 +56,8 @@ import java.util.Calendar
 @Composable
 fun TodoScreen(
     viewModel: TodoViewModel,
+    authViewModel: com.example.mytodoapp.viewmodel.AuthViewModel,
+    profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel,
     openTaskId: Int? = null,
     onOpenTaskConsumed: () -> Unit = {}
 ) {
@@ -84,7 +86,9 @@ fun TodoScreen(
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? -> viewModel.importTasks(context, uri) }
 
-    var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
+    var currentScreen by remember {
+        mutableStateOf(if (authViewModel.isLoggedIn) Screen.DASHBOARD else Screen.LOGIN)
+    }
     var previousScreen by remember { mutableStateOf(Screen.DASHBOARD) }
     var selectedTodoForDetails by remember { mutableStateOf<Todo?>(null) }
 
@@ -226,6 +230,55 @@ fun TodoScreen(
         selectedTodoForDetails = viewModel.todoList.find { it.id == current.id } ?: current
     }
 
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            containerColor = surfaceColorFor(isDarkTheme),
+            title = {
+                Text(
+                    text = "Log Out",
+                    fontWeight = FontWeight.Bold,
+                    color = textPrimaryFor(isDarkTheme)
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to log out?",
+                    color = textSecondaryFor(isDarkTheme)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        profileViewModel.logout {
+                            authViewModel.resetState()
+                            viewModel.loadTodos()
+                            currentScreen = Screen.LOGIN
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = DeleteRed, contentColor = Color.White)
+                ) {
+                    Text("Logout")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutDialog = false },
+                    colors = ButtonDefaults.textButtonColors(contentColor = textSecondaryFor(isDarkTheme))
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    val showMainBars = currentScreen in listOf(
+        Screen.DASHBOARD, Screen.ALL, Screen.COMPLETED, Screen.PENDING, Screen.CALENDAR
+    )
+
     CompositionLocalProvider(LocalIsDarkTheme provides isDarkTheme) {
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -249,14 +302,18 @@ fun TodoScreen(
                         viewModel.onGlobalNotificationsChanged(it)
                     },
                     onExportClick = { exportLauncher.launch("todo_backup.json") },
-                    onImportClick = { importLauncher.launch(arrayOf("application/json")) }
+                    onImportClick = { importLauncher.launch(arrayOf("application/json")) },
+                    onLogoutClick = {
+                        scope.launch { drawerState.close() }
+                        showLogoutDialog = true
+                    }
                 )
             }
         ) {
             Scaffold(
                 containerColor = backgroundColorFor(isDarkTheme),
                 topBar = {
-                    if (currentScreen != Screen.TASK_DETAILS) {
+                    if (showMainBars) {
                         TopAppBar(
                             title = {
                                 Text(
@@ -278,12 +335,12 @@ fun TodoScreen(
                     }
                 },
                 bottomBar = {
-                    if (currentScreen != Screen.TASK_DETAILS) {
+                    if (showMainBars) {
                         BottomNavBar(selected = currentScreen, onSelect = { currentScreen = it })
                     }
                 },
                 floatingActionButton = {
-                    if (currentScreen != Screen.TASK_DETAILS) {
+                    if (showMainBars) {
                         FloatingActionButton(
                             onClick = { showAddDialog = true },
                             containerColor = Accent,
@@ -299,18 +356,62 @@ fun TodoScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues)
+                        .padding(if (showMainBars) paddingValues else PaddingValues(0.dp))
                 ) {
                     when (currentScreen) {
+                        Screen.LOGIN -> {
+                            com.example.mytodoapp.ui.auth.LoginScreen(
+                                viewModel = authViewModel,
+                                onNavigateToSignup = { currentScreen = Screen.SIGNUP },
+                                onLoginSuccess = {
+                                    viewModel.loadTodos()
+                                    currentScreen = Screen.DASHBOARD
+                                }
+                            )
+                        }
+
+                        Screen.SIGNUP -> {
+                            com.example.mytodoapp.ui.auth.SignupScreen(
+                                viewModel = authViewModel,
+                                onNavigateToLogin = { currentScreen = Screen.LOGIN },
+                                onSignupSuccess = {
+                                    viewModel.loadTodos()
+                                    currentScreen = Screen.DASHBOARD
+                                }
+                            )
+                        }
+
+                        Screen.PROFILE -> {
+                            com.example.mytodoapp.ui.profile.ProfileScreen(
+                                viewModel = profileViewModel,
+                                onBack = { currentScreen = Screen.DASHBOARD },
+                                onNavigateToEditProfile = { currentScreen = Screen.EDIT_PROFILE },
+                                onLogoutSuccess = {
+                                    authViewModel.resetState()
+                                    viewModel.loadTodos()
+                                    currentScreen = Screen.LOGIN
+                                }
+                            )
+                        }
+
+                        Screen.EDIT_PROFILE -> {
+                            com.example.mytodoapp.ui.profile.EditProfileScreen(
+                                viewModel = profileViewModel,
+                                onBack = { currentScreen = Screen.PROFILE }
+                            )
+                        }
+
                         Screen.DASHBOARD -> {
                             DashboardScreen(
                                 viewModel = viewModel,
+                                profileViewModel = profileViewModel,
                                 onToggle = { viewModel.toggleTodo(it) },
                                 onEditClick = { openEdit(it) },
                                 onDeleteClick = { openDelete(it) },
                                 onAddTaskClick = { showAddDialog = true },
                                 onFocusOpen = { focusTimerTodo = it },
-                                onTodoClick = navigateToDetails
+                                onTodoClick = navigateToDetails,
+                                onProfileClick = { currentScreen = Screen.PROFILE }
                             )
                         }
 

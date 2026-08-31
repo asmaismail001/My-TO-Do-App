@@ -18,5 +18,6 @@ data class Todo(
     val endTimeMillis: Long? = null,
     val attachmentUri: String? = null,
     val notificationEnabled: Boolean = false,
-    val notificationMinutesBefore: Int = 10
+    val notificationMinutesBefore: Int = 10,
+    val userId: String? = null
 )

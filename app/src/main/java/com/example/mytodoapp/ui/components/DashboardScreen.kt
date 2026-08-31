@@ -54,12 +54,14 @@ import java.util.*
 @Composable
 fun DashboardScreen(
     viewModel: TodoViewModel,
+    profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel,
     onToggle: (Todo) -> Unit,
     onEditClick: (Todo) -> Unit,
     onDeleteClick: (Todo) -> Unit,
     onAddTaskClick: () -> Unit,
     onFocusOpen: (Todo) -> Unit,
-    onTodoClick: (Todo) -> Unit
+    onTodoClick: (Todo) -> Unit,
+    onProfileClick: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
     val context = LocalContext.current
@@ -67,16 +69,21 @@ fun DashboardScreen(
     val selectedDate = viewModel.dashboardDate
     val period = viewModel.dashboardPeriod
 
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: android.net.Uri? ->
-        if (uri != null) {
-            viewModel.updateProfilePictureUri(uri.toString())
-        }
+    LaunchedEffect(Unit) {
+        profileViewModel.loadProfile()
     }
 
-    val profilePictureUri = viewModel.profilePictureUri
-    val profileBitmap = rememberBitmapFromUri(profilePictureUri)
+    val profileData = profileViewModel.profileData
+    val profileBitmap = rememberBitmapFromUri(profileData?.profileImage)
+
+    val greeting = remember {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        when (hour) {
+            in 0..11 -> "Good Morning"
+            in 12..16 -> "Good Afternoon"
+            else -> "Good Evening"
+        }
+    }
 
     // Calculations
     val stats = viewModel.getStatsForPeriod(period, selectedDate)
@@ -113,16 +120,19 @@ fun DashboardScreen(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(
-                            text = "Welcome Back!",
-                            style = MaterialTheme.typography.headlineMedium.copy(
+                            text = "$greeting, ${profileData?.name ?: "User"}! 👋",
+                            style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimaryFor(isDark)
-                            )
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
@@ -133,13 +143,15 @@ fun DashboardScreen(
                         )
                     }
 
-                    // Profile Avatar loading gallery image on click
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Profile Avatar navigating to Profile Screen on click
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(Accent.copy(alpha = 0.15f))
-                            .clickable { imagePickerLauncher.launch("image/*") },
+                            .clickable { onProfileClick() },
                         contentAlignment = Alignment.Center
                     ) {
                         if (profileBitmap != null) {
@@ -151,8 +163,10 @@ fun DashboardScreen(
                             )
                         } else {
                             Text(
-                                text = "👤",
-                                fontSize = 20.sp
+                                text = profileData?.name?.firstOrNull()?.toString()?.uppercase() ?: "👤",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Accent
                             )
                         }
                     }
