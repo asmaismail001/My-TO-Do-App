@@ -57,6 +57,10 @@ fun EditTaskDialog(
     val context = LocalContext.current
     val isDark = LocalIsDarkTheme.current
 
+    var showDateTimePicker by remember { mutableStateOf(false) }
+    var dateTimePickerInitialTime by remember { mutableStateOf<Long?>(null) }
+    var dateTimePickerOnPicked by remember { mutableStateOf<((Long) -> Unit)?>(null) }
+
     val formatDateOnly = remember {
         { millis: Long ->
             val sdf = SimpleDateFormat("d MMM", Locale.getDefault())
@@ -171,12 +175,14 @@ fun EditTaskDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    DateTimePickerUtil.pickDateTime(context, dueTimeMillis) { picked ->
+                                    dateTimePickerInitialTime = dueTimeMillis
+                                    dateTimePickerOnPicked = { picked ->
                                         onDueTimeChange(picked)
                                         if (endTimeMillis == null) {
                                             onEndTimeChange(picked + 60 * 60 * 1000L)
                                         }
                                     }
+                                    showDateTimePicker = true
                                 }
                         ) {
                             Text(
@@ -230,9 +236,11 @@ fun EditTaskDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    DateTimePickerUtil.pickDateTime(context, endTimeMillis) { picked ->
+                                    dateTimePickerInitialTime = endTimeMillis
+                                    dateTimePickerOnPicked = { picked ->
                                         onEndTimeChange(picked)
                                     }
+                                    showDateTimePicker = true
                                 }
                         ) {
                             Text(
@@ -439,5 +447,16 @@ fun EditTaskDialog(
                 }
             }
         }
+    }
+
+    if (showDateTimePicker) {
+        CustomDateTimePickerDialog(
+            initialTime = dateTimePickerInitialTime,
+            onDismiss = { showDateTimePicker = false },
+            onSave = { picked ->
+                dateTimePickerOnPicked?.invoke(picked)
+                showDateTimePicker = false
+            }
+        )
     }
 }

@@ -126,13 +126,18 @@ fun DashboardScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(
-                            text = "$greeting, ${profileData?.name ?: "User"}! 👋",
+                            text = if ((profileData?.name?.length ?: 0) > 12) {
+                                "$greeting,\n${profileData?.name ?: "User"}! 👋"
+                            } else {
+                                "$greeting, ${profileData?.name ?: "User"}! 👋"
+                            },
                             style = MaterialTheme.typography.titleLarge.copy(
+                                fontSize = 19.sp,
+                                lineHeight = 23.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimaryFor(isDark)
                             ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            maxLines = 2
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(

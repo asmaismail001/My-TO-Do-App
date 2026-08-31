@@ -41,6 +41,7 @@ import com.example.mytodoapp.ui.components.DeleteTaskDialog
 import com.example.mytodoapp.ui.components.EditTaskDialog
 import com.example.mytodoapp.ui.components.ConflictDialog
 import com.example.mytodoapp.ui.components.SettingsDrawerContent
+import com.example.mytodoapp.ui.components.CustomDateTimePickerDialog
 import com.example.mytodoapp.ui.components.TaskListContent
 import com.example.mytodoapp.ui.components.TaskDetailsScreen
 import com.example.mytodoapp.ui.components.TodoSearchBar
@@ -167,6 +168,10 @@ fun TodoScreen(
     var showRescheduleConfirm by remember { mutableStateOf(false) }
     var rescheduleNewStart by remember { mutableStateOf(0L) }
     var rescheduleNewEnd by remember { mutableStateOf(0L) }
+
+    var showReschedulePicker by remember { mutableStateOf(false) }
+    var reschedulePickerIsStart by remember { mutableStateOf(true) }
+    var rescheduleTempStart by remember { mutableStateOf<Long?>(null) }
 
     var selectedDay by remember { mutableStateOf(Calendar.getInstance()) }
     var visibleMonth by remember { mutableStateOf(Calendar.getInstance()) }
@@ -809,19 +814,9 @@ fun TodoScreen(
             },
             onRescheduleConflictingTask = {
                 val initialStart = conflictingTodo!!.dueTimeMillis
-                val initialEnd = conflictingTodo!!.endTimeMillis
-                DateTimePickerUtil.pickDateTime(context, initialTime = initialStart) { newPickedStart ->
-                    DateTimePickerUtil.pickDateTime(context, initialTime = initialEnd ?: (newPickedStart + 3600000L)) { newPickedEnd ->
-                        if (newPickedEnd <= newPickedStart) {
-                            validationErrorMessage = "Due time must be later than the start time."
-                            showValidationErrorDialog = true
-                        } else {
-                            rescheduleNewStart = newPickedStart
-                            rescheduleNewEnd = newPickedEnd
-                            showRescheduleConfirm = true
-                        }
-                    }
-                }
+                rescheduleTempStart = initialStart
+                reschedulePickerIsStart = true
+                showReschedulePicker = true
             }
         )
     }
@@ -992,6 +987,35 @@ fun TodoScreen(
             },
             shape = RoundedCornerShape(24.dp),
             containerColor = surfaceColorFor(isDarkTheme)
+        )
+    }
+
+    if (showReschedulePicker) {
+        val pickerInitialTime = if (reschedulePickerIsStart) {
+            rescheduleTempStart
+        } else {
+            conflictingTodo!!.endTimeMillis ?: (rescheduleTempStart!! + 3600000L)
+        }
+        CustomDateTimePickerDialog(
+            initialTime = pickerInitialTime,
+            onDismiss = { showReschedulePicker = false },
+            onSave = { picked ->
+                if (reschedulePickerIsStart) {
+                    rescheduleTempStart = picked
+                    reschedulePickerIsStart = false
+                } else {
+                    showReschedulePicker = false
+                    val start = rescheduleTempStart!!
+                    if (picked <= start) {
+                        validationErrorMessage = "Due time must be later than the start time."
+                        showValidationErrorDialog = true
+                    } else {
+                        rescheduleNewStart = start
+                        rescheduleNewEnd = picked
+                        showRescheduleConfirm = true
+                    }
+                }
+            }
         )
     }
 }
