@@ -27,6 +27,10 @@ import com.example.mytodoapp.ui.surfaceColorFor
 import com.example.mytodoapp.ui.textMutedFor
 import com.example.mytodoapp.ui.textPrimaryFor
 import com.example.mytodoapp.ui.textSecondaryFor
+import com.example.mytodoapp.model.TaskType
+import com.example.mytodoapp.model.WeatherUiState
+import com.example.mytodoapp.ui.weather.TaskTypeSelector
+import com.example.mytodoapp.ui.weather.WeatherCard
 import com.example.mytodoapp.util.DateTimePickerUtil
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -40,6 +44,8 @@ fun EditTaskDialog(
     onDescriptionChange: (String) -> Unit,
     priority: Priority,
     onPriorityChange: (Priority) -> Unit,
+    taskType: TaskType = TaskType.FLEXIBLE,
+    onTaskTypeChange: (TaskType) -> Unit = {},
     dueTimeMillis: Long?,
     onDueTimeChange: (Long?) -> Unit,
     endTimeMillis: Long?,
@@ -51,6 +57,8 @@ fun EditTaskDialog(
     attachmentUri: String?,
     onAttachmentChange: (String?) -> Unit,
     createdAt: Long,
+    weatherUiState: WeatherUiState = WeatherUiState.Idle,
+    onCheckWeatherClick: (() -> Unit)? = null,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -148,6 +156,10 @@ fun EditTaskDialog(
                 Spacer(modifier = Modifier.height(18.dp))
 
                 PrioritySelector(selected = priority, onSelect = onPriorityChange)
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                TaskTypeSelector(selectedType = taskType, onTypeSelected = onTaskTypeChange)
 
                 Spacer(modifier = Modifier.height(18.dp))
 
@@ -286,6 +298,28 @@ fun EditTaskDialog(
                                 }
                             }
                         }
+                    }
+                }
+
+                if (dueTimeMillis != null) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    if (weatherUiState is WeatherUiState.Idle) {
+                        OutlinedButton(
+                            onClick = { onCheckWeatherClick?.invoke() },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, Accent.copy(alpha = 0.5f)),
+                            contentPadding = PaddingValues(vertical = 10.dp)
+                        ) {
+                            Text("🌤 Check Weather Forecast", color = Accent, fontWeight = FontWeight.Bold)
+                        }
+                    } else {
+                        WeatherCard(
+                            weatherUiState = weatherUiState,
+                            taskType = taskType,
+                            onRefresh = { onCheckWeatherClick?.invoke() },
+                            title = "Forecast at Task Time"
+                        )
                     }
                 }
 

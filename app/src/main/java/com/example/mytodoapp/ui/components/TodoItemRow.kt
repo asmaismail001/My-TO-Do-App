@@ -129,6 +129,13 @@ fun TodoItemRow(
                                 modifier = Modifier.padding(start = 2.dp)
                             )
                         }
+                        if (todo.taskType != com.example.mytodoapp.model.TaskType.FLEXIBLE) {
+                            Text(
+                                text = if (todo.taskType == com.example.mytodoapp.model.TaskType.OUTDOOR) "🌲" else "🏠",
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 2.dp)
+                            )
+                        }
                     }
 
                     if (todo.description.isNotBlank()) {

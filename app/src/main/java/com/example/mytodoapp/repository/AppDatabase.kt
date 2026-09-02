@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.mytodoapp.model.Todo
 
-@Database(entities = [Todo::class], version = 6, exportSchema = false)
+@Database(entities = [Todo::class], version = 7, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun todoDao(): TodoDao
 

@@ -19,5 +19,6 @@ data class Todo(
     val attachmentUri: String? = null,
     val notificationEnabled: Boolean = false,
     val notificationMinutesBefore: Int = 10,
-    val userId: String? = null
+    val userId: String? = null,
+    val taskType: TaskType = TaskType.FLEXIBLE
 )

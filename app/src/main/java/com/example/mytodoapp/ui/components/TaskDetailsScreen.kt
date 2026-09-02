@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,6 +23,10 @@ import coil.compose.AsyncImage
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.*
+
+import com.example.mytodoapp.model.TaskType
+import com.example.mytodoapp.model.WeatherUiState
+import com.example.mytodoapp.ui.weather.WeatherCard
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -33,6 +38,10 @@ fun TaskDetailsScreen(
     todo: Todo,
     onBack: () -> Unit,
     isDark: Boolean,
+    weatherUiState: WeatherUiState = WeatherUiState.Idle,
+    onRefreshWeather: () -> Unit = {},
+    onRescheduleClick: (() -> Unit)? = null,
+    onMarkAsIndoorClick: (() -> Unit)? = null,
     eligibleSwapTasks: List<Todo> = emptyList(),
     onConfirmSwap: (Todo) -> Unit = {}
 ) {
@@ -94,19 +103,39 @@ fun TaskDetailsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Status Pill
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Accent.copy(alpha = 0.15f))
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(
-                                text = if (todo.completed) "Completed" else "Pending",
-                                color = Accent,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.labelMedium
-                            )
+                            // Status Pill
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Accent.copy(alpha = 0.15f))
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = if (todo.completed) "Completed" else "Pending",
+                                    color = Accent,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
+
+                            // Task Type Badge
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isDark) Color(0xFF1E293B) else Color(0xFFE2E8F0))
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = todo.taskType.displayName,
+                                    color = textSecondaryFor(isDark),
+                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.labelMedium
+                                )
+                            }
                         }
 
                         // Priority Badge
@@ -289,6 +318,16 @@ fun TaskDetailsScreen(
                     }
                 }
             }
+
+            // Weather Card for Task Time
+            WeatherCard(
+                weatherUiState = weatherUiState,
+                taskType = todo.taskType,
+                onRefresh = onRefreshWeather,
+                onRescheduleClick = onRescheduleClick,
+                onMarkAsIndoorClick = onMarkAsIndoorClick,
+                title = "Weather at Task Time"
+            )
 
             // Attached Image Card Section
             if (!todo.attachmentUri.isNullOrEmpty()) {

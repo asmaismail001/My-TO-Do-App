@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mytodoapp.model.Priority
+import com.example.mytodoapp.model.TaskType
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.notification.NotificationScheduler
 import com.example.mytodoapp.repository.TodoRepository
@@ -363,7 +364,8 @@ class TodoViewModel(
         endTimeMillis: Long? = null,
         attachmentUri: String? = null,
         notificationEnabled: Boolean = false,
-        notificationMinutesBefore: Int = 10
+        notificationMinutesBefore: Int = 10,
+        taskType: TaskType = TaskType.FLEXIBLE
     ) {
         if (title.isBlank()) return
         viewModelScope.launch {
@@ -378,7 +380,8 @@ class TodoViewModel(
                 localUriStr,
                 notificationEnabled,
                 notificationMinutesBefore,
-                userId
+                userId,
+                taskType
             )
             if (notificationEnabled && (dueTimeMillis != null || endTimeMillis != null)) {
                 android.util.Log.d(
@@ -436,7 +439,8 @@ class TodoViewModel(
         newEndTimeMillis: Long?,
         newAttachmentUri: String? = todo.attachmentUri,
         newNotificationEnabled: Boolean = todo.notificationEnabled,
-        newNotificationMinutesBefore: Int = todo.notificationMinutesBefore
+        newNotificationMinutesBefore: Int = todo.notificationMinutesBefore,
+        newTaskType: TaskType = todo.taskType
     ) {
         if (newTitle.isBlank()) return
         viewModelScope.launch {
@@ -455,7 +459,8 @@ class TodoViewModel(
                 newEndTimeMillis,
                 finalAttachmentUri,
                 newNotificationEnabled,
-                newNotificationMinutesBefore
+                newNotificationMinutesBefore,
+                newTaskType
             )
             NotificationScheduler.cancelReminder(appContext, todo.id)
             if (newNotificationEnabled && (newDueTimeMillis != null || newEndTimeMillis != null)) {
@@ -538,7 +543,8 @@ class TodoViewModel(
                             endTimeMillis = it.endTimeMillis,
                             attachmentUri = it.attachmentUri,
                             notificationEnabled = it.notificationEnabled,
-                            notificationMinutesBefore = if (it.notificationMinutesBefore > 0) it.notificationMinutesBefore else 10
+                            notificationMinutesBefore = if (it.notificationMinutesBefore > 0) it.notificationMinutesBefore else 10,
+                            taskType = it.taskType
                         )
                         if (saved.notificationEnabled && !saved.completed &&
                             (saved.endTimeMillis != null || saved.dueTimeMillis != null)

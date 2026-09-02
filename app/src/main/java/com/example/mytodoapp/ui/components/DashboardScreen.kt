@@ -48,13 +48,19 @@ import com.example.mytodoapp.viewmodel.DailyChartData
 import com.example.mytodoapp.viewmodel.MonthlyChartData
 import com.example.mytodoapp.viewmodel.DashboardPeriod
 import com.example.mytodoapp.viewmodel.TodoViewModel
+import com.example.mytodoapp.ui.weather.DashboardWeatherSection
+import com.example.mytodoapp.ui.weather.WeatherDetailsDialog
+import com.example.mytodoapp.ui.weather.LocationPickerDialog
+import com.example.mytodoapp.viewmodel.WeatherViewModel
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun DashboardScreen(
     viewModel: TodoViewModel,
     profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel,
+    weatherViewModel: WeatherViewModel? = null,
     onToggle: (Todo) -> Unit,
     onEditClick: (Todo) -> Unit,
     onDeleteClick: (Todo) -> Unit,
@@ -65,6 +71,9 @@ fun DashboardScreen(
 ) {
     val isDark = LocalIsDarkTheme.current
     val context = LocalContext.current
+
+    var showWeatherDetails by remember { mutableStateOf(false) }
+    var showLocationPicker by remember { mutableStateOf(false) }
 
     val selectedDate = viewModel.dashboardDate
     val period = viewModel.dashboardPeriod
@@ -212,6 +221,18 @@ fun DashboardScreen(
                             )
                         }
                     }
+                }
+
+                if (weatherViewModel != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    val outdoorSummary = weatherViewModel.getOutdoorSummary(dailyTasks)
+                    DashboardWeatherSection(
+                        weatherUiState = weatherViewModel.currentWeatherState,
+                        locationData = weatherViewModel.currentLocation,
+                        outdoorSummary = outdoorSummary,
+                        onClick = { showWeatherDetails = true },
+                        onRefresh = { weatherViewModel.loadCurrentWeather(context, forceRefresh = true) }
+                    )
                 }
             }
         }
@@ -428,6 +449,7 @@ fun DashboardScreen(
                             DashboardPeriod.DAILY -> "Daily Completion"
                             DashboardPeriod.WEEKLY -> "Weekly Progress"
                             DashboardPeriod.MONTHLY -> "Monthly Performance"
+                            else -> "Overview"
                         },
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
@@ -620,6 +642,38 @@ fun DashboardScreen(
                 }
             }
         }
+    }
+
+    if (showWeatherDetails && weatherViewModel != null) {
+        WeatherDetailsDialog(
+            weatherUiState = weatherViewModel.currentWeatherState,
+            locationData = weatherViewModel.currentLocation,
+            hourlyForecast = weatherViewModel.todayHourlyForecast,
+            onChangeLocationClick = {
+                showWeatherDetails = false
+                showLocationPicker = true
+            },
+            onRefresh = { weatherViewModel.loadCurrentWeather(context, forceRefresh = true) },
+            onDismiss = { showWeatherDetails = false }
+        )
+    }
+
+    if (showLocationPicker && weatherViewModel != null) {
+        LocationPickerDialog(
+            searchResults = weatherViewModel.locationSearchResults,
+            isSearching = weatherViewModel.isSearchingLocations,
+            onSearchQueryChange = { weatherViewModel.searchCities(it) },
+            onLocationSelected = { loc ->
+                weatherViewModel.setManualLocation(loc.latitude, loc.longitude, loc.locationName)
+            },
+            onUseGpsClick = {
+                weatherViewModel.useDeviceLocation(context)
+            },
+            onDismiss = {
+                showLocationPicker = false
+                weatherViewModel.clearLocationSearchResults()
+            }
+        )
     }
 }
 

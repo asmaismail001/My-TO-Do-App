@@ -90,6 +90,7 @@ class MainActivity : ComponentActivity() {
                         val repository = TodoRepository(applicationContext)
                         val authRepository = com.example.mytodoapp.repository.AuthRepository(applicationContext)
                         val profileRepository = com.example.mytodoapp.repository.ProfileRepository(applicationContext)
+                        val weatherRepository = com.example.mytodoapp.repository.WeatherRepository()
 
                         val viewModel: TodoViewModel = viewModel(
                             factory = TodoViewModelFactory(repository, applicationContext)
@@ -100,11 +101,15 @@ class MainActivity : ComponentActivity() {
                         val profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel = viewModel(
                             factory = com.example.mytodoapp.viewmodel.ProfileViewModelFactory(authRepository, profileRepository)
                         )
+                        val weatherViewModel: com.example.mytodoapp.viewmodel.WeatherViewModel = viewModel(
+                            factory = com.example.mytodoapp.viewmodel.WeatherViewModelFactory(weatherRepository, applicationContext)
+                        )
 
                         TodoScreen(
                             viewModel = viewModel,
                             authViewModel = authViewModel,
                             profileViewModel = profileViewModel,
+                            weatherViewModel = weatherViewModel,
                             openTaskId = taskIdToOpen,
                             onOpenTaskConsumed = { pendingOpenTaskId.value = null }
                         )

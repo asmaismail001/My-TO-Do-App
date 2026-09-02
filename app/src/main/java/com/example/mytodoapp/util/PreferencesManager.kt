@@ -34,4 +34,18 @@ class PreferencesManager(private val context: Context) {
     fun setProfilePictureUri(uri: String?) {
         prefs.edit().putString("profile_picture_uri", uri).apply()
     }
+
+    fun getSavedLatitude(): Double = prefs.getString("weather_lat", "51.5074")?.toDoubleOrNull() ?: 51.5074
+    fun getSavedLongitude(): Double = prefs.getString("weather_lon", "-0.1278")?.toDoubleOrNull() ?: -0.1278
+    fun getSavedLocationName(): String = prefs.getString("weather_loc_name", "Current Location") ?: "Current Location"
+    fun isManualLocation(): Boolean = prefs.getBoolean("weather_is_manual", false)
+
+    fun saveWeatherLocation(lat: Double, lon: Double, name: String, isManual: Boolean) {
+        prefs.edit()
+            .putString("weather_lat", lat.toString())
+            .putString("weather_lon", lon.toString())
+            .putString("weather_loc_name", name)
+            .putBoolean("weather_is_manual", isManual)
+            .apply()
+    }
 }

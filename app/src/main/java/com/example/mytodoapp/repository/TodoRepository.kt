@@ -5,6 +5,8 @@ import androidx.room.withTransaction
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.model.Todo
 
+import com.example.mytodoapp.model.TaskType
+
 class TodoRepository(private val context: Context) {
 
     private val database = AppDatabase.getDatabase(context)
@@ -31,7 +33,8 @@ class TodoRepository(private val context: Context) {
         attachmentUri: String? = null,
         notificationEnabled: Boolean = false,
         notificationMinutesBefore: Int = 10,
-        userId: String? = null
+        userId: String? = null,
+        taskType: TaskType = TaskType.FLEXIBLE
     ): Todo {
         val todo = Todo(
             title = title,
@@ -44,7 +47,8 @@ class TodoRepository(private val context: Context) {
             attachmentUri = attachmentUri,
             notificationEnabled = notificationEnabled,
             notificationMinutesBefore = notificationMinutesBefore,
-            userId = userId
+            userId = userId,
+            taskType = taskType
         )
         val newId = dao.insertTodo(todo)
         return todo.copy(id = newId.toInt())
@@ -63,7 +67,8 @@ class TodoRepository(private val context: Context) {
         newEndTimeMillis: Long?,
         newAttachmentUri: String? = todo.attachmentUri,
         newNotificationEnabled: Boolean = todo.notificationEnabled,
-        newNotificationMinutesBefore: Int = todo.notificationMinutesBefore
+        newNotificationMinutesBefore: Int = todo.notificationMinutesBefore,
+        newTaskType: TaskType = todo.taskType
     ) {
         dao.updateTodo(
             todo.copy(
@@ -74,7 +79,8 @@ class TodoRepository(private val context: Context) {
                 endTimeMillis = newEndTimeMillis,
                 attachmentUri = newAttachmentUri,
                 notificationEnabled = newNotificationEnabled,
-                notificationMinutesBefore = newNotificationMinutesBefore
+                notificationMinutesBefore = newNotificationMinutesBefore,
+                taskType = newTaskType
             )
         )
     }

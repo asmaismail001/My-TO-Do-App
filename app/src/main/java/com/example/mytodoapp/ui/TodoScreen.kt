@@ -32,7 +32,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
  
 import com.example.mytodoapp.model.Priority
+import com.example.mytodoapp.model.TaskType
 import com.example.mytodoapp.model.Todo
+import com.example.mytodoapp.model.WeatherUiState
 import com.example.mytodoapp.ui.components.AddTaskDialog
 import com.example.mytodoapp.ui.components.BottomNavBar
 import com.example.mytodoapp.ui.components.CalendarView
@@ -47,9 +49,11 @@ import com.example.mytodoapp.ui.components.TaskDetailsScreen
 import com.example.mytodoapp.ui.components.TodoSearchBar
 import com.example.mytodoapp.util.CalendarUtil
 import com.example.mytodoapp.util.DateTimePickerUtil
+import com.example.mytodoapp.util.LocationHelper
 import com.example.mytodoapp.util.PreferencesManager
 import com.example.mytodoapp.viewmodel.SwapTimeResult
 import com.example.mytodoapp.viewmodel.TodoViewModel
+import com.example.mytodoapp.viewmodel.WeatherViewModel
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -59,11 +63,33 @@ fun TodoScreen(
     viewModel: TodoViewModel,
     authViewModel: com.example.mytodoapp.viewmodel.AuthViewModel,
     profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel,
+    weatherViewModel: WeatherViewModel? = null,
     openTaskId: Int? = null,
     onOpenTaskConsumed: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val prefs = remember { PreferencesManager(context) }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val isGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (isGranted && weatherViewModel != null) {
+            weatherViewModel.loadCurrentWeather(context, forceRefresh = true)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!LocationHelper.hasLocationPermission(context)) {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
 
     var themeMode by remember { mutableStateOf(prefs.getThemeMode()) }
     val systemInDark = androidx.compose.foundation.isSystemInDarkTheme()
@@ -103,6 +129,7 @@ fun TodoScreen(
     var newTitle by remember { mutableStateOf("") }
     var newDescription by remember { mutableStateOf("") }
     var newPriority by remember { mutableStateOf(Priority.MEDIUM) }
+    var newTaskType by remember { mutableStateOf(TaskType.FLEXIBLE) }
     var newDueTime by remember { mutableStateOf<Long?>(null) }
     var newEndTime by remember { mutableStateOf<Long?>(null) }
     var newNotificationEnabled by remember { mutableStateOf(false) }
@@ -114,11 +141,14 @@ fun TodoScreen(
     var editTitle by remember { mutableStateOf("") }
     var editDescription by remember { mutableStateOf("") }
     var editPriority by remember { mutableStateOf(Priority.MEDIUM) }
+    var editTaskType by remember { mutableStateOf(TaskType.FLEXIBLE) }
     var editDueTime by remember { mutableStateOf<Long?>(null) }
     var editEndTime by remember { mutableStateOf<Long?>(null) }
     var editNotificationEnabled by remember { mutableStateOf(false) }
     var editNotificationMinutesBefore by remember { mutableStateOf(10) }
     var editAttachmentUri by remember { mutableStateOf<String?>(null) }
+
+    var showReschedulePickerForDetails by remember { mutableStateOf(false) }
 
     var showConflictDialog by remember { mutableStateOf(false) }
     var conflictingTodo by remember { mutableStateOf<Todo?>(null) }
@@ -181,11 +211,13 @@ fun TodoScreen(
         editTitle = todo.title
         editDescription = todo.description
         editPriority = todo.priority
+        editTaskType = todo.taskType
         editDueTime = todo.dueTimeMillis
         editEndTime = todo.endTimeMillis
         editNotificationEnabled = todo.notificationEnabled
         editNotificationMinutesBefore = todo.notificationMinutesBefore
         editAttachmentUri = todo.attachmentUri
+        weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, todo.taskType)
         showEditDialog = true
     }
 
@@ -410,6 +442,7 @@ fun TodoScreen(
                             DashboardScreen(
                                 viewModel = viewModel,
                                 profileViewModel = profileViewModel,
+                                weatherViewModel = weatherViewModel,
                                 onToggle = { viewModel.toggleTodo(it) },
                                 onEditClick = { openEdit(it) },
                                 onDeleteClick = { openDelete(it) },
@@ -561,6 +594,10 @@ fun TodoScreen(
 
                         Screen.TASK_DETAILS -> {
                             selectedTodoForDetails?.let { todo ->
+                                LaunchedEffect(todo.id, todo.dueTimeMillis, todo.taskType) {
+                                    weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, todo.taskType)
+                                }
+
                                 TaskDetailsScreen(
                                     todo = todo,
                                     onBack = {
@@ -568,6 +605,28 @@ fun TodoScreen(
                                         selectedTodoForDetails = null
                                     },
                                     isDark = isDarkTheme,
+                                    weatherUiState = weatherViewModel?.taskWeatherState ?: WeatherUiState.Idle,
+                                    onRefreshWeather = {
+                                        weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, todo.taskType)
+                                    },
+                                    onRescheduleClick = {
+                                        showReschedulePickerForDetails = true
+                                    },
+                                    onMarkAsIndoorClick = {
+                                        viewModel.updateTodo(
+                                            todo = todo,
+                                            newTitle = todo.title,
+                                            newDescription = todo.description,
+                                            newPriority = todo.priority,
+                                            newDueTimeMillis = todo.dueTimeMillis,
+                                            newEndTimeMillis = todo.endTimeMillis,
+                                            newAttachmentUri = todo.attachmentUri,
+                                            newNotificationEnabled = todo.notificationEnabled,
+                                            newNotificationMinutesBefore = todo.notificationMinutesBefore,
+                                            newTaskType = TaskType.INDOOR
+                                        )
+                                        weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, TaskType.INDOOR)
+                                    },
                                     eligibleSwapTasks = viewModel.eligibleSwapTasks(todo),
                                     onConfirmSwap = { other ->
                                         viewModel.swapTimeSlots(todo, other) { result ->
@@ -592,11 +651,13 @@ fun TodoScreen(
         newTitle = ""
         newDescription = ""
         newPriority = Priority.MEDIUM
+        newTaskType = TaskType.FLEXIBLE
         newDueTime = null
         newEndTime = null
         newNotificationEnabled = false
         newNotificationMinutesBefore = 10
         newAttachmentUri = null
+        weatherViewModel?.clearTaskWeather()
     }
 
     if (showAddDialog) {
@@ -607,8 +668,20 @@ fun TodoScreen(
             onDescriptionChange = { newDescription = it },
             priority = newPriority,
             onPriorityChange = { newPriority = it },
+            taskType = newTaskType,
+            onTaskTypeChange = {
+                newTaskType = it
+                if (newDueTime != null) {
+                    weatherViewModel?.loadTaskWeather(newDueTime, it)
+                }
+            },
             dueTimeMillis = newDueTime,
-            onDueTimeChange = { newDueTime = it },
+            onDueTimeChange = {
+                newDueTime = it
+                if (it != null) {
+                    weatherViewModel?.loadTaskWeather(it, newTaskType)
+                }
+            },
             endTimeMillis = newEndTime,
             onEndTimeChange = { newEndTime = it },
             notificationEnabled = newNotificationEnabled,
@@ -642,6 +715,10 @@ fun TodoScreen(
             onNotificationMinutesBeforeChange = { newNotificationMinutesBefore = it },
             attachmentUri = newAttachmentUri,
             onAttachmentChange = { newAttachmentUri = it },
+            weatherUiState = weatherViewModel?.taskWeatherState ?: WeatherUiState.Idle,
+            onCheckWeatherClick = {
+                weatherViewModel?.loadTaskWeather(newDueTime, newTaskType)
+            },
             onConfirm = {
                 if (newNotificationEnabled && newDueTime == null) {
                     validationErrorTitle = "Start time required"
@@ -664,7 +741,8 @@ fun TodoScreen(
                                 newEndTime,
                                 newAttachmentUri,
                                 newNotificationEnabled,
-                                newNotificationMinutesBefore
+                                newNotificationMinutesBefore,
+                                newTaskType
                             )
                             clearAddStates()
                             showAddDialog = false
@@ -679,7 +757,8 @@ fun TodoScreen(
                             newEndTime,
                             newAttachmentUri,
                             newNotificationEnabled,
-                            newNotificationMinutesBefore
+                            newNotificationMinutesBefore,
+                            newTaskType
                         )
                         clearAddStates()
                         showAddDialog = false
@@ -701,8 +780,20 @@ fun TodoScreen(
             onDescriptionChange = { editDescription = it },
             priority = editPriority,
             onPriorityChange = { editPriority = it },
+            taskType = editTaskType,
+            onTaskTypeChange = {
+                editTaskType = it
+                if (editDueTime != null) {
+                    weatherViewModel?.loadTaskWeather(editDueTime, it)
+                }
+            },
             dueTimeMillis = editDueTime,
-            onDueTimeChange = { editDueTime = it },
+            onDueTimeChange = {
+                editDueTime = it
+                if (it != null) {
+                    weatherViewModel?.loadTaskWeather(it, editTaskType)
+                }
+            },
             endTimeMillis = editEndTime,
             onEndTimeChange = { editEndTime = it },
             notificationEnabled = editNotificationEnabled,
@@ -737,6 +828,10 @@ fun TodoScreen(
             attachmentUri = editAttachmentUri,
             onAttachmentChange = { editAttachmentUri = it },
             createdAt = editingTodo?.createdAt ?: System.currentTimeMillis(),
+            weatherUiState = weatherViewModel?.taskWeatherState ?: WeatherUiState.Idle,
+            onCheckWeatherClick = {
+                weatherViewModel?.loadTaskWeather(editDueTime, editTaskType)
+            },
             onConfirm = {
                 if (editNotificationEnabled && editDueTime == null) {
                     validationErrorTitle = "Start time required"
@@ -761,7 +856,8 @@ fun TodoScreen(
                                     editEndTime,
                                     editAttachmentUri,
                                     editNotificationEnabled,
-                                    editNotificationMinutesBefore
+                                    editNotificationMinutesBefore,
+                                    editTaskType
                                 )
                             }
                             showEditDialog = false
@@ -779,7 +875,8 @@ fun TodoScreen(
                                 editEndTime,
                                 editAttachmentUri,
                                 editNotificationEnabled,
-                                editNotificationMinutesBefore
+                                editNotificationMinutesBefore,
+                                editTaskType
                             )
                         }
                         showEditDialog = false
@@ -790,6 +887,60 @@ fun TodoScreen(
             onDismiss = {
                 showEditDialog = false
                 editingTodo = null
+            }
+        )
+    }
+
+    if (showReschedulePickerForDetails && selectedTodoForDetails != null) {
+        val currentTask = selectedTodoForDetails!!
+        CustomDateTimePickerDialog(
+            initialTime = currentTask.dueTimeMillis ?: currentTask.createdAt,
+            onDismiss = { showReschedulePickerForDetails = false },
+            onSave = { newStart ->
+                val duration = if (currentTask.dueTimeMillis != null && currentTask.endTimeMillis != null) {
+                    currentTask.endTimeMillis!! - currentTask.dueTimeMillis!!
+                } else {
+                    60 * 60 * 1000L
+                }
+                val newEnd = newStart + duration
+                val conflict = viewModel.checkTimeConflict(newStart, newEnd, currentTask.id)
+                if (conflict != null) {
+                    conflictingTodo = conflict
+                    conflictResolutionCallback = {
+                        viewModel.updateTodo(
+                            todo = currentTask,
+                            newTitle = currentTask.title,
+                            newDescription = currentTask.description,
+                            newPriority = currentTask.priority,
+                            newDueTimeMillis = newStart,
+                            newEndTimeMillis = newEnd,
+                            newAttachmentUri = currentTask.attachmentUri,
+                            newNotificationEnabled = currentTask.notificationEnabled,
+                            newNotificationMinutesBefore = currentTask.notificationMinutesBefore,
+                            newTaskType = currentTask.taskType
+                        )
+                        selectedTodoForDetails = currentTask.copy(dueTimeMillis = newStart, endTimeMillis = newEnd)
+                        weatherViewModel?.loadTaskWeather(newStart, currentTask.taskType)
+                        showReschedulePickerForDetails = false
+                    }
+                    showConflictDialog = true
+                } else {
+                    viewModel.updateTodo(
+                        todo = currentTask,
+                        newTitle = currentTask.title,
+                        newDescription = currentTask.description,
+                        newPriority = currentTask.priority,
+                        newDueTimeMillis = newStart,
+                        newEndTimeMillis = newEnd,
+                        newAttachmentUri = currentTask.attachmentUri,
+                        newNotificationEnabled = currentTask.notificationEnabled,
+                        newNotificationMinutesBefore = currentTask.notificationMinutesBefore,
+                        newTaskType = currentTask.taskType
+                    )
+                    selectedTodoForDetails = currentTask.copy(dueTimeMillis = newStart, endTimeMillis = newEnd)
+                    weatherViewModel?.loadTaskWeather(newStart, currentTask.taskType)
+                    showReschedulePickerForDetails = false
+                }
             }
         )
     }
