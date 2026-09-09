@@ -1,0 +1,256 @@
+<resources>
+    <string name="app_name">إدارة المهام</string>
+
+    <!-- Navigation & Headers -->
+    <string name="menu">القائمة</string>
+    <string name="navigation">التنقل</string>
+    <string name="dashboard">لوحة التحكم</string>
+    <string name="all_tasks">جميع المهام</string>
+    <string name="all">الكل</string>
+    <string name="completed_tasks">المهام المكتملة</string>
+    <string name="completed">مكتملة</string>
+    <string name="pending_tasks">المهام المعلقة</string>
+    <string name="pending">معلقة</string>
+    <string name="calendar">التقويم</string>
+    <string name="my_profile">ملفي الشخصي</string>
+    <string name="profile">الملف الشخصي</string>
+    <string name="edit_profile">تعديل الملف الشخصي</string>
+    <string name="settings">الإعدادات</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="logout">تسجيل الخروج</string>
+    <string name="account">الحساب</string>
+    <string name="preferences">التفضيلات</string>
+    <string name="data_management">إدارة البيانات</string>
+
+    <!-- Greetings & Dashboard Stats -->
+    <string name="good_morning">صباح الخير</string>
+    <string name="good_afternoon">مساء الخير</string>
+    <string name="good_evening">مساء الخير</string>
+    <string name="no_tasks_today">لا توجد مهام مجدولة لليوم</string>
+    <string name="no_tasks_found">لم يتم العثور على مهام</string>
+    <string name="no_completed_tasks">لا توجد مهام مكتملة بعد</string>
+    <string name="no_pending_tasks">لا توجد مهام معلقة</string>
+    <string name="tasks">المهام</string>
+    <string name="task_overview">نظرة عامة على المهام</string>
+    <string name="daily">يومي</string>
+    <string name="weekly">أسبوعي</string>
+    <string name="monthly">شهري</string>
+    <string name="total">الإجمالي</string>
+    <string name="completion_rate">نسبة الإنجاز</string>
+    <string name="search_tasks">البحث عن المهام</string>
+
+    <!-- Task Actions & Dialogs -->
+    <string name="add_task">إضافة مهمة</string>
+    <string name="new_task">مهمة جديدة</string>
+    <string name="edit_task">تعديل المهمة</string>
+    <string name="delete_task">حذف المهمة</string>
+    <string name="delete_task_confirm_title">حذف المهمة؟</string>
+    <string name="delete_task_confirm_msg">هل أنت متأكد من رغبتك في حذف \"%1$s\"؟</string>
+    <string name="task_details">تفاصيل المهمة</string>
+    <string name="task_title">العنوان</string>
+    <string name="task_title_hint">أدخل عنوان المهمة...</string>
+    <string name="task_desc">الوصف</string>
+    <string name="task_desc_hint">إضافة تفاصيل...</string>
+    <string name="priority">الأولوية</string>
+    <string name="priority_high">عالية</string>
+    <string name="priority_medium">متوسطة</string>
+    <string name="priority_low">منخفضة</string>
+    <string name="save_changes">حفظ التغييرات</string>
+    <string name="create_task">إنشاء مهمة</string>
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+    <string name="delete">حذف</string>
+    <string name="update">تحديث</string>
+    <string name="close">إغلاق</string>
+    <string name="retry">إعادة المحاولة</string>
+    <string name="done">تم</string>
+    <string name="back">رجوع</string>
+
+    <!-- Task Scheduling, Conflicts & Time Swap -->
+    <string name="activity_type">مكان النشاط</string>
+    <string name="indoor">داخلي</string>
+    <string name="outdoor">خارجي</string>
+    <string name="flexible">مرن</string>
+    <string name="date_and_time">التاريخ والوقت</string>
+    <string name="start_time">وقت البدء</string>
+    <string name="end_time">وقت الانتهاء</string>
+    <string name="set_date_time">تحديد التاريخ والوقت</string>
+    <string name="set_end_time">تحديد وقت الانتهاء</string>
+    <string name="swap_time">تبديل الوقت</string>
+    <string name="swap_with">تبديل مع</string>
+    <string name="swap_confirm_msg">هل تريد تبديل الوقت المجدول مع \"%1$s\"؟</string>
+    <string name="time_slot_unavailable">الفترة الزمنية غير متاحة</string>
+    <string name="time_slot_occupied_msg">هذه الفترة الزمنية مشغولة بالفعل بمهمة أخرى.</string>
+    <string name="change_time">تغيير الوقت</string>
+    <string name="view_task">عرض المهمة</string>
+    <string name="reschedule">إعادة جدولة</string>
+    <string name="reschedule_task">إعادة جدولة المهمة</string>
+    <string name="select_date_time">اختر التاريخ والوقت</string>
+    <string name="conflict_detected">تعارض في المواعيد</string>
+    <string name="invalid_time">وقت المهمة غير صالح</string>
+    <string name="end_time_before_start">لا يمكن أن يكون وقت الانتهاء قبل وقت البدء.</string>
+    <string name="no_eligible_swap_tasks">لا توجد مهام أخرى مجدولة متاحة للتبديل.</string>
+
+    <!-- Notifications & Reminders -->
+    <string name="notifications">الإشعارات</string>
+    <string name="task_reminders">تذكيرات المهام</string>
+    <string name="manage_reminders">إدارة تذكيرات المهام</string>
+    <string name="due_date_reminders">تذكيرات المواعيد المحددة</string>
+    <string name="reminder_notification">إشعار التذكير</string>
+    <string name="remind_before">تذكيري قبل المهمة</string>
+    <string name="reminder_time">وقت التذكير</string>
+    <string name="min_before_5">قبل 5 دقائق</string>
+    <string name="min_before_10">قبل 10 دقائق</string>
+    <string name="min_before_15">قبل 15 دقيقة</string>
+    <string name="min_before_30">قبل 30 دقيقة</string>
+    <string name="hour_before_1">قبل ساعة واحدة</string>
+    <string name="snooze">غفوة (تأجيل)</string>
+    <string name="snooze_reminder">تأجيل التذكير</string>
+    <string name="snooze_for">تأجيل التذكير لـ \"%1$s\" لمدة:</string>
+    <string name="custom_minutes">دقائق مخصصة</string>
+    <string name="permission_required">الإذن مطلوب</string>
+    <string name="notification_permission_msg">إذن الإشعارات مطلوب لإرسال تذكيرات بمهامك.</string>
+    <string name="exact_alarm_permission_msg">إذن المنبه الدقيق مطلوب لتقديم تذكيرات دقيقة في الوقت المحدد.</string>
+
+    <!-- Focus Timer -->
+    <string name="focus_timer">مؤقت التركيز</string>
+    <string name="focusing_on">التركيز على: %1$s</string>
+    <string name="break_time">وقت الاستراحة</string>
+    <string name="start">بدء</string>
+    <string name="pause">إيقاف مؤقت</string>
+    <string name="resume">استئناف</string>
+    <string name="reset">إعادة ضبط</string>
+    <string name="minutes_abbr">دقيقة</string>
+
+    <!-- Attachments -->
+    <string name="attachment">مرفق</string>
+    <string name="add_photo">إضافة صورة</string>
+    <string name="remove_attachment">إزالة المرفق</string>
+    <string name="select_photo">اختيار صورة</string>
+
+    <!-- Profile & Authentication -->
+    <string name="personal_info">المعلومات الشخصية</string>
+    <string name="full_name">الاسم الكامل</string>
+    <string name="email_address">البريد الإلكتروني</string>
+    <string name="phone_number">رقم الهاتف</string>
+    <string name="not_provided">غير متوفر</string>
+    <string name="welcome_back">مرحبًا بك مجددًا</string>
+    <string name="sign_in_subtitle">سجل الدخول لمواصلة إدارة مهامك</string>
+    <string name="create_account">إنشاء حساب جديد</string>
+    <string name="dont_have_account">ليس لديك حساب؟ </string>
+    <string name="already_have_account">لديك حساب بالفعل؟ </string>
+    <string name="sign_up">إنشاء حساب</string>
+    <string name="login">تسجيل الدخول</string>
+    <string name="password">كلمة المرور</string>
+    <string name="confirm_password">تأكيد كلمة المرور</string>
+    <string name="password_hint">6 أحرف على الأقل</string>
+    <string name="confirm_password_hint">أعد إدخال كلمة المرور</string>
+    <string name="loading_profile">جارٍ تحميل الملف الشخصي...</string>
+    <string name="logout_confirm_title">تسجيل الخروج</string>
+    <string name="logout_confirm_msg">هل أنت متأكد من رغبتك في تسجيل الخروج؟</string>
+    <string name="changes_saved">تم حفظ التغييرات بنجاح!</string>
+
+    <!-- Weather Feature -->
+    <string name="weather">الطقس</string>
+    <string name="weather_forecast">توقعات الطقس</string>
+    <string name="weather_at_task_time">الطقس في وقت المهمة</string>
+    <string name="check_weather">التحقق من الطقس</string>
+    <string name="refresh_weather">تحديث الطقس</string>
+    <string name="good_conditions">أحوال جوية ممتازة</string>
+    <string name="unfavorable_conditions">أحوال جوية غير ملائمة</string>
+    <string name="indoor_recommended">يوصى بنشاط داخلي</string>
+    <string name="outdoor_suitable">مناسب للأنشطة الخارجية</string>
+    <string name="select_location">اختيار الموقع</string>
+    <string name="search_city_hint">ابحث عن اسم المدينة...</string>
+    <string name="use_current_location">استخدام الموقع الحالي (GPS)</string>
+    <string name="temperature">درجة الحرارة</string>
+    <string name="humidity">الرطوبة</string>
+    <string name="wind">الرياح</string>
+    <string name="precipitation">احتمال هطول الأمطار</string>
+    <string name="details">التفاصيل</string>
+
+    <!-- Settings Screen -->
+    <string name="appearance">المظهر</string>
+    <string name="theme">السمة</string>
+    <string name="theme_system">تلقائي حسب النظام</string>
+    <string name="theme_light">الوضع الفاتح</string>
+    <string name="theme_dark">الوضع الداكن</string>
+    <string name="theme_mode">وضع السمة</string>
+    <string name="theme_description">اختر السمة الفاتحة أو الداكنة أو الافتراضية للنظام</string>
+    <string name="task_import_export">استيراد وتصدير المهام</string>
+    <string name="backup_restore_tasks">نسخ احتياطي للمهام أو استعادتها</string>
+    <string name="export_tasks">تصدير المهام</string>
+    <string name="import_tasks">استيراد المهام</string>
+    <string name="last_backup">آخر نسخة احتياطية: %1$s</string>
+    <string name="last_backup_none">آخر نسخة احتياطية: غير متوفرة</string>
+    <string name="export_success">تم تصدير المهام بنجاح</string>
+    <string name="import_success">تم استيراد المهام بنجاح (%1$d مهمة)</string>
+    <string name="import_invalid_data">ملف النسخ الاحتياطي غير صالح أو تالف</string>
+    <string name="import_error">فشل استيراد المهام</string>
+    <string name="export_error">فشل تصدير المهام</string>
+    <string name="language">اللغة</string>
+    <string name="select_language">اختر اللغة</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ur">اردو (Urdu)</string>
+    <string name="lang_fr">Français (French)</string>
+    <string name="lang_zh">中文 (Chinese)</string>
+    <string name="lang_ar">العربية (Arabic)</string>
+    <string name="general_settings">عام</string>
+    <string name="app_version">الإصدار 1.0</string>
+
+    <!-- Additional UI Strings -->
+    <string name="task_schedule">جدول المهمة</string>
+    <string name="due">الاستحقاق</string>
+    <string name="set_date">تحديد التاريخ</string>
+    <string name="set_time">تحديد الوقت</string>
+    <string name="task_notification">إشعار المهمة</string>
+    <string name="remind_me">تذكيري</string>
+    <string name="at_start_time">في وقت البدء</string>
+    <string name="min_before_1">قبل دقيقة واحدة</string>
+    <string name="hours_before_2">قبل ساعتين</string>
+    <string name="custom">مخصص</string>
+    <string name="minutes_before">دقائق قبل</string>
+    <string name="check_weather_forecast">التحقق من حالة الطقس</string>
+    <string name="forecast_at_task_time">الطقس في وقت المهمة</string>
+    <string name="high_priority">أولوية عالية</string>
+    <string name="medium_priority">أولوية متوسطة</string>
+    <string name="low_priority">أولوية منخفضة</string>
+    <string name="start_date">تاريخ البدء</string>
+    <string name="due_date">تاريخ الاستحقاق</string>
+    <string name="full_attachment_preview">معاينة كاملة للمرفق</string>
+    <string name="attachment_preview">معاينة المرفق</string>
+    <string name="todays_status">حالة اليوم</string>
+    <string name="tasks_completed_summary">تم إنجاز %1$d من أصل %2$d مهمة</string>
+    <string name="daily_completion">الإنجاز اليومي</string>
+    <string name="weekly_progress">التقدم الأسبوعي</string>
+    <string name="monthly_performance">الأداء الشهري</string>
+    <string name="total_tasks">إجمالي المهام</string>
+    <string name="weekly_activity">النشاط الأسبوعي</string>
+    <string name="monthly_progress_graph">رسم بياني للتقدم الشهري</string>
+    <string name="monthly_insights">رؤى شهرية</string>
+    <string name="tasks_for_date">مهام يوم %1$s</string>
+    <string name="no_tasks_today_msg">استمتع بوقت فراغك أو أنشئ مهمة جديدة.</string>
+    <string name="popular_cities">المدن الشائعة</string>
+    <string name="use_device_gps">استخدام نظام GPS للجهاز</string>
+    <string name="auto_detect_coords">تحديد الموقع الحالي تلقائياً</string>
+    <string name="no_matching_cities">لم يتم العثور على مدن مطابقة.</string>
+    <string name="next_24_hours">الـ 24 ساعة القادمة</string>
+    <string name="feels_like">يبدو مثل %1$d°C</string>
+    <string name="rain">فرصة المطر</string>
+    <string name="checking_weather">جارٍ التحقق من توقعات الطقس...</string>
+    <string name="updating_weather">جارٍ تحديث الطقس...</string>
+    <string name="weather_unavailable_date">توقعات الطقس غير متوفرة لهذا التاريخ بعد.</string>
+    <string name="location_perm_weather">إذن الموقع مطلوب لتقديم اقتراحات الطقس للمهام.</string>
+    <string name="set_task_datetime_weather">حدد تاريخ ووقت المهمة لعرض توصيات الطقس.</string>
+    <string name="mark_indoor">تحديد كنشاط داخلي</string>
+    <string name="change_location">تغيير الموقع</string>
+    <string name="swap_time_question">تبديل الموعد؟</string>
+    <string name="select_task_swap">اختر مهمة للتبديل معها:</string>
+    <string name="enter_custom_snooze">أدخل مدة الغفوة بالدقائق:</string>
+    <string name="snooze_5_min">5 دقائق</string>
+    <string name="snooze_10_min">10 دقائق</string>
+    <string name="snooze_15_min">15 دقيقة</string>
+    <string name="snooze_30_min">30 دقيقة</string>
+    <string name="snooze_1_hour">ساعة واحدة</string>
+    <string name="added_date">أضيف في: %1$s</string>
+</resources>

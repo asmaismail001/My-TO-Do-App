@@ -1,0 +1,256 @@
+<resources>
+    <string name="app_name">ٹاسک مینیجر</string>
+
+    <!-- Navigation & Headers -->
+    <string name="menu">مینو</string>
+    <string name="navigation">نیویگیشن</string>
+    <string name="dashboard">ڈیش بورڈ</string>
+    <string name="all_tasks">تمام کام</string>
+    <string name="all">تمام</string>
+    <string name="completed_tasks">مکمل شدہ کام</string>
+    <string name="completed">مکمل شدہ</string>
+    <string name="pending_tasks">زیر التواء کام</string>
+    <string name="pending">زیر التواء</string>
+    <string name="calendar">کیلنڈر</string>
+    <string name="my_profile">میرا پروفائل</string>
+    <string name="profile">پروفائل</string>
+    <string name="edit_profile">پروفائل ترمیم کریں</string>
+    <string name="settings">ترتیبات</string>
+    <string name="settings_title">ترتیبات</string>
+    <string name="logout">لاگ آؤٹ</string>
+    <string name="account">اکاؤنٹ</string>
+    <string name="preferences">ترجیحات</string>
+    <string name="data_management">ڈیٹا کا انتظام</string>
+
+    <!-- Greetings & Dashboard Stats -->
+    <string name="good_morning">صبح بخیر</string>
+    <string name="good_afternoon">دوپہر بخیر</string>
+    <string name="good_evening">شام بخیر</string>
+    <string name="no_tasks_today">آج کے لیے کوئی کام شیڈول نہیں ہے</string>
+    <string name="no_tasks_found">کوئی کام نہیں ملا</string>
+    <string name="no_completed_tasks">ابھی تک کوئی مکمل کام نہیں</string>
+    <string name="no_pending_tasks">کوئی زیر التواء کام نہیں</string>
+    <string name="tasks">کام</string>
+    <string name="task_overview">کاموں کا جائزہ</string>
+    <string name="daily">روزانہ</string>
+    <string name="weekly">ہفتہ وار</string>
+    <string name="monthly">ماہانہ</string>
+    <string name="total">کل</string>
+    <string name="completion_rate">تکمیل</string>
+    <string name="search_tasks">کام تلاش کریں</string>
+
+    <!-- Task Actions & Dialogs -->
+    <string name="add_task">نیا کام شامل کریں</string>
+    <string name="new_task">نیا کام</string>
+    <string name="edit_task">کام کی ترمیم</string>
+    <string name="delete_task">کام حذف کریں</string>
+    <string name="delete_task_confirm_title">کیا کام حذف کریں؟</string>
+    <string name="delete_task_confirm_msg">کیا آپ واقعی \"%1$s\" کو حذف کرنا چاہتے ہیں؟</string>
+    <string name="task_details">کام کی تفصیلات</string>
+    <string name="task_title">عنوان</string>
+    <string name="task_title_hint">کام کا عنوان درج کریں...</string>
+    <string name="task_desc">تفصیل</string>
+    <string name="task_desc_hint">تفصیلات شامل کریں...</string>
+    <string name="priority">ترجیح</string>
+    <string name="priority_high">زیادہ</string>
+    <string name="priority_medium">درمیانہ</string>
+    <string name="priority_low">کم</string>
+    <string name="save_changes">تبدیلیاں محفوظ کریں</string>
+    <string name="create_task">کام بنائیں</string>
+    <string name="save">محفوظ کریں</string>
+    <string name="cancel">منسوخ کریں</string>
+    <string name="delete">حذف کریں</string>
+    <string name="update">اپ ڈیٹ کریں</string>
+    <string name="close">بند کریں</string>
+    <string name="retry">دوبارہ کوشش کریں</string>
+    <string name="done">ہو گیا</string>
+    <string name="back">پیچھے</string>
+
+    <!-- Task Scheduling, Conflicts & Time Swap -->
+    <string name="activity_type">سرگرمی کا مقام</string>
+    <string name="indoor">انڈور (اندرون خانہ)</string>
+    <string name="outdoor">آؤٹ ڈور (کھلی جگہ)</string>
+    <string name="flexible">لچکدار</string>
+    <string name="date_and_time">تاریخ اور وقت</string>
+    <string name="start_time">شروع کا وقت</string>
+    <string name="end_time">اختتام کا وقت</string>
+    <string name="set_date_time">تاریخ اور وقت سیٹ کریں</string>
+    <string name="set_end_time">اختتامی وقت سیٹ کریں</string>
+    <string name="swap_time">وقت کا تبادلہ</string>
+    <string name="swap_with">کے ساتھ تبادلہ کریں</string>
+    <string name="swap_confirm_msg">کیا \"%1$s\" کے ساتھ وقت کا تبادلہ کرنا ہے؟</string>
+    <string name="time_slot_unavailable">وقت کا سلاٹ دستیاب نہیں</string>
+    <string name="time_slot_occupied_msg">یہ وقت پہلے ہی کسی دوسرے کام کے لیے مختص ہے۔</string>
+    <string name="change_time">وقت تبدیل کریں</string>
+    <string name="view_task">کام دیکھیں</string>
+    <string name="reschedule">دوبارہ وقت طے کریں</string>
+    <string name="reschedule_task">کام کا نیا وقت طے کریں</string>
+    <string name="select_date_time">تاریخ اور وقت منتخب کریں</string>
+    <string name="conflict_detected">شیڈول میں تضاد</string>
+    <string name="invalid_time">غلط وقت</string>
+    <string name="end_time_before_start">اختتامی وقت شروع کے وقت سے پہلے نہیں ہو سکتا۔</string>
+    <string name="no_eligible_swap_tasks">تبادلے کے لیے کوئی دوسرا کام دستیاب نہیں ہے۔</string>
+
+    <!-- Notifications & Reminders -->
+    <string name="notifications">اطلاعات</string>
+    <string name="task_reminders">کام کی یاد دہانی</string>
+    <string name="manage_reminders">یاد دہانیوں کا انتظام کریں</string>
+    <string name="due_date_reminders">مقررہ وقت کی یاد دہانیاں</string>
+    <string name="reminder_notification">یاد دہانی کی اطلاع</string>
+    <string name="remind_before">کام سے پہلے یاد دلائیں</string>
+    <string name="reminder_time">یاد دہانی کا وقت</string>
+    <string name="min_before_5">5 منٹ پہلے</string>
+    <string name="min_before_10">10 منٹ پہلے</string>
+    <string name="min_before_15">15 منٹ پہلے</string>
+    <string name="min_before_30">30 منٹ پہلے</string>
+    <string name="hour_before_1">1 گھنٹہ پہلے</string>
+    <string name="snooze">سنوز (ملتوی کریں)</string>
+    <string name="snooze_reminder">یاد دہانی ملتوی کریں</string>
+    <string name="snooze_for">\"%1$s\" کی یاد دہانی کو کتنی دیر کے لیے ملتوی کریں:</string>
+    <string name="custom_minutes">اپنی مرضی کے منٹ</string>
+    <string name="permission_required">اجازت درکار ہے</string>
+    <string name="notification_permission_msg">آپ کے کاموں کی یاد دہانی کے لیے نوٹیفکیشن کی اجازت درکار ہے۔</string>
+    <string name="exact_alarm_permission_msg">درست وقت پر یاد دہانی بھیجنے کے لیے الارم کی اجازت درکار ہے۔</string>
+
+    <!-- Focus Timer -->
+    <string name="focus_timer">فوکس ٹائمر</string>
+    <string name="focusing_on">فوکس کر رہے ہیں: %1$s</string>
+    <string name="break_time">وقفے کا وقت</string>
+    <string name="start">شروع کریں</string>
+    <string name="pause">روکیں</string>
+    <string name="resume">دوبارہ شروع کریں</string>
+    <string name="reset">ری سیٹ</string>
+    <string name="minutes_abbr">منٹ</string>
+
+    <!-- Attachments -->
+    <string name="attachment">منسلکہ</string>
+    <string name="add_photo">تصویر شامل کریں</string>
+    <string name="remove_attachment">منسلکہ ہٹائیں</string>
+    <string name="select_photo">تصویر منتخب کریں</string>
+
+    <!-- Profile & Authentication -->
+    <string name="personal_info">ذاتی معلومات</string>
+    <string name="full_name">پورا نام</string>
+    <string name="email_address">ای میل ایڈریس</string>
+    <string name="phone_number">فون نمبر</string>
+    <string name="not_provided">فراہم نہیں کیا گیا</string>
+    <string name="welcome_back">خوش آمدید</string>
+    <string name="sign_in_subtitle">اپنے کاموں کا انتظام جاری رکھنے کے لیے لاگ ان کریں</string>
+    <string name="create_account">نیا اکاؤنٹ بنائیں</string>
+    <string name="dont_have_account">کیا اکاؤنٹ نہیں ہے؟ </string>
+    <string name="already_have_account">پہلے سے اکاؤنٹ موجود ہے؟ </string>
+    <string name="sign_up">سائن اپ کریں</string>
+    <string name="login">لاگ ان کریں</string>
+    <string name="password">پاس ورڈ</string>
+    <string name="confirm_password">پاس ورڈ کی تصدیق کریں</string>
+    <string name="password_hint">کم از کم 6 حروف</string>
+    <string name="confirm_password_hint">پاس ورڈ دوبارہ درج کریں</string>
+    <string name="loading_profile">پروفائل لوڈ ہو رہا ہے...</string>
+    <string name="logout_confirm_title">لاگ آؤٹ</string>
+    <string name="logout_confirm_msg">کیا آپ واقعی لاگ آؤٹ کرنا چاہتے ہیں؟</string>
+    <string name="changes_saved">تبدیلیاں محفوظ ہو گئیں!</string>
+
+    <!-- Weather Feature -->
+    <string name="weather">موسم</string>
+    <string name="weather_forecast">موسم کی پیشن گوئی</string>
+    <string name="weather_at_task_time">کام کے وقت کا موسم</string>
+    <string name="check_weather">موسم چیک کریں</string>
+    <string name="refresh_weather">موسم تازہ کریں</string>
+    <string name="good_conditions">بہترین موسمی حالات</string>
+    <string name="unfavorable_conditions">غیر موزوں موسمی حالات</string>
+    <string name="indoor_recommended">انڈور سرگرمی تجویز کی جاتی ہے</string>
+    <string name="outdoor_suitable">آؤٹ ڈور سرگرمی کے لیے موزوں</string>
+    <string name="select_location">مقام منتخب کریں</string>
+    <string name="search_city_hint">شہر کا نام تلاش کریں...</string>
+    <string name="use_current_location">موجودہ مقام استعمال کریں (GPS)</string>
+    <string name="temperature">درجہ حرارت</string>
+    <string name="humidity">نمی</string>
+    <string name="wind">ہوا</string>
+    <string name="precipitation">بارش کا امکان</string>
+    <string name="details">تفصیلات</string>
+
+    <!-- Settings Screen -->
+    <string name="appearance">ظاہری شکل</string>
+    <string name="theme">تھیم</string>
+    <string name="theme_system">سسٹم ڈیفالٹ</string>
+    <string name="theme_light">لائٹ تھیم</string>
+    <string name="theme_dark">ڈارک تھیم</string>
+    <string name="theme_mode">تھیم موڈ</string>
+    <string name="theme_description">لائٹ، ڈارک یا سسٹم ڈیفالٹ تھیم منتخب کریں</string>
+    <string name="task_import_export">ٹاسک امپورٹ اور ایکسپورٹ</string>
+    <string name="backup_restore_tasks">اپنے کاموں کا بیک اپ یا بحالی کریں</string>
+    <string name="export_tasks">کام ایکسپورٹ کریں</string>
+    <string name="import_tasks">کام امپورٹ کریں</string>
+    <string name="last_backup">آخری بیک اپ: %1$s</string>
+    <string name="last_backup_none">آخری بیک اپ: دستیاب نہیں</string>
+    <string name="export_success">کام کامیابی سے ایکسپورٹ ہو گئے</string>
+    <string name="import_success">کام کامیابی سے امپورٹ ہو گئے (%1$d کام)</string>
+    <string name="import_invalid_data">غلط یا خراب بیک اپ فائل</string>
+    <string name="import_error">کام امپورٹ کرنے میں ناکامی</string>
+    <string name="export_error">کام ایکسپورٹ کرنے میں ناکامی</string>
+    <string name="language">زبان</string>
+    <string name="select_language">زبان منتخب کریں</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ur">اردو (Urdu)</string>
+    <string name="lang_fr">Français (French)</string>
+    <string name="lang_zh">中文 (Chinese)</string>
+    <string name="lang_ar">العربية (Arabic)</string>
+    <string name="general_settings">عمومی</string>
+    <string name="app_version">ورژن 1.0</string>
+
+    <!-- Additional UI Strings -->
+    <string name="task_schedule">کام کا شیڈول</string>
+    <string name="due">مقررہ وقت</string>
+    <string name="set_date">تاریخ منتخب کریں</string>
+    <string name="set_time">وقت منتخب کریں</string>
+    <string name="task_notification">کام کی اطلاع</string>
+    <string name="remind_me">یاد دہانی کا وقت</string>
+    <string name="at_start_time">شروع کے وقت پر</string>
+    <string name="min_before_1">1 منٹ پہلے</string>
+    <string name="hours_before_2">2 گھنٹے پہلے</string>
+    <string name="custom">اپنی مرضی کا</string>
+    <string name="minutes_before">منٹ پہلے</string>
+    <string name="check_weather_forecast">موسم کی پیشگوئی چیک کریں</string>
+    <string name="forecast_at_task_time">کام کے وقت کا موسم</string>
+    <string name="high_priority">زیادہ ترجیح</string>
+    <string name="medium_priority">درمیانی ترجیح</string>
+    <string name="low_priority">کم ترجیح</string>
+    <string name="start_date">شروع کی تاریخ</string>
+    <string name="due_date">آخری تاریخ</string>
+    <string name="full_attachment_preview">منسلک فائل کا مکمل پیش نظارہ</string>
+    <string name="attachment_preview">منسلک فائل کا پیش نظارہ</string>
+    <string name="todays_status">آج کی حالت</string>
+    <string name="tasks_completed_summary">%1$d میں سے %2$d کام مکمل ہوئے</string>
+    <string name="daily_completion">روزانہ کی تکمیل</string>
+    <string name="weekly_progress">ہفتہ وار پیشرفت</string>
+    <string name="monthly_performance">ماہانہ کارکردگی</string>
+    <string name="total_tasks">کل کام</string>
+    <string name="weekly_activity">ہفتہ وار سرگرمی</string>
+    <string name="monthly_progress_graph">ماہانہ پیشرفت کا گراف</string>
+    <string name="monthly_insights">ماہانہ بصیرت</string>
+    <string name="tasks_for_date">%1$s کے کام</string>
+    <string name="no_tasks_today_msg">اپنے فارغ وقت سے لطف اندوز ہوں یا کوئی نیا کام بنائیں۔</string>
+    <string name="popular_cities">مشہور شہر</string>
+    <string name="use_device_gps">ڈیوائس کا GPS استعمال کریں</string>
+    <string name="auto_detect_coords">موجودہ مقام خودکار طور پر تلاش کریں</string>
+    <string name="no_matching_cities">کوئی مماثل شہر نہیں ملا۔</string>
+    <string name="next_24_hours">اگلے 24 گھنٹے</string>
+    <string name="feels_like">محسوس درجہ حرارت %1$d°C</string>
+    <string name="rain">بارش</string>
+    <string name="checking_weather">موسم کی پیشگوئی چیک کی جا رہی ہے...</string>
+    <string name="updating_weather">موسم اپ ڈیٹ ہو رہا ہے...</string>
+    <string name="weather_unavailable_date">اس تاریخ کے لیے ابھی موسم کی معلومات دستیاب نہیں ہیں۔</string>
+    <string name="location_perm_weather">موسم پر مبنی تجاویز کے لیے لوکیشن کی اجازت درکار ہے۔</string>
+    <string name="set_task_datetime_weather">موسمی تجاویز دیکھنے کے لیے کام کی تاریخ اور وقت مقرر کریں۔</string>
+    <string name="mark_indoor">انڈور کریں</string>
+    <string name="change_location">مقام تبدیل کریں</string>
+    <string name="swap_time_question">وقت تبدیل کریں؟</string>
+    <string name="select_task_swap">تبادلے کے لیے کام منتخب کریں:</string>
+    <string name="enter_custom_snooze">اپنی مرضی کے منٹ درج کریں:</string>
+    <string name="snooze_5_min">5 منٹ</string>
+    <string name="snooze_10_min">10 منٹ</string>
+    <string name="snooze_15_min">15 منٹ</string>
+    <string name="snooze_30_min">30 منٹ</string>
+    <string name="snooze_1_hour">1 گھنٹہ</string>
+    <string name="added_date">شامل کیا گیا: %1$s</string>
+</resources>

@@ -1,21 +1,56 @@
 package com.example.mytodoapp.util
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import java.io.File
 
 class SessionManager(context: Context) {
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
+    private val prefs: SharedPreferences = createEncryptedPrefs(context)
 
-    private val prefs = EncryptedSharedPreferences.create(
-        context,
-        "secure_user_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private fun createEncryptedPrefs(context: Context): SharedPreferences {
+        val fileName = "secure_user_prefs"
+        return try {
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+
+            EncryptedSharedPreferences.create(
+                context,
+                fileName,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            Log.e("SessionManager", "Failed to initialize EncryptedSharedPreferences, attempting reset...", e)
+            try {
+                context.deleteSharedPreferences(fileName)
+                val sharedPrefsDir = File(context.filesDir.parent, "shared_prefs")
+                val prefsFile = File(sharedPrefsDir, "$fileName.xml")
+                if (prefsFile.exists()) {
+                    prefsFile.delete()
+                }
+
+                val masterKey = MasterKey.Builder(context)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
+
+                EncryptedSharedPreferences.create(
+                    context,
+                    fileName,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+            } catch (fallbackEx: Exception) {
+                Log.e("SessionManager", "Falling back to standard SharedPreferences", fallbackEx)
+                context.getSharedPreferences(fileName, Context.MODE_PRIVATE)
+            }
+        }
+    }
 
     fun saveAuthToken(token: String?) {
         prefs.edit().putString(KEY_TOKEN, token).apply()

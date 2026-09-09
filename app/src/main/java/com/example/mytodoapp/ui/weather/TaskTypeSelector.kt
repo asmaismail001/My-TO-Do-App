@@ -20,9 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.TaskType
 import com.example.mytodoapp.ui.*
 
@@ -39,7 +41,7 @@ fun TaskTypeSelector(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "Activity Location",
+            text = stringResource(R.string.activity_type),
             style = MaterialTheme.typography.labelMedium,
             color = textSecondaryFor(isDark),
             fontWeight = FontWeight.SemiBold
@@ -70,6 +72,12 @@ fun TaskTypeSelector(
                     TaskType.FLEXIBLE -> Icons.Outlined.Tune
                 }
 
+                val typeLabel = when (type) {
+                    TaskType.INDOOR -> stringResource(R.string.indoor)
+                    TaskType.OUTDOOR -> stringResource(R.string.outdoor)
+                    TaskType.FLEXIBLE -> stringResource(R.string.flexible)
+                }
+
                 Row(
                     modifier = Modifier
                         .weight(1f)
@@ -88,7 +96,7 @@ fun TaskTypeSelector(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = type.displayName,
+                        text = typeLabel,
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 12.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium

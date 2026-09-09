@@ -22,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.Accent
@@ -164,7 +166,7 @@ fun TodoItemRow(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Start: " + formatDateTime(todo.dueTimeMillis ?: todo.createdAt),
+                                text = "${stringResource(R.string.start_time)}: ${formatDateTime(todo.dueTimeMillis ?: todo.createdAt)}",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = textSecondaryFor(isDark)
                             )
@@ -199,7 +201,7 @@ fun TodoItemRow(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
                                     Text(
-                                        text = "Due",
+                                        text = stringResource(R.string.due),
                                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 9.sp),
                                         color = dueText
                                     )
@@ -232,7 +234,7 @@ fun TodoItemRow(
                         ) {
                             Icon(
                                 imageVector = Icons.Outlined.Timer,
-                                contentDescription = "Start Focus Session",
+                                contentDescription = stringResource(R.string.focus_timer),
                                 tint = Accent,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -249,7 +251,7 @@ fun TodoItemRow(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Edit Task",
+                            contentDescription = stringResource(R.string.edit_task),
                             tint = textMutedFor(isDark),
                             modifier = Modifier.size(18.dp)
                         )
@@ -265,7 +267,7 @@ fun TodoItemRow(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.DeleteOutline,
-                            contentDescription = "Delete Task",
+                            contentDescription = stringResource(R.string.delete_task),
                             tint = textMutedFor(isDark),
                             modifier = Modifier.size(18.dp)
                         )
@@ -274,4 +276,4 @@ fun TodoItemRow(
             }
         }
     }
-}
+}

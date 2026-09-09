@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -35,6 +36,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.ui.*
 import com.example.mytodoapp.ui.components.rememberBitmapFromUri
 import com.example.mytodoapp.viewmodel.AuthViewModel
@@ -64,10 +66,10 @@ fun SignupScreen(
         containerColor = backgroundColorFor(isDark),
         topBar = {
             TopAppBar(
-                title = { Text("Create Account", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.create_account), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateToLogin) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = textPrimaryFor(isDark))
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back), tint = textPrimaryFor(isDark))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -97,7 +99,7 @@ fun SignupScreen(
                 if (selectedImageBitmap != null) {
                     Image(
                         bitmap = selectedImageBitmap,
-                        contentDescription = "Selected Profile Image",
+                        contentDescription = stringResource(R.string.select_photo),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -105,13 +107,13 @@ fun SignupScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             imageVector = Icons.Default.PhotoCamera,
-                            contentDescription = "Select Photo",
+                            contentDescription = stringResource(R.string.select_photo),
                             tint = Accent,
                             modifier = Modifier.size(28.dp)
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Add Photo",
+                            text = stringResource(R.string.add_photo),
                             style = MaterialTheme.typography.labelSmall,
                             color = Accent,
                             fontWeight = FontWeight.Bold
@@ -147,7 +149,7 @@ fun SignupScreen(
                     viewModel.signupName = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Full Name") },
+                label = { Text(stringResource(R.string.full_name)) },
                 placeholder = { Text("Sarah Connor") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = textMutedFor(isDark)) },
                 modifier = Modifier.fillMaxWidth(),
@@ -173,7 +175,7 @@ fun SignupScreen(
                     viewModel.signupEmail = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Email Address") },
+                label = { Text(stringResource(R.string.email_address)) },
                 placeholder = { Text("sarah@example.com") },
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = textMutedFor(isDark)) },
                 modifier = Modifier.fillMaxWidth(),
@@ -200,8 +202,8 @@ fun SignupScreen(
                     viewModel.signupPassword = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Password") },
-                placeholder = { Text("At least 6 characters") },
+                label = { Text(stringResource(R.string.password)) },
+                placeholder = { Text(stringResource(R.string.password_hint)) },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = textMutedFor(isDark)) },
                 trailingIcon = {
                     val image = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
@@ -234,8 +236,8 @@ fun SignupScreen(
                     viewModel.signupConfirmPassword = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Confirm Password") },
-                placeholder = { Text("Re-enter password") },
+                label = { Text(stringResource(R.string.confirm_password)) },
+                placeholder = { Text(stringResource(R.string.confirm_password_hint)) },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = textMutedFor(isDark)) },
                 trailingIcon = {
                     val image = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
@@ -279,7 +281,7 @@ fun SignupScreen(
                     )
                 } else {
                     Text(
-                        text = "Sign Up",
+                        text = stringResource(R.string.sign_up),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -294,12 +296,12 @@ fun SignupScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Already have an account? ",
+                    text = stringResource(R.string.already_have_account),
                     style = MaterialTheme.typography.bodyMedium,
                     color = textSecondaryFor(isDark)
                 )
                 Text(
-                    text = "Login",
+                    text = stringResource(R.string.login),
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                     color = Accent,
                     modifier = Modifier.clickable {

@@ -36,6 +36,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import androidx.compose.ui.res.stringResource
+import com.example.mytodoapp.R
+
 @Composable
 fun AddTaskDialog(
     title: String,
@@ -96,7 +99,7 @@ fun AddTaskDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "New Task",
+                    text = stringResource(R.string.new_task),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
                     color = textPrimaryFor(isDark),
@@ -106,8 +109,8 @@ fun AddTaskDialog(
                 OutlinedTextField(
                     value = title,
                     onValueChange = onTitleChange,
-                    label = { Text("Title") },
-                    placeholder = { Text("Enter task title...", color = textMutedFor(isDark)) },
+                    label = { Text(stringResource(R.string.task_title)) },
+                    placeholder = { Text(stringResource(R.string.task_title_hint), color = textMutedFor(isDark)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -128,8 +131,8 @@ fun AddTaskDialog(
                 OutlinedTextField(
                     value = description,
                     onValueChange = onDescriptionChange,
-                    label = { Text("Description") },
-                    placeholder = { Text("Add more details...", color = textMutedFor(isDark)) },
+                    label = { Text(stringResource(R.string.task_desc)) },
+                    placeholder = { Text(stringResource(R.string.task_desc_hint), color = textMutedFor(isDark)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp),
@@ -169,7 +172,7 @@ fun AddTaskDialog(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Text(
-                            text = "Task Schedule",
+                            text = stringResource(R.string.task_schedule),
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium,
                             color = Accent
@@ -191,7 +194,7 @@ fun AddTaskDialog(
                                 }
                         ) {
                             Text(
-                                text = "Start",
+                                text = stringResource(R.string.start),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = textSecondaryFor(isDark),
                                 fontWeight = FontWeight.SemiBold
@@ -210,7 +213,7 @@ fun AddTaskDialog(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = dueTimeMillis?.let { formatDateOnly(it) } ?: "Set date",
+                                        text = dueTimeMillis?.let { formatDateOnly(it) } ?: stringResource(R.string.set_date),
                                         color = if (dueTimeMillis != null) textPrimaryFor(isDark) else textSecondaryFor(isDark),
                                         fontWeight = if (dueTimeMillis != null) FontWeight.SemiBold else FontWeight.Normal,
                                         style = MaterialTheme.typography.bodyMedium
@@ -225,7 +228,7 @@ fun AddTaskDialog(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = dueTimeMillis?.let { formatTimeOnly(it) } ?: "Set time",
+                                        text = dueTimeMillis?.let { formatTimeOnly(it) } ?: stringResource(R.string.set_time),
                                         color = if (dueTimeMillis != null) textPrimaryFor(isDark) else textSecondaryFor(isDark),
                                         fontWeight = if (dueTimeMillis != null) FontWeight.SemiBold else FontWeight.Normal,
                                         style = MaterialTheme.typography.bodyMedium
@@ -249,7 +252,7 @@ fun AddTaskDialog(
                                 }
                         ) {
                             Text(
-                                text = "Due",
+                                text = stringResource(R.string.due),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = textSecondaryFor(isDark),
                                 fontWeight = FontWeight.SemiBold
@@ -268,7 +271,7 @@ fun AddTaskDialog(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = endTimeMillis?.let { formatDateOnly(it) } ?: "Set date",
+                                        text = endTimeMillis?.let { formatDateOnly(it) } ?: stringResource(R.string.set_date),
                                         color = if (endTimeMillis != null) textPrimaryFor(isDark) else textSecondaryFor(isDark),
                                         fontWeight = if (endTimeMillis != null) FontWeight.SemiBold else FontWeight.Normal,
                                         style = MaterialTheme.typography.bodyMedium
@@ -283,7 +286,7 @@ fun AddTaskDialog(
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = endTimeMillis?.let { formatTimeOnly(it) } ?: "Set time",
+                                        text = endTimeMillis?.let { formatTimeOnly(it) } ?: stringResource(R.string.set_time),
                                         color = if (endTimeMillis != null) textPrimaryFor(isDark) else textSecondaryFor(isDark),
                                         fontWeight = if (endTimeMillis != null) FontWeight.SemiBold else FontWeight.Normal,
                                         style = MaterialTheme.typography.bodyMedium
@@ -304,14 +307,14 @@ fun AddTaskDialog(
                             border = BorderStroke(1.dp, Accent.copy(alpha = 0.5f)),
                             contentPadding = PaddingValues(vertical = 10.dp)
                         ) {
-                            Text("🌤 Check Weather Forecast", color = Accent, fontWeight = FontWeight.Bold)
+                            Text("🌤 " + stringResource(R.string.check_weather_forecast), color = Accent, fontWeight = FontWeight.Bold)
                         }
                     } else {
                         WeatherCard(
                             weatherUiState = weatherUiState,
                             taskType = taskType,
                             onRefresh = { onCheckWeatherClick?.invoke() },
-                            title = "Forecast at Task Time"
+                            title = stringResource(R.string.forecast_at_task_time)
                         )
                     }
                 }
@@ -324,7 +327,7 @@ fun AddTaskDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Task Notification",
+                        text = stringResource(R.string.task_notification),
                         fontWeight = FontWeight.SemiBold,
                         color = textPrimaryFor(isDark),
                         style = MaterialTheme.typography.bodyMedium
@@ -346,27 +349,37 @@ fun AddTaskDialog(
                     var showCustomInput by remember { mutableStateOf(notificationMinutesBefore !in listOf(0, 1, 5, 10, 15, 30, 60, 120)) }
                     var customInputText by remember { mutableStateOf(if (showCustomInput) notificationMinutesBefore.toString() else "") }
 
+                    val atStartStr = stringResource(R.string.at_start_time)
+                    val min1Str = stringResource(R.string.min_before_1)
+                    val min5Str = stringResource(R.string.min_before_5)
+                    val min10Str = stringResource(R.string.min_before_10)
+                    val min15Str = stringResource(R.string.min_before_15)
+                    val min30Str = stringResource(R.string.min_before_30)
+                    val hour1Str = stringResource(R.string.hour_before_1)
+                    val hours2Str = stringResource(R.string.hours_before_2)
+                    val customStr = stringResource(R.string.custom)
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Remind me",
+                            text = stringResource(R.string.remind_me),
                             color = textSecondaryFor(isDark),
                             style = MaterialTheme.typography.bodyMedium
                         )
                         var dropdownExpanded by remember { mutableStateOf(false) }
                         val options = listOf(
-                            0 to "At start time",
-                            1 to "1 minute before",
-                            5 to "5 minutes before",
-                            10 to "10 minutes before",
-                            15 to "15 minutes before",
-                            30 to "30 minutes before",
-                            60 to "1 hour before",
-                            120 to "2 hours before",
-                            -1 to "Custom"
+                            0 to atStartStr,
+                            1 to min1Str,
+                            5 to min5Str,
+                            10 to min10Str,
+                            15 to min15Str,
+                            30 to min30Str,
+                            60 to hour1Str,
+                            120 to hours2Str,
+                            -1 to customStr
                         )
                         Box {
                             TextButton(
@@ -375,9 +388,9 @@ fun AddTaskDialog(
                                 contentPadding = PaddingValues(0.dp)
                             ) {
                                 val currentText = if (showCustomInput) {
-                                    "Custom ▼"
+                                    "$customStr ▼"
                                 } else {
-                                    options.firstOrNull { it.first == notificationMinutesBefore }?.second ?: "${notificationMinutesBefore} minutes before ▼"
+                                    options.firstOrNull { it.first == notificationMinutesBefore }?.second ?: "$notificationMinutesBefore $min1Str ▼"
                                 }
                                 val displayText = if (currentText.endsWith("▼")) currentText else "$currentText ▼"
                                 Text(text = displayText, fontWeight = FontWeight.Bold)
@@ -391,7 +404,7 @@ fun AddTaskDialog(
                                     DropdownMenuItem(
                                         text = { Text(label, color = textPrimaryFor(isDark)) },
                                         onClick = {
-                                            if (minutes == -1) {
+                                             if (minutes == -1) {
                                                 showCustomInput = true
                                             } else {
                                                 showCustomInput = false
@@ -421,7 +434,7 @@ fun AddTaskDialog(
                                         onNotificationMinutesBeforeChange(mins)
                                     }
                                 },
-                                label = { Text("Minutes before") },
+                                label = { Text(stringResource(R.string.minutes_before)) },
                                 singleLine = true,
                                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
@@ -460,7 +473,7 @@ fun AddTaskDialog(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Cancel", color = textSecondaryFor(isDark), fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.cancel), color = textSecondaryFor(isDark), fontWeight = FontWeight.Medium)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
@@ -469,7 +482,7 @@ fun AddTaskDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = Accent),
                         contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
                     ) {
-                        Text("Add Task", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.add_task), fontWeight = FontWeight.Bold)
                     }
                 }
             }

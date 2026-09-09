@@ -16,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.*
@@ -56,7 +58,7 @@ fun TaskDetailsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Task Details",
+                        text = stringResource(R.string.task_details),
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleLarge,
                         color = textPrimaryFor(isDark)
@@ -66,7 +68,7 @@ fun TaskDetailsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back),
                             tint = textPrimaryFor(isDark)
                         )
                     }
@@ -115,7 +117,7 @@ fun TaskDetailsScreen(
                                     .padding(horizontal = 10.dp, vertical = 4.dp)
                             ) {
                                 Text(
-                                    text = if (todo.completed) "Completed" else "Pending",
+                                    text = if (todo.completed) stringResource(R.string.completed) else stringResource(R.string.pending),
                                     color = Accent,
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.labelMedium
@@ -123,6 +125,11 @@ fun TaskDetailsScreen(
                             }
 
                             // Task Type Badge
+                            val taskTypeName = when (todo.taskType) {
+                                TaskType.INDOOR -> stringResource(R.string.indoor)
+                                TaskType.OUTDOOR -> stringResource(R.string.outdoor)
+                                TaskType.FLEXIBLE -> stringResource(R.string.flexible)
+                            }
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
@@ -130,7 +137,7 @@ fun TaskDetailsScreen(
                                     .padding(horizontal = 10.dp, vertical = 4.dp)
                             ) {
                                 Text(
-                                    text = todo.taskType.displayName,
+                                    text = taskTypeName,
                                     color = textSecondaryFor(isDark),
                                     fontWeight = FontWeight.SemiBold,
                                     style = MaterialTheme.typography.labelMedium
@@ -143,9 +150,9 @@ fun TaskDetailsScreen(
                             PriorityDot(priority = todo.priority)
                             Spacer(modifier = Modifier.width(6.dp))
                             val priorityText = when (todo.priority) {
-                                Priority.HIGH -> "High Priority"
-                                Priority.MEDIUM -> "Medium Priority"
-                                Priority.LOW -> "Low Priority"
+                                Priority.HIGH -> stringResource(R.string.high_priority)
+                                Priority.MEDIUM -> stringResource(R.string.medium_priority)
+                                Priority.LOW -> stringResource(R.string.low_priority)
                             }
                             Text(
                                 text = priorityText,
@@ -168,7 +175,7 @@ fun TaskDetailsScreen(
                         HorizontalDivider(color = Accent.copy(alpha = 0.2f), thickness = 1.dp)
                         Column {
                             Text(
-                                text = "Description",
+                                text = stringResource(R.string.task_desc),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = textSecondaryFor(isDark)
@@ -205,7 +212,7 @@ fun TaskDetailsScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Start Date",
+                                text = stringResource(R.string.start_date),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = textSecondaryFor(isDark),
                                 fontWeight = FontWeight.Bold
@@ -233,7 +240,7 @@ fun TaskDetailsScreen(
                                 .padding(start = 16.dp)
                         ) {
                             Text(
-                                text = "Start Time",
+                                text = stringResource(R.string.start_time),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = textSecondaryFor(isDark),
                                 fontWeight = FontWeight.Bold
@@ -260,7 +267,7 @@ fun TaskDetailsScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Due Date",
+                                    text = stringResource(R.string.due_date),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = textSecondaryFor(isDark),
                                     fontWeight = FontWeight.Bold
@@ -288,7 +295,7 @@ fun TaskDetailsScreen(
                                     .padding(start = 16.dp)
                             ) {
                                 Text(
-                                    text = "Due Time",
+                                    text = stringResource(R.string.end_time),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = textSecondaryFor(isDark),
                                     fontWeight = FontWeight.Bold
@@ -326,7 +333,7 @@ fun TaskDetailsScreen(
                 onRefresh = onRefreshWeather,
                 onRescheduleClick = onRescheduleClick,
                 onMarkAsIndoorClick = onMarkAsIndoorClick,
-                title = "Weather at Task Time"
+                title = stringResource(R.string.weather_at_task_time)
             )
 
             // Attached Image Card Section
@@ -342,7 +349,7 @@ fun TaskDetailsScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = "Attachment",
+                            text = stringResource(R.string.attachment),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = textSecondaryFor(isDark)
@@ -358,7 +365,7 @@ fun TaskDetailsScreen(
                         ) {
                             AsyncImage(
                                 model = todo.attachmentUri,
-                                contentDescription = "Attachment preview",
+                                contentDescription = stringResource(R.string.attachment_preview),
                                 contentScale = ContentScale.Fit,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -411,7 +418,7 @@ fun TaskDetailsScreen(
                 ) {
                     AsyncImage(
                         model = todo.attachmentUri,
-                        contentDescription = "Full attachment preview",
+                        contentDescription = stringResource(R.string.full_attachment_preview),
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -420,10 +427,11 @@ fun TaskDetailsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     TextButton(onClick = { showFullPreview = false }) {
-                        Text("Close", color = Accent, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.close), color = Accent, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
     }
 }
+

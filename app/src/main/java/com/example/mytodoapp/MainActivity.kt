@@ -16,17 +16,24 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mytodoapp.repository.TodoRepository
+import com.example.mytodoapp.ui.LocalIsDarkTheme
 import com.example.mytodoapp.ui.SplashContent
 import com.example.mytodoapp.ui.TodoScreen
+import com.example.mytodoapp.util.LocaleHelper
+import com.example.mytodoapp.util.PreferencesManager
 import com.example.mytodoapp.viewmodel.TodoViewModel
 import com.example.mytodoapp.viewmodel.TodoViewModelFactory
 import kotlinx.coroutines.delay
@@ -37,6 +44,12 @@ class MainActivity : ComponentActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     private val pendingOpenTaskId = mutableStateOf<Int?>(null)
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = PreferencesManager(newBase)
+        val lang = prefs.getLanguage()
+        super.attachBaseContext(LocaleHelper.setLocale(newBase, lang))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,10 +75,20 @@ class MainActivity : ComponentActivity() {
         pendingOpenTaskId.value = readTaskId(intent)
 
         setContent {
-            val prefs = remember { com.example.mytodoapp.util.PreferencesManager(applicationContext) }
+            val activity = this@MainActivity
+            val prefs = remember { PreferencesManager(activity) }
+            var currentLanguage by remember { mutableStateOf(prefs.getLanguage()) }
+            val localizedContext = remember(currentLanguage) {
+                LocaleHelper.setLocale(activity, currentLanguage)
+            }
+            val layoutDirection = remember(currentLanguage) {
+                LocaleHelper.getLayoutDirection(currentLanguage)
+            }
+
+            var themeMode by remember { mutableStateOf(prefs.getThemeMode()) }
             val systemInDark = androidx.compose.foundation.isSystemInDarkTheme()
-            val isDarkTheme = remember(systemInDark) {
-                when (prefs.getThemeMode()) {
+            val isDarkTheme = remember(themeMode, systemInDark) {
+                when (themeMode) {
                     "light" -> false
                     "dark" -> true
                     else -> systemInDark
@@ -73,46 +96,64 @@ class MainActivity : ComponentActivity() {
             }
             val taskIdToOpen by pendingOpenTaskId
 
-            com.example.mytodoapp.ui.theme.MyTODoAppTheme(darkTheme = isDarkTheme, dynamicColor = false) {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    var showSplash by remember { mutableStateOf(true) }
+            CompositionLocalProvider(
+                LocalContext provides localizedContext,
+                LocalConfiguration provides localizedContext.resources.configuration,
+                LocalLayoutDirection provides layoutDirection,
+                LocalIsDarkTheme provides isDarkTheme,
+                androidx.activity.compose.LocalActivityResultRegistryOwner provides activity
+            ) {
+                com.example.mytodoapp.ui.theme.MyTODoAppTheme(darkTheme = isDarkTheme, dynamicColor = false) {
+                    Surface(modifier = Modifier.fillMaxSize()) {
+                        var showSplash by remember { mutableStateOf(true) }
 
-                    if (showSplash) {
-                        SplashContent()
-                        LaunchedEffect(Unit) {
-                            delay(1600)
-                            showSplash = false
-                            if (pendingOpenTaskId.value == null) {
-                                requestIgnoreBatteryOptimizations()
+                        if (showSplash) {
+                            SplashContent()
+                            LaunchedEffect(Unit) {
+                                delay(1600)
+                                showSplash = false
+                                if (pendingOpenTaskId.value == null) {
+                                    requestIgnoreBatteryOptimizations()
+                                }
                             }
+                        } else {
+                            val repository = TodoRepository(applicationContext)
+                            val authRepository = com.example.mytodoapp.repository.AuthRepository(applicationContext)
+                            val profileRepository = com.example.mytodoapp.repository.ProfileRepository(applicationContext)
+                            val weatherRepository = com.example.mytodoapp.repository.WeatherRepository()
+
+                            val viewModel: TodoViewModel = viewModel(
+                                factory = TodoViewModelFactory(repository, applicationContext)
+                            )
+                            val authViewModel: com.example.mytodoapp.viewmodel.AuthViewModel = viewModel(
+                                factory = com.example.mytodoapp.viewmodel.AuthViewModelFactory(authRepository, repository)
+                            )
+                            val profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel = viewModel(
+                                factory = com.example.mytodoapp.viewmodel.ProfileViewModelFactory(authRepository, profileRepository)
+                            )
+                            val weatherViewModel: com.example.mytodoapp.viewmodel.WeatherViewModel = viewModel(
+                                factory = com.example.mytodoapp.viewmodel.WeatherViewModelFactory(weatherRepository, applicationContext)
+                            )
+
+                            TodoScreen(
+                                viewModel = viewModel,
+                                authViewModel = authViewModel,
+                                profileViewModel = profileViewModel,
+                                weatherViewModel = weatherViewModel,
+                                openTaskId = taskIdToOpen,
+                                onOpenTaskConsumed = { pendingOpenTaskId.value = null },
+                                themeMode = themeMode,
+                                onThemeModeChange = { mode ->
+                                    themeMode = mode
+                                    prefs.setThemeMode(mode)
+                                },
+                                currentLanguage = currentLanguage,
+                                onLanguageChange = { lang ->
+                                    currentLanguage = lang
+                                    prefs.setLanguage(lang)
+                                }
+                            )
                         }
-                    } else {
-                        val repository = TodoRepository(applicationContext)
-                        val authRepository = com.example.mytodoapp.repository.AuthRepository(applicationContext)
-                        val profileRepository = com.example.mytodoapp.repository.ProfileRepository(applicationContext)
-                        val weatherRepository = com.example.mytodoapp.repository.WeatherRepository()
-
-                        val viewModel: TodoViewModel = viewModel(
-                            factory = TodoViewModelFactory(repository, applicationContext)
-                        )
-                        val authViewModel: com.example.mytodoapp.viewmodel.AuthViewModel = viewModel(
-                            factory = com.example.mytodoapp.viewmodel.AuthViewModelFactory(authRepository, repository)
-                        )
-                        val profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel = viewModel(
-                            factory = com.example.mytodoapp.viewmodel.ProfileViewModelFactory(authRepository, profileRepository)
-                        )
-                        val weatherViewModel: com.example.mytodoapp.viewmodel.WeatherViewModel = viewModel(
-                            factory = com.example.mytodoapp.viewmodel.WeatherViewModelFactory(weatherRepository, applicationContext)
-                        )
-
-                        TodoScreen(
-                            viewModel = viewModel,
-                            authViewModel = authViewModel,
-                            profileViewModel = profileViewModel,
-                            weatherViewModel = weatherViewModel,
-                            openTaskId = taskIdToOpen,
-                            onOpenTaskConsumed = { pendingOpenTaskId.value = null }
-                        )
                     }
                 }
             }

@@ -23,16 +23,18 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.ui.*
 import com.example.mytodoapp.ui.components.rememberBitmapFromUri
 import com.example.mytodoapp.viewmodel.ProfileViewModel
@@ -60,10 +62,10 @@ fun EditProfileScreen(
         containerColor = backgroundColorFor(isDark),
         topBar = {
             TopAppBar(
-                title = { Text("Edit Profile", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.edit_profile), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = textPrimaryFor(isDark))
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back), tint = textPrimaryFor(isDark))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -93,7 +95,7 @@ fun EditProfileScreen(
                 if (selectedImageBitmap != null) {
                     Image(
                         bitmap = selectedImageBitmap,
-                        contentDescription = "Selected Profile Image",
+                        contentDescription = stringResource(R.string.select_photo),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -116,7 +118,7 @@ fun EditProfileScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.PhotoCamera,
-                        contentDescription = "Choose Photo",
+                        contentDescription = stringResource(R.string.select_photo),
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )
@@ -169,7 +171,7 @@ fun EditProfileScreen(
                     viewModel.editName = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Full Name") },
+                label = { Text(stringResource(R.string.full_name)) },
                 placeholder = { Text("Your Name") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = textMutedFor(isDark)) },
                 modifier = Modifier.fillMaxWidth(),
@@ -192,7 +194,7 @@ fun EditProfileScreen(
             OutlinedTextField(
                 value = viewModel.profileData?.email ?: "",
                 onValueChange = {},
-                label = { Text("Email Address") },
+                label = { Text(stringResource(R.string.email_address)) },
                 readOnly = true,
                 enabled = false,
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = textMutedFor(isDark).copy(alpha = 0.5f)) },
@@ -215,7 +217,7 @@ fun EditProfileScreen(
                     viewModel.editPhone = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Phone Number") },
+                label = { Text(stringResource(R.string.phone_number)) },
                 placeholder = { Text("+1 (234) 567-890") },
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = textMutedFor(isDark)) },
                 modifier = Modifier.fillMaxWidth(),
@@ -239,7 +241,7 @@ fun EditProfileScreen(
             Button(
                 onClick = {
                     viewModel.updateProfile {
-                        Toast.makeText(context, "Changes Saved!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.changes_saved), Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
@@ -257,7 +259,7 @@ fun EditProfileScreen(
                     )
                 } else {
                     Text(
-                        text = "Save Changes",
+                        text = stringResource(R.string.save_changes),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )

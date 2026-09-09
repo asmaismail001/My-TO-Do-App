@@ -18,9 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.LocationData
 import com.example.mytodoapp.ui.*
 
@@ -74,7 +76,7 @@ fun LocationPickerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Select Location",
+                        text = stringResource(R.string.select_location),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = textPrimaryFor(isDark)
@@ -82,7 +84,7 @@ fun LocationPickerDialog(
                     IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
                         Icon(
                             imageVector = Icons.Outlined.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.close),
                             tint = textSecondaryFor(isDark)
                         )
                     }
@@ -95,7 +97,7 @@ fun LocationPickerDialog(
                         searchText = it
                         onSearchQueryChange(it)
                     },
-                    placeholder = { Text("Search city name...", color = textMutedFor(isDark)) },
+                    placeholder = { Text(stringResource(R.string.search_city_hint), color = textMutedFor(isDark)) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Search,
@@ -153,12 +155,12 @@ fun LocationPickerDialog(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "Use Device GPS Location",
+                                text = stringResource(R.string.use_device_gps),
                                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                                 color = textPrimaryFor(isDark)
                             )
                             Text(
-                                text = "Auto-detect current coordinates",
+                                text = stringResource(R.string.auto_detect_coords),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = textSecondaryFor(isDark)
                             )
@@ -170,7 +172,7 @@ fun LocationPickerDialog(
                 val listToShow = if (searchText.trim().length >= 2) searchResults else presetLocations
 
                 Text(
-                    text = if (searchText.trim().length >= 2) "Search Results" else "Popular Cities",
+                    text = if (searchText.trim().length >= 2) stringResource(R.string.details) else stringResource(R.string.popular_cities),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = textSecondaryFor(isDark)
@@ -185,7 +187,7 @@ fun LocationPickerDialog(
                     if (listToShow.isEmpty() && searchText.isNotBlank() && !isSearching) {
                         item {
                             Text(
-                                text = "No matching cities found.",
+                                text = stringResource(R.string.no_matching_cities),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textMutedFor(isDark),
                                 modifier = Modifier.padding(vertical = 8.dp)
@@ -225,3 +227,4 @@ fun LocationPickerDialog(
         }
     }
 }
+

@@ -23,9 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.*
 import com.example.mytodoapp.ui.*
 
@@ -75,7 +77,7 @@ fun WeatherCard(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Refresh,
-                        contentDescription = "Refresh weather",
+                        contentDescription = stringResource(R.string.refresh_weather),
                         tint = Accent,
                         modifier = Modifier.size(16.dp)
                     )
@@ -98,7 +100,7 @@ fun WeatherCard(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Checking weather forecast...",
+                            text = stringResource(R.string.checking_weather),
                             style = MaterialTheme.typography.bodyMedium,
                             color = textSecondaryFor(isDark)
                         )
@@ -131,7 +133,7 @@ fun WeatherCard(
                                     color = textPrimaryFor(isDark)
                                 )
                                 Text(
-                                    text = "Feels like ${Math.round(weather.feelsLikeC)}°C",
+                                    text = stringResource(R.string.feels_like, Math.round(weather.feelsLikeC)),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = textMutedFor(isDark)
                                 )
@@ -170,7 +172,7 @@ fun WeatherCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Rain: ${weather.rainProbability}%",
+                                text = "${stringResource(R.string.rain)}: ${weather.rainProbability}%",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textSecondaryFor(isDark)
                             )
@@ -186,7 +188,7 @@ fun WeatherCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Wind: ${weather.windSpeedKmh.toInt()} km/h",
+                                text = "${stringResource(R.string.wind)}: ${weather.windSpeedKmh.toInt()} km/h",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textSecondaryFor(isDark)
                             )
@@ -202,7 +204,7 @@ fun WeatherCard(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Humidity: ${weather.humidityPercent}%",
+                                text = "${stringResource(R.string.humidity)}: ${weather.humidityPercent}%",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textSecondaryFor(isDark)
                             )
@@ -287,7 +289,7 @@ fun WeatherCard(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Mark Indoor",
+                                        text = stringResource(R.string.mark_indoor),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Accent,
                                         fontWeight = FontWeight.Bold
@@ -310,7 +312,7 @@ fun WeatherCard(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Reschedule",
+                                    text = stringResource(R.string.reschedule),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold
@@ -335,7 +337,7 @@ fun WeatherCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Weather forecast is not available for this date yet.",
+                            text = stringResource(R.string.weather_unavailable_date),
                             style = MaterialTheme.typography.bodySmall,
                             color = textMutedFor(isDark)
                         )
@@ -357,7 +359,7 @@ fun WeatherCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Location permission is required to provide weather-based task suggestions.",
+                            text = stringResource(R.string.location_perm_weather),
                             style = MaterialTheme.typography.bodySmall,
                             color = textSecondaryFor(isDark)
                         )
@@ -388,7 +390,7 @@ fun WeatherCard(
 
                 is WeatherUiState.Idle -> {
                     Text(
-                        text = "Set a task date and time to view weather recommendations.",
+                        text = stringResource(R.string.set_task_datetime_weather),
                         style = MaterialTheme.typography.bodySmall,
                         color = textMutedFor(isDark)
                     )
@@ -397,3 +399,4 @@ fun WeatherCard(
         }
     }
 }
+

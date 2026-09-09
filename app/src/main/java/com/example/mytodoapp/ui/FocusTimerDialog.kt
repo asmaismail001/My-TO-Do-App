@@ -13,16 +13,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.FontWeight
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.LocalIsDarkTheme
 import com.example.mytodoapp.ui.textPrimaryFor
 import com.example.mytodoapp.ui.Accent
-
 
 private const val BREAK_MILLIS = 5 * 60 * 1000L
 
@@ -103,7 +104,7 @@ fun FocusTimerDialog(
         title = {
             val isDark = LocalIsDarkTheme.current
             Text(
-                text = if (isBreak) "Break time" else "Focusing on: ${todo.title}",
+                text = if (isBreak) stringResource(R.string.break_time) else stringResource(R.string.focusing_on, todo.title),
                 color = textPrimaryFor(isDark)
             )
         },
@@ -151,7 +152,7 @@ fun FocusTimerDialog(
                         }
 
                         Text(
-                            text = "${customFocusMinutes} min",
+                            text = "$customFocusMinutes ${stringResource(R.string.minutes_abbr)}",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimaryFor(isDark)
@@ -176,11 +177,11 @@ fun FocusTimerDialog(
                     IconButton(onClick = { if (isRunning) pauseTimer() else startTimer() }) {
                         Icon(
                             if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = if (isRunning) "Pause" else "Start"
+                            contentDescription = if (isRunning) stringResource(R.string.pause) else stringResource(R.string.start)
                         )
                     }
                     IconButton(onClick = { resetTimer() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Reset")
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.reset))
                     }
                 }
             }
@@ -189,7 +190,7 @@ fun FocusTimerDialog(
             TextButton(onClick = {
                 timer?.cancel()
                 onDismiss()
-            }) { Text("Close") }
+            }) { Text(stringResource(R.string.close)) }
         }
     )
-}
+}

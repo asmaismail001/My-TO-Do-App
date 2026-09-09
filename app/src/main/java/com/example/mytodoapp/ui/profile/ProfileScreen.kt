@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,10 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.ui.*
 import com.example.mytodoapp.ui.components.rememberBitmapFromUri
 import com.example.mytodoapp.viewmodel.ProfileViewModel
@@ -39,6 +42,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     onBack: () -> Unit,
     onNavigateToEditProfile: () -> Unit,
+    onNavigateToSettings: () -> Unit = {},
     onLogoutSuccess: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
@@ -54,14 +58,14 @@ fun ProfileScreen(
             containerColor = surfaceColorFor(isDark),
             title = {
                 Text(
-                    text = "Log Out",
+                    text = stringResource(R.string.logout_confirm_title),
                     fontWeight = FontWeight.Bold,
                     color = textPrimaryFor(isDark)
                 )
             },
             text = {
                 Text(
-                    text = "Are you sure you want to log out?",
+                    text = stringResource(R.string.logout_confirm_msg),
                     color = textSecondaryFor(isDark)
                 )
             },
@@ -73,7 +77,7 @@ fun ProfileScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = DeleteRed, contentColor = Color.White)
                 ) {
-                    Text("Logout")
+                    Text(stringResource(R.string.logout))
                 }
             },
             dismissButton = {
@@ -81,7 +85,7 @@ fun ProfileScreen(
                     onClick = { showLogoutDialog = false },
                     colors = ButtonDefaults.textButtonColors(contentColor = textSecondaryFor(isDark))
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -91,10 +95,14 @@ fun ProfileScreen(
         containerColor = backgroundColorFor(isDark),
         topBar = {
             TopAppBar(
-                title = { Text("Profile", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.profile), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = textPrimaryFor(isDark))
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                            tint = textPrimaryFor(isDark)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -115,7 +123,7 @@ fun ProfileScreen(
                     CircularProgressIndicator(color = Accent)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Loading profile...",
+                        text = stringResource(R.string.loading_profile),
                         style = MaterialTheme.typography.bodyMedium,
                         color = textSecondaryFor(isDark)
                     )
@@ -142,7 +150,7 @@ fun ProfileScreen(
                             onClick = { viewModel.loadProfile() },
                             colors = ButtonDefaults.buttonColors(containerColor = Accent)
                         ) {
-                            Text("Retry")
+                            Text(stringResource(R.string.retry))
                         }
                     }
                 }
@@ -209,7 +217,7 @@ fun ProfileScreen(
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
                             Text(
-                                text = "Personal Information",
+                                text = stringResource(R.string.personal_info),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = textPrimaryFor(isDark)
                             )
@@ -217,7 +225,7 @@ fun ProfileScreen(
 
                             InfoRow(
                                 icon = Icons.Default.Person,
-                                label = "Full Name",
+                                label = stringResource(R.string.full_name),
                                 value = user.name,
                                 isDark = isDark
                             )
@@ -227,7 +235,7 @@ fun ProfileScreen(
                             )
                             InfoRow(
                                 icon = Icons.Default.Email,
-                                label = "Email Address",
+                                label = stringResource(R.string.email_address),
                                 value = user.email,
                                 isDark = isDark
                             )
@@ -237,8 +245,8 @@ fun ProfileScreen(
                             )
                             InfoRow(
                                 icon = Icons.Default.Phone,
-                                label = "Phone Number",
-                                value = user.phone ?: "Not Provided",
+                                label = stringResource(R.string.phone_number),
+                                value = user.phone ?: stringResource(R.string.not_provided),
                                 isDark = isDark
                             )
                         }
@@ -247,8 +255,17 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     ProfileOptionItem(
+                        icon = Icons.Outlined.Settings,
+                        title = stringResource(R.string.settings),
+                        isDark = isDark,
+                        onClick = onNavigateToSettings
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    ProfileOptionItem(
                         icon = Icons.Default.Edit,
-                        title = "Edit Profile",
+                        title = stringResource(R.string.edit_profile),
                         isDark = isDark,
                         onClick = {
                             viewModel.initializeEditFields()
@@ -260,7 +277,7 @@ fun ProfileScreen(
 
                     ProfileOptionItem(
                         icon = Icons.Default.Logout,
-                        title = "Log Out",
+                        title = stringResource(R.string.logout),
                         textColor = DeleteRed,
                         iconColor = DeleteRed,
                         isDark = isDark,

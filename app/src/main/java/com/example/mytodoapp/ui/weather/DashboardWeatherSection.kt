@@ -19,9 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.*
 import com.example.mytodoapp.ui.*
 import com.example.mytodoapp.viewmodel.OutdoorTasksSummary
@@ -79,13 +81,13 @@ fun DashboardWeatherSection(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Details",
+                        text = stringResource(R.string.details),
                         style = MaterialTheme.typography.labelSmall,
                         color = textMutedFor(isDark)
                     )
                     Icon(
                         imageVector = Icons.Outlined.ChevronRight,
-                        contentDescription = "View weather details",
+                        contentDescription = stringResource(R.string.details),
                         tint = textMutedFor(isDark),
                         modifier = Modifier.size(16.dp)
                     )
@@ -108,7 +110,7 @@ fun DashboardWeatherSection(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Updating weather...",
+                            text = stringResource(R.string.updating_weather),
                             style = MaterialTheme.typography.bodySmall,
                             color = textSecondaryFor(isDark)
                         )
@@ -196,7 +198,7 @@ fun DashboardWeatherSection(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Enable location for weather forecast suggestions.",
+                            text = stringResource(R.string.location_perm_weather),
                             style = MaterialTheme.typography.bodySmall,
                             color = textSecondaryFor(isDark),
                             modifier = Modifier.weight(1f)
@@ -217,14 +219,14 @@ fun DashboardWeatherSection(
                             modifier = Modifier.weight(1f)
                         )
                         IconButton(onClick = onRefresh, modifier = Modifier.size(24.dp)) {
-                            Icon(Icons.Outlined.Refresh, contentDescription = "Retry", tint = Accent, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.retry), tint = Accent, modifier = Modifier.size(16.dp))
                         }
                     }
                 }
 
                 is WeatherUiState.ForecastUnavailable -> {
                     Text(
-                        text = "Weather forecast is currently unavailable.",
+                        text = stringResource(R.string.weather_unavailable_date),
                         style = MaterialTheme.typography.bodySmall,
                         color = textMutedFor(isDark)
                     )
@@ -232,7 +234,7 @@ fun DashboardWeatherSection(
 
                 is WeatherUiState.Idle -> {
                     Text(
-                        text = "Tap to check weather forecast.",
+                        text = stringResource(R.string.check_weather_forecast),
                         style = MaterialTheme.typography.bodySmall,
                         color = textMutedFor(isDark)
                     )
@@ -241,3 +243,4 @@ fun DashboardWeatherSection(
         }
     }
 }
+

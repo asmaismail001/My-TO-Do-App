@@ -28,9 +28,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
  
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.model.TaskType
 import com.example.mytodoapp.model.Todo
@@ -47,6 +49,7 @@ import com.example.mytodoapp.ui.components.CustomDateTimePickerDialog
 import com.example.mytodoapp.ui.components.TaskListContent
 import com.example.mytodoapp.ui.components.TaskDetailsScreen
 import com.example.mytodoapp.ui.components.TodoSearchBar
+import com.example.mytodoapp.ui.settings.SettingsScreen
 import com.example.mytodoapp.util.CalendarUtil
 import com.example.mytodoapp.util.DateTimePickerUtil
 import com.example.mytodoapp.util.LocationHelper
@@ -65,7 +68,11 @@ fun TodoScreen(
     profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel,
     weatherViewModel: WeatherViewModel? = null,
     openTaskId: Int? = null,
-    onOpenTaskConsumed: () -> Unit = {}
+    onOpenTaskConsumed: () -> Unit = {},
+    themeMode: String = "system",
+    onThemeModeChange: (String) -> Unit = {},
+    currentLanguage: String = "en",
+    onLanguageChange: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val prefs = remember { PreferencesManager(context) }
@@ -91,27 +98,45 @@ fun TodoScreen(
         }
     }
 
-    var themeMode by remember { mutableStateOf(prefs.getThemeMode()) }
-    val systemInDark = androidx.compose.foundation.isSystemInDarkTheme()
-    val isDarkTheme = remember(themeMode, systemInDark) {
-        when (themeMode) {
-            "light" -> false
-            "dark" -> true
-            else -> systemInDark
-        }
-    }
+    val isDarkTheme = LocalIsDarkTheme.current
     var notificationsEnabled by remember { mutableStateOf(prefs.areNotificationsEnabled()) }
+    var defaultReminderMinutes by remember { mutableIntStateOf(prefs.getDefaultReminderMinutes()) }
+    var lastBackupTime by remember { mutableStateOf(prefs.getLastBackupTime()) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
-    ) { uri: Uri? -> viewModel.exportTasks(context, uri) }
+    ) { uri: Uri? ->
+        viewModel.exportTasks(
+            context = context,
+            uri = uri,
+            onSuccess = {
+                lastBackupTime = prefs.getLastBackupTime()
+                Toast.makeText(context, context.getString(R.string.export_success), Toast.LENGTH_SHORT).show()
+            },
+            onError = { msg ->
+                Toast.makeText(context, "${context.getString(R.string.export_error)}: $msg", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
 
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? -> viewModel.importTasks(context, uri) }
+    ) { uri: Uri? ->
+        viewModel.importTasks(
+            context = context,
+            uri = uri,
+            onSuccess = { count ->
+                lastBackupTime = prefs.getLastBackupTime()
+                Toast.makeText(context, context.getString(R.string.import_success, count), Toast.LENGTH_SHORT).show()
+            },
+            onError = {
+                Toast.makeText(context, context.getString(R.string.import_invalid_data), Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
 
     var currentScreen by remember {
         mutableStateOf(if (authViewModel.isLoggedIn) Screen.DASHBOARD else Screen.LOGIN)
@@ -133,7 +158,7 @@ fun TodoScreen(
     var newDueTime by remember { mutableStateOf<Long?>(null) }
     var newEndTime by remember { mutableStateOf<Long?>(null) }
     var newNotificationEnabled by remember { mutableStateOf(false) }
-    var newNotificationMinutesBefore by remember { mutableStateOf(10) }
+    var newNotificationMinutesBefore by remember { mutableIntStateOf(defaultReminderMinutes) }
     var newAttachmentUri by remember { mutableStateOf<String?>(null) }
 
     var showEditDialog by remember { mutableStateOf(false) }
@@ -145,7 +170,7 @@ fun TodoScreen(
     var editDueTime by remember { mutableStateOf<Long?>(null) }
     var editEndTime by remember { mutableStateOf<Long?>(null) }
     var editNotificationEnabled by remember { mutableStateOf(false) }
-    var editNotificationMinutesBefore by remember { mutableStateOf(10) }
+    var editNotificationMinutesBefore by remember { mutableIntStateOf(10) }
     var editAttachmentUri by remember { mutableStateOf<String?>(null) }
 
     var showReschedulePickerForDetails by remember { mutableStateOf(false) }
@@ -161,7 +186,7 @@ fun TodoScreen(
 
     var showValidationErrorDialog by remember { mutableStateOf(false) }
     var validationErrorMessage by remember { mutableStateOf("") }
-    var validationErrorTitle by remember { mutableStateOf("Invalid Task Time") }
+    var validationErrorTitle by remember { mutableStateOf("") }
 
     var showExactAlarmSettingsDialog by remember { mutableStateOf(false) }
 
@@ -183,8 +208,8 @@ fun TodoScreen(
                 if (showEditDialog) editNotificationEnabled = true
             }
         } else {
-            validationErrorTitle = "Permission Required"
-            validationErrorMessage = "Notification permission is required to send reminders for your tasks."
+            validationErrorTitle = context.getString(R.string.permission_required)
+            validationErrorMessage = context.getString(R.string.notification_permission_msg)
             showValidationErrorDialog = true
             if (showAddDialog) {
                 newNotificationEnabled = false
@@ -226,7 +251,7 @@ fun TodoScreen(
         showDeleteDialog = true
     }
 
-    if (currentScreen == Screen.TASK_DETAILS) {
+    if (currentScreen == Screen.TASK_DETAILS || currentScreen == Screen.SETTINGS) {
         BackHandler {
             currentScreen = previousScreen
             selectedTodoForDetails = null
@@ -275,14 +300,14 @@ fun TodoScreen(
             containerColor = surfaceColorFor(isDarkTheme),
             title = {
                 Text(
-                    text = "Log Out",
+                    text = stringResource(R.string.logout_confirm_title),
                     fontWeight = FontWeight.Bold,
                     color = textPrimaryFor(isDarkTheme)
                 )
             },
             text = {
                 Text(
-                    text = "Are you sure you want to log out?",
+                    text = stringResource(R.string.logout_confirm_msg),
                     color = textSecondaryFor(isDarkTheme)
                 )
             },
@@ -298,7 +323,7 @@ fun TodoScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = DeleteRed, contentColor = Color.White)
                 ) {
-                    Text("Logout")
+                    Text(stringResource(R.string.logout))
                 }
             },
             dismissButton = {
@@ -306,7 +331,7 @@ fun TodoScreen(
                     onClick = { showLogoutDialog = false },
                     colors = ButtonDefaults.textButtonColors(contentColor = textSecondaryFor(isDarkTheme))
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -316,330 +341,348 @@ fun TodoScreen(
         Screen.DASHBOARD, Screen.ALL, Screen.COMPLETED, Screen.PENDING, Screen.CALENDAR
     )
 
-    CompositionLocalProvider(LocalIsDarkTheme provides isDarkTheme) {
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                SettingsDrawerContent(
-                    currentScreen = currentScreen,
-                    onScreenSelect = { screen ->
-                        currentScreen = screen
-                        scope.launch { drawerState.close() }
-                    },
-                    themeMode = themeMode,
-                    onThemeModeChange = { mode ->
-                        themeMode = mode
-                        prefs.setThemeMode(mode)
-                    },
-                    isDarkTheme = isDarkTheme,
-                    notificationsEnabled = notificationsEnabled,
-                    onNotificationsChange = {
-                        notificationsEnabled = it
-                        prefs.setNotificationsEnabled(it)
-                        viewModel.onGlobalNotificationsChanged(it)
-                    },
-                    onExportClick = { exportLauncher.launch("todo_backup.json") },
-                    onImportClick = { importLauncher.launch(arrayOf("application/json")) },
-                    onLogoutClick = {
-                        scope.launch { drawerState.close() }
-                        showLogoutDialog = true
-                    }
-                )
-            }
-        ) {
-            Scaffold(
-                containerColor = backgroundColorFor(isDarkTheme),
-                topBar = {
-                    if (showMainBars) {
-                        TopAppBar(
-                            title = {
-                                Text(
-                                    text = if (currentScreen == Screen.DASHBOARD) "Dashboard" else "Task Manager",
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
-                            },
-                            navigationIcon = {
-                                IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                    Icon(Icons.Filled.Menu, contentDescription = "Settings", tint = textPrimaryFor(isDarkTheme))
-                                }
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = backgroundColorFor(isDarkTheme),
-                                titleContentColor = textPrimaryFor(isDarkTheme)
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            SettingsDrawerContent(
+                currentScreen = currentScreen,
+                onScreenSelect = { screen ->
+                    currentScreen = screen
+                    scope.launch { drawerState.close() }
+                },
+                isDarkTheme = isDarkTheme,
+                onLogoutClick = {
+                    scope.launch { drawerState.close() }
+                    showLogoutDialog = true
+                }
+            )
+        }
+    ) {
+        Scaffold(
+            containerColor = backgroundColorFor(isDarkTheme),
+            topBar = {
+                if (showMainBars) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = if (currentScreen == Screen.DASHBOARD) stringResource(R.string.dashboard) else stringResource(R.string.app_name),
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleLarge
                             )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.menu), tint = textPrimaryFor(isDarkTheme))
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = backgroundColorFor(isDarkTheme),
+                            titleContentColor = textPrimaryFor(isDarkTheme)
                         )
-                    }
-                },
-                bottomBar = {
-                    if (showMainBars) {
-                        BottomNavBar(selected = currentScreen, onSelect = { currentScreen = it })
-                    }
-                },
-                floatingActionButton = {
-                    if (showMainBars) {
-                        FloatingActionButton(
-                            onClick = { showAddDialog = true },
-                            containerColor = Accent,
-                            contentColor = Color.White,
-                            shape = androidx.compose.foundation.shape.CircleShape
-                        ) {
-                            Icon(Icons.Filled.Add, contentDescription = "Add Task")
-                        }
+                    )
+                }
+            },
+            bottomBar = {
+                if (showMainBars) {
+                    BottomNavBar(selected = currentScreen, onSelect = { currentScreen = it })
+                }
+            },
+            floatingActionButton = {
+                if (showMainBars) {
+                    FloatingActionButton(
+                        onClick = {
+                            newNotificationMinutesBefore = defaultReminderMinutes
+                            showAddDialog = true
+                        },
+                        containerColor = Accent,
+                        contentColor = Color.White,
+                        shape = androidx.compose.foundation.shape.CircleShape
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_task))
                     }
                 }
-            ) { paddingValues ->
+            }
+        ) { paddingValues ->
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(if (showMainBars) paddingValues else PaddingValues(0.dp))
-                ) {
-                    when (currentScreen) {
-                        Screen.LOGIN -> {
-                            com.example.mytodoapp.ui.auth.LoginScreen(
-                                viewModel = authViewModel,
-                                onNavigateToSignup = { currentScreen = Screen.SIGNUP },
-                                onLoginSuccess = {
-                                    viewModel.loadTodos()
-                                    currentScreen = Screen.DASHBOARD
-                                }
-                            )
-                        }
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(if (showMainBars) paddingValues else PaddingValues(0.dp))
+            ) {
+                when (currentScreen) {
+                    Screen.LOGIN -> {
+                        com.example.mytodoapp.ui.auth.LoginScreen(
+                            viewModel = authViewModel,
+                            onNavigateToSignup = { currentScreen = Screen.SIGNUP },
+                            onLoginSuccess = {
+                                viewModel.loadTodos()
+                                currentScreen = Screen.DASHBOARD
+                            }
+                        )
+                    }
 
-                        Screen.SIGNUP -> {
-                            com.example.mytodoapp.ui.auth.SignupScreen(
-                                viewModel = authViewModel,
-                                onNavigateToLogin = { currentScreen = Screen.LOGIN },
-                                onSignupSuccess = {
-                                    viewModel.loadTodos()
-                                    currentScreen = Screen.DASHBOARD
-                                }
-                            )
-                        }
+                    Screen.SIGNUP -> {
+                        com.example.mytodoapp.ui.auth.SignupScreen(
+                            viewModel = authViewModel,
+                            onNavigateToLogin = { currentScreen = Screen.LOGIN },
+                            onSignupSuccess = {
+                                viewModel.loadTodos()
+                                currentScreen = Screen.DASHBOARD
+                            }
+                        )
+                    }
 
-                        Screen.PROFILE -> {
-                            com.example.mytodoapp.ui.profile.ProfileScreen(
-                                viewModel = profileViewModel,
-                                onBack = { currentScreen = Screen.DASHBOARD },
-                                onNavigateToEditProfile = { currentScreen = Screen.EDIT_PROFILE },
-                                onLogoutSuccess = {
-                                    authViewModel.resetState()
-                                    viewModel.loadTodos()
-                                    currentScreen = Screen.LOGIN
-                                }
-                            )
-                        }
+                    Screen.PROFILE -> {
+                        com.example.mytodoapp.ui.profile.ProfileScreen(
+                            viewModel = profileViewModel,
+                            onBack = { currentScreen = Screen.DASHBOARD },
+                            onNavigateToEditProfile = { currentScreen = Screen.EDIT_PROFILE },
+                            onNavigateToSettings = {
+                                previousScreen = currentScreen
+                                currentScreen = Screen.SETTINGS
+                            },
+                            onLogoutSuccess = {
+                                authViewModel.resetState()
+                                viewModel.loadTodos()
+                                currentScreen = Screen.LOGIN
+                            }
+                        )
+                    }
 
-                        Screen.EDIT_PROFILE -> {
-                            com.example.mytodoapp.ui.profile.EditProfileScreen(
-                                viewModel = profileViewModel,
-                                onBack = { currentScreen = Screen.PROFILE }
-                            )
-                        }
+                    Screen.EDIT_PROFILE -> {
+                        com.example.mytodoapp.ui.profile.EditProfileScreen(
+                            viewModel = profileViewModel,
+                            onBack = { currentScreen = Screen.PROFILE }
+                        )
+                    }
 
-                        Screen.DASHBOARD -> {
-                            DashboardScreen(
-                                viewModel = viewModel,
-                                profileViewModel = profileViewModel,
-                                weatherViewModel = weatherViewModel,
-                                onToggle = { viewModel.toggleTodo(it) },
-                                onEditClick = { openEdit(it) },
-                                onDeleteClick = { openDelete(it) },
-                                onAddTaskClick = { showAddDialog = true },
-                                onFocusOpen = { focusTimerTodo = it },
-                                onTodoClick = navigateToDetails,
-                                onProfileClick = { currentScreen = Screen.PROFILE }
-                            )
-                        }
+                    Screen.SETTINGS -> {
+                        SettingsScreen(
+                            themeMode = themeMode,
+                            onThemeModeChange = onThemeModeChange,
+                            notificationsEnabled = notificationsEnabled,
+                            onNotificationsEnabledChange = { enabled ->
+                                notificationsEnabled = enabled
+                                prefs.setNotificationsEnabled(enabled)
+                                viewModel.onGlobalNotificationsChanged(enabled)
+                            },
+                            defaultReminderMinutes = defaultReminderMinutes,
+                            onDefaultReminderMinutesChange = { minutes ->
+                                defaultReminderMinutes = minutes
+                                prefs.setDefaultReminderMinutes(minutes)
+                            },
+                            currentLanguage = currentLanguage,
+                            onLanguageChange = onLanguageChange,
+                            lastBackupTime = lastBackupTime,
+                            onExportClick = { exportLauncher.launch("todo_backup.json") },
+                            onImportClick = { importLauncher.launch(arrayOf("application/json")) },
+                            onBack = { currentScreen = previousScreen }
+                        )
+                    }
 
-                        Screen.ALL -> {
-                            TodoSearchBar(
-                                query = viewModel.searchQuery,
-                                onQueryChange = { viewModel.onSearchQueryChange(it) }
-                            )
-                            val list = viewModel.allTasks
-                            val completedCount = viewModel.todoList.count { it.completed }
-                            val total = viewModel.todoList.size
+                    Screen.DASHBOARD -> {
+                        DashboardScreen(
+                            viewModel = viewModel,
+                            profileViewModel = profileViewModel,
+                            weatherViewModel = weatherViewModel,
+                            onToggle = { viewModel.toggleTodo(it) },
+                            onEditClick = { openEdit(it) },
+                            onDeleteClick = { openDelete(it) },
+                            onAddTaskClick = {
+                                newNotificationMinutesBefore = defaultReminderMinutes
+                                showAddDialog = true
+                            },
+                            onFocusOpen = { focusTimerTodo = it },
+                            onTodoClick = navigateToDetails,
+                            onProfileClick = { currentScreen = Screen.PROFILE }
+                        )
+                    }
 
-                            val progress = if (total > 0) completedCount.toFloat() / total.toFloat() else 0f
-                            val percentage = (progress * 100).toInt()
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = surfaceColorFor(isDarkTheme)),
-                                border = BorderStroke(1.dp, cardBorderColorFor(isDarkTheme))
+                    Screen.ALL -> {
+                        TodoSearchBar(
+                            query = viewModel.searchQuery,
+                            onQueryChange = { viewModel.onSearchQueryChange(it) }
+                        )
+                        val list = viewModel.allTasks
+                        val completedCount = viewModel.todoList.count { it.completed }
+                        val total = viewModel.todoList.size
+
+                        val progress = if (total > 0) completedCount.toFloat() / total.toFloat() else 0f
+                        val percentage = (progress * 100).toInt()
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = surfaceColorFor(isDarkTheme)),
+                            border = BorderStroke(1.dp, cardBorderColorFor(isDarkTheme))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "Today's Progress",
-                                            fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = textPrimaryFor(isDarkTheme)
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = if (total == 0) "No tasks for today" else "$completedCount of $total tasks completed",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = textSecondaryFor(isDarkTheme)
-                                        )
-                                        if (total > 0) {
-                                            Spacer(modifier = Modifier.height(10.dp))
-                                            LinearProgressIndicator(
-                                                progress = { progress },
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .height(6.dp)
-                                                    .clip(RoundedCornerShape(3.dp)),
-                                                color = Accent,
-                                                trackColor = if (isDarkTheme) Color(0xFF222836) else Color(0xFFEEF0F3)
-                                            )
-                                        }
-                                    }
-
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.task_overview),
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = textPrimaryFor(isDarkTheme)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = if (total == 0) stringResource(R.string.no_tasks_today) else "$completedCount / $total",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = textSecondaryFor(isDarkTheme)
+                                    )
                                     if (total > 0) {
-                                        Spacer(modifier = Modifier.width(16.dp))
-                                        Box(
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        LinearProgressIndicator(
+                                            progress = { progress },
                                             modifier = Modifier
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(Accent.copy(alpha = 0.15f))
-                                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                                        ) {
-                                            Text(
-                                                text = "$percentage%",
-                                                color = Accent,
-                                                fontWeight = FontWeight.Bold,
-                                                style = MaterialTheme.typography.titleMedium
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            TaskListContent(
-                                tasks = list,
-                                emptyMessage = "No tasks yet. Tap + to add one.",
-                                onToggle = { viewModel.toggleTodo(it) },
-                                onEditClick = { openEdit(it) },
-                                onDeleteClick = { openDelete(it) },
-                                onFocusClick = { focusTimerTodo = it },
-                                onTodoClick = navigateToDetails
-                            )
-                        }
-
-                        Screen.COMPLETED -> {
-                            TodoSearchBar(
-                                query = viewModel.searchQuery,
-                                onQueryChange = { viewModel.onSearchQueryChange(it) }
-                            )
-                            TaskListContent(
-                                tasks = viewModel.completedTasks,
-                                emptyMessage = "No completed tasks yet.",
-                                onToggle = { viewModel.toggleTodo(it) },
-                                onEditClick = { openEdit(it) },
-                                onDeleteClick = { openDelete(it) },
-                                onFocusClick = { focusTimerTodo = it },
-                                onTodoClick = navigateToDetails
-                            )
-                        }
-
-                        Screen.PENDING -> {
-                            TodoSearchBar(
-                                query = viewModel.searchQuery,
-                                onQueryChange = { viewModel.onSearchQueryChange(it) }
-                            )
-                            TaskListContent(
-                                tasks = viewModel.pendingTasks,
-                                emptyMessage = "No pending tasks. You're all caught up!",
-                                onToggle = { viewModel.toggleTodo(it) },
-                                onEditClick = { openEdit(it) },
-                                onDeleteClick = { openDelete(it) },
-                                onFocusClick = { focusTimerTodo = it },
-                                onTodoClick = navigateToDetails
-                            )
-                        }
-
-                        Screen.CALENDAR -> {
-                            CalendarView(
-                                tasks = viewModel.todoList,
-                                selectedDay = selectedDay,
-                                onDaySelected = { selectedDay = it },
-                                visibleMonth = visibleMonth,
-                                onMonthChange = { visibleMonth = it }
-                            )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            val tasksForSelectedDay = viewModel.todoList.filter {
-                                it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, selectedDay.timeInMillis)
-                            }
-
-                            TaskListContent(
-                                tasks = tasksForSelectedDay,
-                                emptyMessage = "No tasks on this day.",
-                                onToggle = { viewModel.toggleTodo(it) },
-                                onEditClick = { openEdit(it) },
-                                onDeleteClick = { openDelete(it) },
-                                onFocusClick = { focusTimerTodo = it },
-                                onTodoClick = navigateToDetails
-                            )
-                        }
-
-                        Screen.TASK_DETAILS -> {
-                            selectedTodoForDetails?.let { todo ->
-                                LaunchedEffect(todo.id, todo.dueTimeMillis, todo.taskType) {
-                                    weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, todo.taskType)
-                                }
-
-                                TaskDetailsScreen(
-                                    todo = todo,
-                                    onBack = {
-                                        currentScreen = previousScreen
-                                        selectedTodoForDetails = null
-                                    },
-                                    isDark = isDarkTheme,
-                                    weatherUiState = weatherViewModel?.taskWeatherState ?: WeatherUiState.Idle,
-                                    onRefreshWeather = {
-                                        weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, todo.taskType)
-                                    },
-                                    onRescheduleClick = {
-                                        showReschedulePickerForDetails = true
-                                    },
-                                    onMarkAsIndoorClick = {
-                                        viewModel.updateTodo(
-                                            todo = todo,
-                                            newTitle = todo.title,
-                                            newDescription = todo.description,
-                                            newPriority = todo.priority,
-                                            newDueTimeMillis = todo.dueTimeMillis,
-                                            newEndTimeMillis = todo.endTimeMillis,
-                                            newAttachmentUri = todo.attachmentUri,
-                                            newNotificationEnabled = todo.notificationEnabled,
-                                            newNotificationMinutesBefore = todo.notificationMinutesBefore,
-                                            newTaskType = TaskType.INDOOR
+                                                .fillMaxWidth()
+                                                .height(6.dp)
+                                                .clip(RoundedCornerShape(3.dp)),
+                                            color = Accent,
+                                            trackColor = if (isDarkTheme) Color(0xFF222836) else Color(0xFFEEF0F3)
                                         )
-                                        weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, TaskType.INDOOR)
-                                    },
-                                    eligibleSwapTasks = viewModel.eligibleSwapTasks(todo),
-                                    onConfirmSwap = { other ->
-                                        viewModel.swapTimeSlots(todo, other) { result ->
-                                            if (result == SwapTimeResult.CONFLICT || result == SwapTimeResult.INVALID) {
-                                                validationErrorTitle = "Time swap unavailable"
-                                                validationErrorMessage =
-                                                    "One of the new time slots is already occupied by another task."
-                                                showValidationErrorDialog = true
-                                            }
+                                    }
+                                }
+
+                                if (total > 0) {
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Accent.copy(alpha = 0.15f))
+                                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(
+                                            text = "$percentage%",
+                                            color = Accent,
+                                            fontWeight = FontWeight.Bold,
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        TaskListContent(
+                            tasks = list,
+                            emptyMessage = stringResource(R.string.no_tasks_found),
+                            onToggle = { viewModel.toggleTodo(it) },
+                            onEditClick = { openEdit(it) },
+                            onDeleteClick = { openDelete(it) },
+                            onFocusClick = { focusTimerTodo = it },
+                            onTodoClick = navigateToDetails
+                        )
+                    }
+
+                    Screen.COMPLETED -> {
+                        TodoSearchBar(
+                            query = viewModel.searchQuery,
+                            onQueryChange = { viewModel.onSearchQueryChange(it) }
+                        )
+                        TaskListContent(
+                            tasks = viewModel.completedTasks,
+                            emptyMessage = stringResource(R.string.no_completed_tasks),
+                            onToggle = { viewModel.toggleTodo(it) },
+                            onEditClick = { openEdit(it) },
+                            onDeleteClick = { openDelete(it) },
+                            onFocusClick = { focusTimerTodo = it },
+                            onTodoClick = navigateToDetails
+                        )
+                    }
+
+                    Screen.PENDING -> {
+                        TodoSearchBar(
+                            query = viewModel.searchQuery,
+                            onQueryChange = { viewModel.onSearchQueryChange(it) }
+                        )
+                        TaskListContent(
+                            tasks = viewModel.pendingTasks,
+                            emptyMessage = stringResource(R.string.no_pending_tasks),
+                            onToggle = { viewModel.toggleTodo(it) },
+                            onEditClick = { openEdit(it) },
+                            onDeleteClick = { openDelete(it) },
+                            onFocusClick = { focusTimerTodo = it },
+                            onTodoClick = navigateToDetails
+                        )
+                    }
+
+                    Screen.CALENDAR -> {
+                        CalendarView(
+                            tasks = viewModel.todoList,
+                            selectedDay = selectedDay,
+                            onDaySelected = { selectedDay = it },
+                            visibleMonth = visibleMonth,
+                            onMonthChange = { visibleMonth = it }
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        val tasksForSelectedDay = viewModel.todoList.filter {
+                            it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, selectedDay.timeInMillis)
+                        }
+
+                        TaskListContent(
+                            tasks = tasksForSelectedDay,
+                            emptyMessage = stringResource(R.string.no_tasks_today),
+                            onToggle = { viewModel.toggleTodo(it) },
+                            onEditClick = { openEdit(it) },
+                            onDeleteClick = { openDelete(it) },
+                            onFocusClick = { focusTimerTodo = it },
+                            onTodoClick = navigateToDetails
+                        )
+                    }
+
+                    Screen.TASK_DETAILS -> {
+                        selectedTodoForDetails?.let { todo ->
+                            LaunchedEffect(todo.id, todo.dueTimeMillis, todo.taskType) {
+                                weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, todo.taskType)
+                            }
+
+                            TaskDetailsScreen(
+                                todo = todo,
+                                onBack = {
+                                    currentScreen = previousScreen
+                                    selectedTodoForDetails = null
+                                },
+                                isDark = isDarkTheme,
+                                weatherUiState = weatherViewModel?.taskWeatherState ?: WeatherUiState.Idle,
+                                onRefreshWeather = {
+                                    weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, todo.taskType)
+                                },
+                                onRescheduleClick = {
+                                    showReschedulePickerForDetails = true
+                                },
+                                onMarkAsIndoorClick = {
+                                    viewModel.updateTodo(
+                                        todo = todo,
+                                        newTitle = todo.title,
+                                        newDescription = todo.description,
+                                        newPriority = todo.priority,
+                                        newDueTimeMillis = todo.dueTimeMillis,
+                                        newEndTimeMillis = todo.endTimeMillis,
+                                        newAttachmentUri = todo.attachmentUri,
+                                        newNotificationEnabled = todo.notificationEnabled,
+                                        newNotificationMinutesBefore = todo.notificationMinutesBefore,
+                                        newTaskType = TaskType.INDOOR
+                                    )
+                                    weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, TaskType.INDOOR)
+                                },
+                                eligibleSwapTasks = viewModel.eligibleSwapTasks(todo),
+                                onConfirmSwap = { other ->
+                                    viewModel.swapTimeSlots(todo, other) { result ->
+                                        if (result == SwapTimeResult.CONFLICT || result == SwapTimeResult.INVALID) {
+                                            validationErrorTitle = context.getString(R.string.time_slot_unavailable)
+                                            validationErrorMessage = context.getString(R.string.time_slot_occupied_msg)
+                                            showValidationErrorDialog = true
                                         }
                                     }
-                                )
-                            }
+                                }
+                            )
                         }
                     }
                 }
@@ -655,7 +698,7 @@ fun TodoScreen(
         newDueTime = null
         newEndTime = null
         newNotificationEnabled = false
-        newNotificationMinutesBefore = 10
+        newNotificationMinutesBefore = defaultReminderMinutes
         newAttachmentUri = null
         weatherViewModel?.clearTaskWeather()
     }
@@ -721,12 +764,12 @@ fun TodoScreen(
             },
             onConfirm = {
                 if (newNotificationEnabled && newDueTime == null) {
-                    validationErrorTitle = "Start time required"
-                    validationErrorMessage = "Set a start date and time so the reminder can fire before the task starts."
+                    validationErrorTitle = context.getString(R.string.invalid_time)
+                    validationErrorMessage = context.getString(R.string.set_date_time)
                     showValidationErrorDialog = true
                 } else if (newDueTime != null && newEndTime != null && newEndTime!! <= newDueTime!!) {
-                    validationErrorTitle = "Invalid Task Time"
-                    validationErrorMessage = "Due time must be later than the start time."
+                    validationErrorTitle = context.getString(R.string.invalid_time)
+                    validationErrorMessage = context.getString(R.string.end_time_before_start)
                     showValidationErrorDialog = true
                 } else {
                     val conflict = viewModel.checkTimeConflict(newDueTime, newEndTime)
@@ -834,12 +877,12 @@ fun TodoScreen(
             },
             onConfirm = {
                 if (editNotificationEnabled && editDueTime == null) {
-                    validationErrorTitle = "Start time required"
-                    validationErrorMessage = "Set a start date and time so the reminder can fire before the task starts."
+                    validationErrorTitle = context.getString(R.string.invalid_time)
+                    validationErrorMessage = context.getString(R.string.set_date_time)
                     showValidationErrorDialog = true
                 } else if (editDueTime != null && editEndTime != null && editEndTime!! <= editDueTime!!) {
-                    validationErrorTitle = "Invalid Task Time"
-                    validationErrorMessage = "Due time must be later than the start time."
+                    validationErrorTitle = context.getString(R.string.invalid_time)
+                    validationErrorMessage = context.getString(R.string.end_time_before_start)
                     showValidationErrorDialog = true
                 } else {
                     val conflict = viewModel.checkTimeConflict(editDueTime, editEndTime, editingTodo?.id ?: 0)
@@ -991,7 +1034,7 @@ fun TodoScreen(
         FocusTimerDialog(
             todo = todo,
             onDismiss = { focusTimerTodo = null },
-            onSessionComplete = { /* optional: show a snackbar or increment a stat */ }
+            onSessionComplete = { }
         )
     }
 
@@ -1017,7 +1060,7 @@ fun TodoScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Accent)
                 ) {
-                    Text("OK", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.done), fontWeight = FontWeight.Bold)
                 }
             },
             shape = RoundedCornerShape(24.dp),
@@ -1034,14 +1077,14 @@ fun TodoScreen(
             },
             title = {
                 Text(
-                    text = "Exact Reminders Permission",
+                    text = stringResource(R.string.permission_required),
                     fontWeight = FontWeight.Bold,
                     color = textPrimaryFor(isDarkTheme)
                 )
             },
             text = {
                 Text(
-                    text = "To trigger reminders exactly on time, the app needs the \"Alarms & Reminders\" permission. Please enable it in the system settings page.",
+                    text = stringResource(R.string.exact_alarm_permission_msg),
                     color = textSecondaryFor(isDarkTheme)
                 )
             },
@@ -1056,14 +1099,14 @@ fun TodoScreen(
                                 }
                                 context.startActivity(intent)
                             } catch (e: Exception) {
-                                Toast.makeText(context, "Could not open settings. Please enable exact alarms manually.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Please enable exact alarms manually in Settings.", Toast.LENGTH_LONG).show()
                             }
                         }
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Accent)
                 ) {
-                    Text("Settings", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.settings), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -1074,7 +1117,7 @@ fun TodoScreen(
                         if (showEditDialog) editNotificationEnabled = true
                     }
                 ) {
-                    Text("Use Non-Exact", color = textSecondaryFor(isDarkTheme))
+                    Text(stringResource(R.string.cancel), color = textSecondaryFor(isDarkTheme))
                 }
             },
             shape = RoundedCornerShape(24.dp),
@@ -1087,14 +1130,14 @@ fun TodoScreen(
             onDismissRequest = { showRescheduleConfirm = false },
             title = {
                 Text(
-                    text = "Confirm Reschedule",
+                    text = stringResource(R.string.conflict_detected),
                     fontWeight = FontWeight.Bold,
                     color = textPrimaryFor(isDarkTheme)
                 )
             },
             text = {
                 Text(
-                    text = "Do you want to reschedule \"${conflictingTodo!!.title}\" to:\n${DateTimePickerUtil.formatTimeRange(rescheduleNewStart, rescheduleNewEnd)}?",
+                    text = stringResource(R.string.swap_confirm_msg, conflictingTodo!!.title),
                     color = textSecondaryFor(isDarkTheme)
                 )
             },
@@ -1104,7 +1147,7 @@ fun TodoScreen(
                         val newConflict = viewModel.checkTimeConflict(rescheduleNewStart, rescheduleNewEnd, excludeTaskId = conflictingTodo!!.id)
                         if (newConflict != null) {
                             conflictingTodo = newConflict
-                            Toast.makeText(context, "The new slot is also occupied! Please choose another time.", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, context.getString(R.string.time_slot_occupied_msg), Toast.LENGTH_LONG).show()
                         } else {
                             val currentConf = conflictingTodo!!
                             viewModel.updateTodo(
@@ -1128,12 +1171,12 @@ fun TodoScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Accent)
                 ) {
-                    Text("Confirm", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.save), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRescheduleConfirm = false }) {
-                    Text("Cancel", color = textSecondaryFor(isDarkTheme))
+                    Text(stringResource(R.string.cancel), color = textSecondaryFor(isDarkTheme))
                 }
             },
             shape = RoundedCornerShape(24.dp),
@@ -1158,7 +1201,7 @@ fun TodoScreen(
                     showReschedulePicker = false
                     val start = rescheduleTempStart!!
                     if (picked <= start) {
-                        validationErrorMessage = "Due time must be later than the start time."
+                        validationErrorMessage = context.getString(R.string.end_time_before_start)
                         showValidationErrorDialog = true
                     } else {
                         rescheduleNewStart = start

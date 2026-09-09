@@ -17,8 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.mytodoapp.R
 
 @Composable
 fun AttachmentPicker(
@@ -46,7 +48,7 @@ fun AttachmentPicker(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            "Attachment",
+            stringResource(R.string.attachment),
             style = MaterialTheme.typography.labelLarge,
             color = textSecondaryFor(isDark)
         )
@@ -60,7 +62,7 @@ fun AttachmentPicker(
             ) {
                 AsyncImage(
                     model = attachmentUri,
-                    contentDescription = "Task attachment",
+                    contentDescription = stringResource(R.string.attachment_preview),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -72,7 +74,7 @@ fun AttachmentPicker(
                 ) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Remove attachment",
+                        contentDescription = stringResource(R.string.remove_attachment),
                         tint = Color.White
                     )
                 }
@@ -85,7 +87,7 @@ fun AttachmentPicker(
             ) {
                 Icon(Icons.Default.AttachFile, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Add photo")
+                Text(stringResource(R.string.add_photo))
             }
         }
     }

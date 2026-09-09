@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,12 +86,25 @@ fun CalendarView(
         }
 
         // Weekday Labels Row
+        val weekdaySymbols = remember {
+            val dfs = java.text.DateFormatSymbols.getInstance(java.util.Locale.getDefault())
+            val shortWeekdays = dfs.shortWeekdays
+            listOf(
+                shortWeekdays.getOrElse(Calendar.SUNDAY) { "S" }.take(2),
+                shortWeekdays.getOrElse(Calendar.MONDAY) { "M" }.take(2),
+                shortWeekdays.getOrElse(Calendar.TUESDAY) { "T" }.take(2),
+                shortWeekdays.getOrElse(Calendar.WEDNESDAY) { "W" }.take(2),
+                shortWeekdays.getOrElse(Calendar.THURSDAY) { "T" }.take(2),
+                shortWeekdays.getOrElse(Calendar.FRIDAY) { "F" }.take(2),
+                shortWeekdays.getOrElse(Calendar.SATURDAY) { "S" }.take(2)
+            )
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
         ) {
-            listOf("S", "M", "T", "W", "T", "F", "S").forEach { day ->
+            for (day in weekdaySymbols) {
                 Box(
                     modifier = Modifier.weight(1f),
                     contentAlignment = Alignment.Center

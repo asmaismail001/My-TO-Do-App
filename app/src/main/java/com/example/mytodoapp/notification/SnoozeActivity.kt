@@ -12,15 +12,27 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.graphics.Color
+import com.example.mytodoapp.R
 import com.example.mytodoapp.ui.Accent
 import com.example.mytodoapp.ui.theme.MyTODoAppTheme
+import com.example.mytodoapp.util.LocaleHelper
 import com.example.mytodoapp.util.PreferencesManager
 
 class SnoozeActivity : ComponentActivity() {
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = PreferencesManager(newBase)
+        val lang = prefs.getLanguage()
+        super.attachBaseContext(LocaleHelper.setLocale(newBase, lang))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val taskId = intent.getIntExtra("taskId", 0)
@@ -30,29 +42,42 @@ class SnoozeActivity : ComponentActivity() {
 
         val prefs = PreferencesManager(applicationContext)
         val isDark = prefs.isDarkTheme()
+        val lang = prefs.getLanguage()
 
         setContent {
-            MyTODoAppTheme(dynamicColor = false) {
-                SnoozeDialogContent(
-                    taskTitle = taskTitle,
-                    isDark = isDark,
-                    onDismiss = { finish() },
-                    onSnoozeSelected = { minutes ->
-                        val dueVal = if (dueTimeMillis > 0) dueTimeMillis else null
-                        val endVal = if (endTimeMillis > 0) endTimeMillis else null
-                        NotificationScheduler.scheduleSnooze(
-                            context = applicationContext,
-                            taskId = taskId,
-                            taskTitle = taskTitle,
-                            dueTimeMillis = dueVal,
-                            endTimeMillis = endVal,
-                            snoozeMinutes = minutes
-                        )
-                        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                        notificationManager.cancel(taskId)
-                        finish()
-                    }
-                )
+            val activity = this@SnoozeActivity
+            val localizedContext = remember(lang) { LocaleHelper.setLocale(activity, lang) }
+            val layoutDirection = remember(lang) { LocaleHelper.getLayoutDirection(lang) }
+            val config = remember(localizedContext) { localizedContext.resources.configuration }
+
+            CompositionLocalProvider(
+                LocalContext provides localizedContext,
+                LocalConfiguration provides config,
+                LocalLayoutDirection provides layoutDirection,
+                androidx.activity.compose.LocalActivityResultRegistryOwner provides activity
+            ) {
+                MyTODoAppTheme(dynamicColor = false) {
+                    SnoozeDialogContent(
+                        taskTitle = taskTitle,
+                        isDark = isDark,
+                        onDismiss = { finish() },
+                        onSnoozeSelected = { minutes ->
+                            val dueVal = if (dueTimeMillis > 0) dueTimeMillis else null
+                            val endVal = if (endTimeMillis > 0) endTimeMillis else null
+                            NotificationScheduler.scheduleSnooze(
+                                context = applicationContext,
+                                taskId = taskId,
+                                taskTitle = taskTitle,
+                                dueTimeMillis = dueVal,
+                                endTimeMillis = endVal,
+                                snoozeMinutes = minutes
+                            )
+                            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                            notificationManager.cancel(taskId)
+                            finish()
+                        }
+                    )
+                }
             }
         }
     }
@@ -81,7 +106,7 @@ fun SnoozeDialogContent(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "Snooze Reminder",
+                    text = stringResource(R.string.snooze_reminder),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
                     color = if (isDark) com.example.mytodoapp.ui.TextPrimaryDark else com.example.mytodoapp.ui.TextPrimary
@@ -90,18 +115,18 @@ fun SnoozeDialogContent(
 
                 if (!isCustomSelected) {
                     Text(
-                        text = "Snooze reminder for \"$taskTitle\" for:",
+                        text = stringResource(R.string.snooze_for, taskTitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isDark) com.example.mytodoapp.ui.TextSecondaryDark else com.example.mytodoapp.ui.TextSecondary
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
                     val options = listOf(
-                        5 to "5 minutes",
-                        10 to "10 minutes",
-                        15 to "15 minutes",
-                        30 to "30 minutes",
-                        60 to "1 hour"
+                        5 to stringResource(R.string.snooze_5_min),
+                        10 to stringResource(R.string.snooze_10_min),
+                        15 to stringResource(R.string.snooze_15_min),
+                        30 to stringResource(R.string.snooze_30_min),
+                        60 to stringResource(R.string.snooze_1_hour)
                     )
 
                     options.forEach { (minutes, label) ->
@@ -126,7 +151,7 @@ fun SnoozeDialogContent(
                         contentPadding = PaddingValues(vertical = 12.dp)
                     ) {
                         Text(
-                            text = "Custom",
+                            text = stringResource(R.string.custom),
                             color = Accent,
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.bodyLarge
@@ -142,14 +167,14 @@ fun SnoozeDialogContent(
                     ) {
                         TextButton(onClick = onDismiss) {
                             Text(
-                                text = "Cancel",
+                                text = stringResource(R.string.cancel),
                                 color = if (isDark) com.example.mytodoapp.ui.TextSecondaryDark else com.example.mytodoapp.ui.TextSecondary
                             )
                         }
                     }
                 } else {
                     Text(
-                        text = "Enter custom snooze duration in minutes:",
+                        text = stringResource(R.string.enter_custom_snooze),
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isDark) com.example.mytodoapp.ui.TextSecondaryDark else com.example.mytodoapp.ui.TextSecondary
                     )
@@ -162,7 +187,7 @@ fun SnoozeDialogContent(
                                 customMinutesStr = newValue
                             }
                         },
-                        label = { Text("Minutes") },
+                        label = { Text(stringResource(R.string.custom_minutes)) },
                         singleLine = true,
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                             keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
@@ -190,7 +215,7 @@ fun SnoozeDialogContent(
                     ) {
                         TextButton(onClick = { isCustomSelected = false }) {
                             Text(
-                                text = "Back",
+                                text = stringResource(R.string.back),
                                 color = if (isDark) com.example.mytodoapp.ui.TextSecondaryDark else com.example.mytodoapp.ui.TextSecondary
                             )
                         }
@@ -205,7 +230,7 @@ fun SnoozeDialogContent(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = Accent)
                         ) {
-                            Text("Snooze", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.snooze), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -213,3 +238,4 @@ fun SnoozeDialogContent(
         }
     }
 }
+

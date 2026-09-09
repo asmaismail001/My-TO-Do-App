@@ -11,8 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.ui.LocalIsDarkTheme
 import com.example.mytodoapp.ui.cardBorderColorFor
 import com.example.mytodoapp.ui.searchBarBackgroundFor
@@ -38,11 +40,11 @@ fun TodoSearchBar(query: String, onQueryChange: (String) -> Unit) {
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Filled.Search, contentDescription = "Search", tint = textMutedFor(isDark), modifier = Modifier.size(18.dp))
+            Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.search_tasks), tint = textMutedFor(isDark), modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Box(modifier = Modifier.weight(1f)) {
                 if (query.isEmpty()) {
-                    Text("Search tasks", color = textMutedFor(isDark), style = LocalTextStyle.current.copy(fontSize = 14.sp))
+                    Text(stringResource(R.string.search_tasks), color = textMutedFor(isDark), style = LocalTextStyle.current.copy(fontSize = 14.sp))
                 }
                 BasicTextField(
                     value = query,
@@ -54,7 +56,7 @@ fun TodoSearchBar(query: String, onQueryChange: (String) -> Unit) {
             }
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }, modifier = Modifier.size(18.dp)) {
-                    Icon(Icons.Filled.Close, contentDescription = "Clear", tint = textSecondaryFor(isDark), modifier = Modifier.size(16.dp))
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.cancel), tint = textSecondaryFor(isDark), modifier = Modifier.size(16.dp))
                 }
             }
         }

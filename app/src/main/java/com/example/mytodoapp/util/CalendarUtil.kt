@@ -12,11 +12,8 @@ object CalendarUtil {
     }
 
     fun monthYearLabel(calendar: Calendar): String {
-        val months = arrayOf(
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        )
-        return "${months[calendar.get(Calendar.MONTH)]} ${calendar.get(Calendar.YEAR)}"
+        val sdf = java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.getDefault())
+        return sdf.format(calendar.time)
     }
 
     // Returns a list of 42 cells (6 weeks). Each cell is a Calendar instance for that day,

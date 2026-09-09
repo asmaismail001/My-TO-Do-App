@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.ui.*
 import com.example.mytodoapp.viewmodel.AuthViewModel
 
@@ -68,7 +70,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Welcome Back",
+                text = stringResource(R.string.welcome_back),
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.headlineLarge,
                 color = textPrimaryFor(isDark),
@@ -78,7 +80,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Sign in to continue managing your tasks",
+                text = stringResource(R.string.sign_in_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = textSecondaryFor(isDark),
                 textAlign = TextAlign.Center
@@ -111,7 +113,7 @@ fun LoginScreen(
                     viewModel.loginEmail = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Email Address") },
+                label = { Text(stringResource(R.string.email_address)) },
                 placeholder = { Text("yourname@example.com") },
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = textMutedFor(isDark)) },
                 modifier = Modifier.fillMaxWidth(),
@@ -138,7 +140,7 @@ fun LoginScreen(
                     viewModel.loginPassword = it
                     viewModel.clearMessages()
                 },
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.password)) },
                 placeholder = { Text("••••••••") },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = textMutedFor(isDark)) },
                 trailingIcon = {
@@ -183,7 +185,7 @@ fun LoginScreen(
                     )
                 } else {
                     Text(
-                        text = "Login",
+                        text = stringResource(R.string.login),
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -198,12 +200,12 @@ fun LoginScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Don't have an account? ",
+                    text = stringResource(R.string.dont_have_account),
                     style = MaterialTheme.typography.bodyMedium,
                     color = textSecondaryFor(isDark)
                 )
                 Text(
-                    text = "Sign Up",
+                    text = stringResource(R.string.sign_up),
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                     color = Accent,
                     modifier = Modifier.clickable {

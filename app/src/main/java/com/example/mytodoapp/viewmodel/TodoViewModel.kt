@@ -511,7 +511,12 @@ class TodoViewModel(
         }
     }
 
-    fun exportTasks(context: Context, uri: Uri?) {
+    fun exportTasks(
+        context: Context,
+        uri: Uri?,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
         if (uri == null) return
         viewModelScope.launch {
             try {
@@ -519,32 +524,50 @@ class TodoViewModel(
                 context.contentResolver.openOutputStream(uri)?.use { stream ->
                     stream.write(json.toByteArray())
                 }
-            } catch (_: Exception) {
-                // export failed silently
+                val now = java.text.SimpleDateFormat("MMM dd, yyyy • h:mm a", java.util.Locale.getDefault()).format(java.util.Date())
+                prefsManager.setLastBackupTime(now)
+                onSuccess()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onError(e.localizedMessage ?: "Export failed")
             }
         }
     }
 
-    fun importTasks(context: Context, uri: Uri?) {
+    fun importTasks(
+        context: Context,
+        uri: Uri?,
+        onSuccess: (Int) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
         if (uri == null) return
         viewModelScope.launch {
             try {
                 val json = context.contentResolver.openInputStream(uri)
                     ?.bufferedReader()?.use { it.readText() }
-                if (json != null) {
-                    val listType = object : TypeToken<List<Todo>>() {}.type
-                    val imported: List<Todo> = Gson().fromJson(json, listType)
-                    imported.forEach {
+                if (json.isNullOrBlank()) {
+                    onError("Empty or invalid file")
+                    return@launch
+                }
+                val listType = object : TypeToken<List<Todo>>() {}.type
+                val imported: List<Todo>? = Gson().fromJson(json, listType)
+                if (imported == null || imported.isEmpty()) {
+                    onError("No tasks found in file")
+                    return@launch
+                }
+                var importedCount = 0
+                imported.forEach {
+                    if (it.title.isNotBlank()) {
                         val saved = repository.addTodo(
-                            title = it.title,
-                            description = it.description,
-                            priority = it.priority,
+                            title = it.title.trim(),
+                            description = it.description.trim(),
+                            priority = it.priority ?: Priority.MEDIUM,
                             dueTimeMillis = it.dueTimeMillis,
                             endTimeMillis = it.endTimeMillis,
                             attachmentUri = it.attachmentUri,
                             notificationEnabled = it.notificationEnabled,
                             notificationMinutesBefore = if (it.notificationMinutesBefore > 0) it.notificationMinutesBefore else 10,
-                            taskType = it.taskType
+                            taskType = it.taskType ?: TaskType.FLEXIBLE
                         )
                         if (saved.notificationEnabled && !saved.completed &&
                             (saved.endTimeMillis != null || saved.dueTimeMillis != null)
@@ -558,11 +581,20 @@ class TodoViewModel(
                                 saved.notificationMinutesBefore
                             )
                         }
+                        importedCount++
                     }
-                    loadTodos()
                 }
-            } catch (_: Exception) {
-                // import failed silently
+                if (importedCount > 0) {
+                    val now = java.text.SimpleDateFormat("MMM dd, yyyy • h:mm a", java.util.Locale.getDefault()).format(java.util.Date())
+                    prefsManager.setLastBackupTime(now)
+                    loadTodos()
+                    onSuccess(importedCount)
+                } else {
+                    onError("Invalid task format")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onError("Invalid or corrupted backup file")
             }
         }
     }

@@ -17,12 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.mytodoapp.R
 import com.example.mytodoapp.ui.Accent
 import com.example.mytodoapp.ui.LocalIsDarkTheme
 import com.example.mytodoapp.ui.cardBorderColorFor
@@ -92,7 +94,7 @@ fun CustomDateTimePickerDialog(
             ) {
                 // Dialog Title
                 Text(
-                    text = "Select Date & Time",
+                    text = stringResource(R.string.select_date_time),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
                     color = Accent
@@ -138,7 +140,7 @@ fun CustomDateTimePickerDialog(
                     )
                     Icon(
                         imageVector = Icons.Outlined.CalendarToday,
-                        contentDescription = "Select Date",
+                        contentDescription = stringResource(R.string.select_date_time),
                         tint = Accent,
                         modifier = Modifier.size(20.dp)
                     )
@@ -276,7 +278,7 @@ fun CustomDateTimePickerDialog(
                 ) {
                     TextButton(onClick = onDismiss) {
                         Text(
-                            text = "Cancel",
+                            text = stringResource(R.string.cancel),
                             color = textSecondaryFor(isDark),
                             fontWeight = FontWeight.SemiBold
                         )
@@ -312,7 +314,7 @@ fun CustomDateTimePickerDialog(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text = "Save",
+                            text = stringResource(R.string.save),
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )

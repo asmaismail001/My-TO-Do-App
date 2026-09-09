@@ -13,8 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.ui.LocalIsDarkTheme
 import com.example.mytodoapp.ui.Accent
@@ -32,7 +34,7 @@ fun PrioritySelector(
 
     Column {
         Text(
-            text = "Priority",
+            text = stringResource(R.string.priority),
             color = textSecondaryFor(isDark),
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -61,12 +63,13 @@ fun PrioritySelector(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     PriorityDot(priority = selected)
+                    val label = when (selected) {
+                        Priority.HIGH -> stringResource(R.string.priority_high)
+                        Priority.MEDIUM -> stringResource(R.string.priority_medium)
+                        Priority.LOW -> stringResource(R.string.priority_low)
+                    }
                     Text(
-                        text = when (selected) {
-                            Priority.HIGH -> "High"
-                            Priority.MEDIUM -> "Medium"
-                            Priority.LOW -> "Low"
-                        },
+                        text = label,
                         color = textPrimaryFor(isDark),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium
@@ -75,7 +78,7 @@ fun PrioritySelector(
 
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Dropdown Indicator",
+                    contentDescription = null,
                     tint = textSecondaryFor(isDark)
                 )
             }
@@ -96,12 +99,13 @@ fun PrioritySelector(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 PriorityDot(priority = priority)
+                                val pLabel = when (priority) {
+                                    Priority.HIGH -> stringResource(R.string.priority_high)
+                                    Priority.MEDIUM -> stringResource(R.string.priority_medium)
+                                    Priority.LOW -> stringResource(R.string.priority_low)
+                                }
                                 Text(
-                                    text = when (priority) {
-                                        Priority.HIGH -> "High"
-                                        Priority.MEDIUM -> "Medium"
-                                        Priority.LOW -> "Low"
-                                    },
+                                    text = pLabel,
                                     color = textPrimaryFor(isDark),
                                     style = MaterialTheme.typography.bodyMedium
                                 )

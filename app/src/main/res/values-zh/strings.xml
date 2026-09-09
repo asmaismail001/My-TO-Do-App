@@ -1,0 +1,256 @@
+<resources>
+    <string name="app_name">任务管理器</string>
+
+    <!-- Navigation & Headers -->
+    <string name="menu">菜单</string>
+    <string name="navigation">导航</string>
+    <string name="dashboard">仪表盘</string>
+    <string name="all_tasks">所有任务</string>
+    <string name="all">全部</string>
+    <string name="completed_tasks">已完成任务</string>
+    <string name="completed">已完成</string>
+    <string name="pending_tasks">待处理任务</string>
+    <string name="pending">待处理</string>
+    <string name="calendar">日历</string>
+    <string name="my_profile">个人资料</string>
+    <string name="profile">个人资料</string>
+    <string name="edit_profile">编辑资料</string>
+    <string name="settings">设置</string>
+    <string name="settings_title">设置</string>
+    <string name="logout">退出登录</string>
+    <string name="account">账户</string>
+    <string name="preferences">偏好设置</string>
+    <string name="data_management">数据管理</string>
+
+    <!-- Greetings & Dashboard Stats -->
+    <string name="good_morning">早上好</string>
+    <string name="good_afternoon">下午好</string>
+    <string name="good_evening">晚上好</string>
+    <string name="no_tasks_today">今天没有安排任何任务</string>
+    <string name="no_tasks_found">未找到任务</string>
+    <string name="no_completed_tasks">暂无已完成的任务</string>
+    <string name="no_pending_tasks">暂无待处理任务</string>
+    <string name="tasks">任务</string>
+    <string name="task_overview">任务概览</string>
+    <string name="daily">每日</string>
+    <string name="weekly">每周</string>
+    <string name="monthly">每月</string>
+    <string name="total">总计</string>
+    <string name="completion_rate">完成率</string>
+    <string name="search_tasks">搜索任务</string>
+
+    <!-- Task Actions & Dialogs -->
+    <string name="add_task">添加任务</string>
+    <string name="new_task">新建任务</string>
+    <string name="edit_task">编辑任务</string>
+    <string name="delete_task">删除任务</string>
+    <string name="delete_task_confirm_title">删除任务？</string>
+    <string name="delete_task_confirm_msg">您确定要删除\"%1$s\"吗？</string>
+    <string name="task_details">任务详情</string>
+    <string name="task_title">标题</string>
+    <string name="task_title_hint">输入任务标题...</string>
+    <string name="task_desc">描述</string>
+    <string name="task_desc_hint">添加详细信息...</string>
+    <string name="priority">优先级</string>
+    <string name="priority_high">高</string>
+    <string name="priority_medium">中</string>
+    <string name="priority_low">低</string>
+    <string name="save_changes">保存更改</string>
+    <string name="create_task">创建任务</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="delete">删除</string>
+    <string name="update">更新</string>
+    <string name="close">关闭</string>
+    <string name="retry">重试</string>
+    <string name="done">完成</string>
+    <string name="back">返回</string>
+
+    <!-- Task Scheduling, Conflicts & Time Swap -->
+    <string name="activity_type">活动地点</string>
+    <string name="indoor">室内</string>
+    <string name="outdoor">室外</string>
+    <string name="flexible">灵活</string>
+    <string name="date_and_time">日期与时间</string>
+    <string name="start_time">开始时间</string>
+    <string name="end_time">结束时间</string>
+    <string name="set_date_time">设置日期与时间</string>
+    <string name="set_end_time">设置结束时间</string>
+    <string name="swap_time">交换时间</string>
+    <string name="swap_with">交换对象</string>
+    <string name="swap_confirm_msg">是否与\"%1$s\"交换计划时间？</string>
+    <string name="time_slot_unavailable">时间段不可用</string>
+    <string name="time_slot_occupied_msg">该时间段已被其他任务占用。</string>
+    <string name="change_time">更改时间</string>
+    <string name="view_task">查看任务</string>
+    <string name="reschedule">重新安排</string>
+    <string name="reschedule_task">重新安排任务</string>
+    <string name="select_date_time">选择日期和时间</string>
+    <string name="conflict_detected">时间冲突</string>
+    <string name="invalid_time">无效任务时间</string>
+    <string name="end_time_before_start">结束时间不能早于开始时间。</string>
+    <string name="no_eligible_swap_tasks">没有其他已安排的任务可供交换。</string>
+
+    <!-- Notifications & Reminders -->
+    <string name="notifications">通知</string>
+    <string name="task_reminders">任务提醒</string>
+    <string name="manage_reminders">管理任务提醒</string>
+    <string name="due_date_reminders">截止日期提醒</string>
+    <string name="reminder_notification">提醒通知</string>
+    <string name="remind_before">任务开始前提醒我</string>
+    <string name="reminder_time">提醒时间</string>
+    <string name="min_before_5">提前 5 分钟</string>
+    <string name="min_before_10">提前 10 分钟</string>
+    <string name="min_before_15">提前 15 分钟</string>
+    <string name="min_before_30">提前 30 分钟</string>
+    <string name="hour_before_1">提前 1 小时</string>
+    <string name="snooze">稍后提醒</string>
+    <string name="snooze_reminder">推迟提醒</string>
+    <string name="snooze_for">推迟\"%1$s\"的提醒时长：</string>
+    <string name="custom_minutes">自定义分钟数</string>
+    <string name="permission_required">需要权限</string>
+    <string name="notification_permission_msg">需要通知权限以便为您的任务发送提醒。</string>
+    <string name="exact_alarm_permission_msg">需要精确闹钟权限以准确发送提醒。</string>
+
+    <!-- Focus Timer -->
+    <string name="focus_timer">专注计时器</string>
+    <string name="focusing_on">正在专注：%1$s</string>
+    <string name="break_time">休息时间</string>
+    <string name="start">开始</string>
+    <string name="pause">暂停</string>
+    <string name="resume">继续</string>
+    <string name="reset">重置</string>
+    <string name="minutes_abbr">分钟</string>
+
+    <!-- Attachments -->
+    <string name="attachment">附件</string>
+    <string name="add_photo">添加照片</string>
+    <string name="remove_attachment">移除附件</string>
+    <string name="select_photo">选择照片</string>
+
+    <!-- Profile & Authentication -->
+    <string name="personal_info">个人信息</string>
+    <string name="full_name">姓名</string>
+    <string name="email_address">电子邮箱</string>
+    <string name="phone_number">电话号码</string>
+    <string name="not_provided">未提供</string>
+    <string name="welcome_back">欢迎回来</string>
+    <string name="sign_in_subtitle">登录以继续管理您的任务</string>
+    <string name="create_account">创建账户</string>
+    <string name="dont_have_account">还没有账户？ </string>
+    <string name="already_have_account">已有账户？ </string>
+    <string name="sign_up">注册</string>
+    <string name="login">登录</string>
+    <string name="password">密码</string>
+    <string name="confirm_password">确认密码</string>
+    <string name="password_hint">至少 6 个字符</string>
+    <string name="confirm_password_hint">重新输入密码</string>
+    <string name="loading_profile">正在加载资料...</string>
+    <string name="logout_confirm_title">退出登录</string>
+    <string name="logout_confirm_msg">您确定要退出登录吗？</string>
+    <string name="changes_saved">更改已保存！</string>
+
+    <!-- Weather Feature -->
+    <string name="weather">天气</string>
+    <string name="weather_forecast">天气预报</string>
+    <string name="weather_at_task_time">任务时间的天气</string>
+    <string name="check_weather">查看天气</string>
+    <string name="refresh_weather">刷新天气</string>
+    <string name="good_conditions">天气良好</string>
+    <string name="unfavorable_conditions">天气不利</string>
+    <string name="indoor_recommended">建议进行室内活动</string>
+    <string name="outdoor_suitable">适合进行室外活动</string>
+    <string name="select_location">选择地点</string>
+    <string name="search_city_hint">搜索城市名称...</string>
+    <string name="use_current_location">使用当前位置 (GPS)</string>
+    <string name="temperature">温度</string>
+    <string name="humidity">湿度</string>
+    <string name="wind">风速</string>
+    <string name="precipitation">降水概率</string>
+    <string name="details">详情</string>
+
+    <!-- Settings Screen -->
+    <string name="appearance">外观</string>
+    <string name="theme">主题</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_light">浅色模式</string>
+    <string name="theme_dark">深色模式</string>
+    <string name="theme_mode">主题模式</string>
+    <string name="theme_description">选择浅色、深色或系统默认主题</string>
+    <string name="task_import_export">任务导入与导出</string>
+    <string name="backup_restore_tasks">备份或恢复您的任务</string>
+    <string name="export_tasks">导出任务</string>
+    <string name="import_tasks">导入任务</string>
+    <string name="last_backup">上次备份：%1$s</string>
+    <string name="last_backup_none">上次备份：无记录</string>
+    <string name="export_success">任务导出成功</string>
+    <string name="import_success">任务导入成功（共 %1$d 项任务）</string>
+    <string name="import_invalid_data">备份文件无效或已损坏</string>
+    <string name="import_error">导入任务失败</string>
+    <string name="export_error">导出任务失败</string>
+    <string name="language">语言</string>
+    <string name="select_language">选择语言</string>
+    <string name="lang_en">English</string>
+    <string name="lang_ur">اردو (Urdu)</string>
+    <string name="lang_fr">Français (French)</string>
+    <string name="lang_zh">中文 (Chinese)</string>
+    <string name="lang_ar">العربية (Arabic)</string>
+    <string name="general_settings">通用</string>
+    <string name="app_version">版本 1.0</string>
+
+    <!-- Additional UI Strings -->
+    <string name="task_schedule">任务时间安排</string>
+    <string name="due">截止时间</string>
+    <string name="set_date">设置日期</string>
+    <string name="set_time">设置时间</string>
+    <string name="task_notification">任务通知</string>
+    <string name="remind_me">提醒时间</string>
+    <string name="at_start_time">开始时提醒</string>
+    <string name="min_before_1">提前 1 分钟</string>
+    <string name="hours_before_2">提前 2 小时</string>
+    <string name="custom">自定义</string>
+    <string name="minutes_before">提前分钟数</string>
+    <string name="check_weather_forecast">查看天气预报</string>
+    <string name="forecast_at_task_time">任务时间天气预报</string>
+    <string name="high_priority">高优先级</string>
+    <string name="medium_priority">中优先级</string>
+    <string name="low_priority">低优先级</string>
+    <string name="start_date">开始日期</string>
+    <string name="due_date">截止日期</string>
+    <string name="full_attachment_preview">附件完整预览</string>
+    <string name="attachment_preview">附件预览</string>
+    <string name="todays_status">今日状态</string>
+    <string name="tasks_completed_summary">已完成 %2$d 项任务中的 %1$d 项</string>
+    <string name="daily_completion">每日完成度</string>
+    <string name="weekly_progress">每周进度</string>
+    <string name="monthly_performance">每月表现</string>
+    <string name="total_tasks">任务总数</string>
+    <string name="weekly_activity">每周活动</string>
+    <string name="monthly_progress_graph">每月进度图表</string>
+    <string name="monthly_insights">月度洞察</string>
+    <string name="tasks_for_date">%1$s 的任务</string>
+    <string name="no_tasks_today_msg">享受您的空闲时间或创建一项新任务。</string>
+    <string name="popular_cities">热门城市</string>
+    <string name="use_device_gps">使用设备 GPS 定位</string>
+    <string name="auto_detect_coords">自动检测当前坐标</string>
+    <string name="no_matching_cities">未找到匹配的城市。</string>
+    <string name="next_24_hours">未来 24 小时</string>
+    <string name="feels_like">体感 %1$d°C</string>
+    <string name="rain">降雨概率</string>
+    <string name="checking_weather">正在查询天气预报...</string>
+    <string name="updating_weather">正在更新天气...</string>
+    <string name="weather_unavailable_date">该日期暂无天气预报数据。</string>
+    <string name="location_perm_weather">需要位置权限以提供基于天气的任务建议。</string>
+    <string name="set_task_datetime_weather">设置任务日期和时间以查看天气建议。</string>
+    <string name="mark_indoor">设为室内活动</string>
+    <string name="change_location">更改位置</string>
+    <string name="swap_time_question">交换时间？</string>
+    <string name="select_task_swap">选择要交换时间的任务：</string>
+    <string name="enter_custom_snooze">输入自定义稍后提醒分钟数：</string>
+    <string name="snooze_5_min">5 分钟</string>
+    <string name="snooze_10_min">10 分钟</string>
+    <string name="snooze_15_min">15 分钟</string>
+    <string name="snooze_30_min">30 分钟</string>
+    <string name="snooze_1_hour">1 小时</string>
+    <string name="added_date">添加于：%1$s</string>
+</resources>

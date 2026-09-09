@@ -16,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.*
 import com.example.mytodoapp.ui.*
 import java.text.SimpleDateFormat
@@ -62,7 +64,7 @@ fun WeatherDetailsDialog(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Weather Forecast",
+                            text = stringResource(R.string.weather_forecast),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = textPrimaryFor(isDark)
@@ -90,7 +92,7 @@ fun WeatherDetailsDialog(
                     IconButton(onClick = onRefresh) {
                         Icon(
                             imageVector = Icons.Outlined.Refresh,
-                            contentDescription = "Refresh",
+                            contentDescription = stringResource(R.string.refresh_weather),
                             tint = Accent
                         )
                     }
@@ -144,7 +146,7 @@ fun WeatherDetailsDialog(
                                                 color = textPrimaryFor(isDark)
                                             )
                                             Text(
-                                                text = "Feels like ${Math.round(weather.feelsLikeC)}°C",
+                                                text = stringResource(R.string.feels_like, Math.round(weather.feelsLikeC)),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = textMutedFor(isDark)
                                             )
@@ -177,21 +179,21 @@ fun WeatherDetailsDialog(
                                 ) {
                                     MetricItem(
                                         icon = Icons.Outlined.WaterDrop,
-                                        label = "Rain",
+                                        label = stringResource(R.string.rain),
                                         value = "${weather.rainProbability}%",
                                         tint = WeatherRainBlue,
                                         isDark = isDark
                                     )
                                     MetricItem(
                                         icon = Icons.Outlined.Air,
-                                        label = "Wind",
+                                        label = stringResource(R.string.wind),
                                         value = "${weather.windSpeedKmh.toInt()} km/h",
                                         tint = Accent,
                                         isDark = isDark
                                     )
                                     MetricItem(
                                         icon = Icons.Outlined.Thermostat,
-                                        label = "Humidity",
+                                        label = stringResource(R.string.humidity),
                                         value = "${weather.humidityPercent}%",
                                         tint = WeatherYellow,
                                         isDark = isDark
@@ -203,7 +205,7 @@ fun WeatherDetailsDialog(
                         // Hourly Forecast Section (Next 24 Hours)
                         if (hourlyForecast.isNotEmpty()) {
                             Text(
-                                text = "Next 24 Hours",
+                                text = stringResource(R.string.next_24_hours),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimaryFor(isDark)
@@ -311,7 +313,7 @@ fun WeatherDetailsDialog(
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Change Location", color = Accent, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.change_location), color = Accent, fontWeight = FontWeight.SemiBold)
                     }
 
                     Button(
@@ -319,7 +321,7 @@ fun WeatherDetailsDialog(
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Accent)
                     ) {
-                        Text("Close", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.close), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -346,3 +348,4 @@ private fun MetricItem(
         )
     }
 }
+

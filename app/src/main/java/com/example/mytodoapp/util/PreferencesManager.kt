@@ -30,6 +30,21 @@ class PreferencesManager(private val context: Context) {
         prefs.edit().putBoolean("notifications_enabled", enabled).apply()
     }
 
+    fun getLanguage(): String = prefs.getString("app_language", LocaleHelper.LANG_ENGLISH) ?: LocaleHelper.LANG_ENGLISH
+    fun setLanguage(languageCode: String) {
+        prefs.edit().putString("app_language", languageCode).apply()
+    }
+
+    fun getDefaultReminderMinutes(): Int = prefs.getInt("default_reminder_minutes", 10)
+    fun setDefaultReminderMinutes(minutes: Int) {
+        prefs.edit().putInt("default_reminder_minutes", minutes).apply()
+    }
+
+    fun getLastBackupTime(): String? = prefs.getString("last_backup_time", null)
+    fun setLastBackupTime(timestampStr: String) {
+        prefs.edit().putString("last_backup_time", timestampStr).apply()
+    }
+
     fun getProfilePictureUri(): String? = prefs.getString("profile_picture_uri", null)
     fun setProfilePictureUri(uri: String?) {
         prefs.edit().putString("profile_picture_uri", uri).apply()

@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.provider.MediaStore
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.*
 import com.example.mytodoapp.util.CalendarUtil
@@ -85,13 +87,11 @@ fun DashboardScreen(
     val profileData = profileViewModel.profileData
     val profileBitmap = rememberBitmapFromUri(profileData?.profileImage)
 
-    val greeting = remember {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        when (hour) {
-            in 0..11 -> "Good Morning"
-            in 12..16 -> "Good Afternoon"
-            else -> "Good Evening"
-        }
+    val hour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
+    val greeting = when (hour) {
+        in 0..11 -> stringResource(R.string.good_morning)
+        in 12..16 -> stringResource(R.string.good_afternoon)
+        else -> stringResource(R.string.good_evening)
     }
 
     // Calculations
@@ -171,7 +171,7 @@ fun DashboardScreen(
                         if (profileBitmap != null) {
                             Image(
                                 bitmap = profileBitmap,
-                                contentDescription = "Profile Picture",
+                                contentDescription = stringResource(R.string.profile),
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -203,7 +203,7 @@ fun DashboardScreen(
                     ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Text(
-                                text = "Today's Status",
+                                text = stringResource(R.string.todays_status),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = textPrimaryFor(isDark)
@@ -211,10 +211,10 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = if (dailyTasks.isEmpty()) {
-                                    "No tasks scheduled for today"
+                                    stringResource(R.string.no_tasks_today)
                                 } else {
                                     val completed = dailyTasks.count { it.completed }
-                                    "$completed of ${dailyTasks.size} tasks completed"
+                                    stringResource(R.string.tasks_completed_summary, completed, dailyTasks.size)
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textSecondaryFor(isDark)
@@ -248,9 +248,9 @@ fun DashboardScreen(
                     .padding(4.dp)
             ) {
                 val periods = listOf(
-                    DashboardPeriod.DAILY to "Daily",
-                    DashboardPeriod.WEEKLY to "Weekly",
-                    DashboardPeriod.MONTHLY to "Monthly"
+                    DashboardPeriod.DAILY to stringResource(R.string.daily),
+                    DashboardPeriod.WEEKLY to stringResource(R.string.weekly),
+                    DashboardPeriod.MONTHLY to stringResource(R.string.monthly)
                 )
 
                 periods.forEach { (type, label) ->
@@ -315,7 +315,7 @@ fun DashboardScreen(
                                 val weekStart = viewModel.getStartOfWeek(selectedDate)
                                 val weekEnd = (weekStart.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, 6) }
                                 val sdf = SimpleDateFormat("MMM d", Locale.getDefault())
-                                "Week: ${sdf.format(weekStart.time)} - ${sdf.format(weekEnd.time)}"
+                                "${sdf.format(weekStart.time)} - ${sdf.format(weekEnd.time)}"
                             }
                             DashboardPeriod.MONTHLY -> monthYearLabel
                         },
@@ -326,7 +326,7 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
                         imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = "Pick Date",
+                        contentDescription = stringResource(R.string.calendar),
                         tint = Accent,
                         modifier = Modifier.size(16.dp)
                     )
@@ -349,7 +349,7 @@ fun DashboardScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.ChevronLeft,
-                            contentDescription = "Previous Date",
+                            contentDescription = stringResource(R.string.back),
                             tint = textSecondaryFor(isDark)
                         )
                     }
@@ -369,7 +369,7 @@ fun DashboardScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
-                            contentDescription = "Next Date",
+                            contentDescription = stringResource(R.string.done),
                             tint = textSecondaryFor(isDark)
                         )
                     }
@@ -446,10 +446,10 @@ fun DashboardScreen(
                 ) {
                     Text(
                         text = when (period) {
-                            DashboardPeriod.DAILY -> "Daily Completion"
-                            DashboardPeriod.WEEKLY -> "Weekly Progress"
-                            DashboardPeriod.MONTHLY -> "Monthly Performance"
-                            else -> "Overview"
+                            DashboardPeriod.DAILY -> stringResource(R.string.daily_completion)
+                            DashboardPeriod.WEEKLY -> stringResource(R.string.weekly_progress)
+                            DashboardPeriod.MONTHLY -> stringResource(R.string.monthly_performance)
+                            else -> stringResource(R.string.task_overview)
                         },
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
@@ -476,19 +476,19 @@ fun DashboardScreen(
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             StatItem(
-                                label = "Total Tasks",
+                                label = stringResource(R.string.total_tasks),
                                 count = stats.totalCount,
                                 color = textPrimaryFor(isDark),
                                 isDark = isDark
                             )
                             StatItem(
-                                label = "Completed",
+                                label = stringResource(R.string.completed),
                                 count = stats.completedCount,
                                 color = Accent,
                                 isDark = isDark
                             )
                             StatItem(
-                                label = "Pending",
+                                label = stringResource(R.string.pending),
                                 count = stats.pendingCount,
                                 color = if (isDark) Color(0xFFF59E0B) else Color(0xFFD97706),
                                 isDark = isDark
@@ -513,7 +513,7 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Weekly Activity",
+                            text = stringResource(R.string.weekly_activity),
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium,
                             color = textPrimaryFor(isDark)
@@ -536,7 +536,7 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Monthly Progress Graph",
+                            text = stringResource(R.string.monthly_progress_graph),
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium,
                             color = textPrimaryFor(isDark)
@@ -557,14 +557,14 @@ fun DashboardScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Monthly Insights",
+                            text = stringResource(R.string.monthly_insights),
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.titleMedium,
                             color = textPrimaryFor(isDark)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "In this month, you have completed ${stats.completedCount} tasks out of ${stats.totalCount} total. That's a completion efficiency of ${stats.completionPercentage}%! Keep going to improve your productivity streak.",
+                            text = "In this month, you have completed ${stats.completedCount} tasks out of ${stats.totalCount} total (${stats.completionPercentage}%).",
                             style = MaterialTheme.typography.bodyMedium,
                             color = textSecondaryFor(isDark),
                             lineHeight = 20.sp
@@ -577,8 +577,9 @@ fun DashboardScreen(
         // 6. Selected Date's Tasks Section Header & Items (Only shown in DAILY mode)
         if (period == DashboardPeriod.DAILY) {
             item {
+                val formattedDate = SimpleDateFormat("MMM d", Locale.getDefault()).format(selectedDate.time)
                 Text(
-                    text = "Tasks for " + SimpleDateFormat("MMM d", Locale.getDefault()).format(selectedDate.time),
+                    text = stringResource(R.string.tasks_for_date, formattedDate),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
                     color = textPrimaryFor(isDark),
@@ -608,14 +609,14 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "No tasks for today",
+                                text = stringResource(R.string.no_tasks_found),
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = textPrimaryFor(isDark)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Enjoy your free time or create a new task.",
+                                text = stringResource(R.string.no_tasks_today_msg),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textSecondaryFor(isDark),
                                 textAlign = TextAlign.Center

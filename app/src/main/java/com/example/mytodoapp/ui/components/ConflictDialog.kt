@@ -8,9 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.Accent
 import com.example.mytodoapp.ui.LocalIsDarkTheme
@@ -43,14 +45,14 @@ fun ConflictDialog(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "Time Slot Unavailable",
+                    text = stringResource(R.string.time_slot_unavailable),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
                     color = textPrimaryFor(isDark)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "This time slot is already occupied by another task.",
+                    text = stringResource(R.string.time_slot_occupied_msg),
                     style = MaterialTheme.typography.bodyMedium,
                     color = textSecondaryFor(isDark)
                 )
@@ -91,13 +93,13 @@ fun ConflictDialog(
                             onClick = onDismiss,
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Change Time", color = textSecondaryFor(isDark))
+                            Text(stringResource(R.string.change_time), color = textSecondaryFor(isDark))
                         }
                         TextButton(
                             onClick = onViewConflictingTask,
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("View Task", color = Accent)
+                            Text(stringResource(R.string.view_task), color = Accent)
                         }
                     }
                     Button(
@@ -106,7 +108,7 @@ fun ConflictDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = Accent),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Reschedule", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.reschedule), fontWeight = FontWeight.Bold)
                     }
                 }
             }

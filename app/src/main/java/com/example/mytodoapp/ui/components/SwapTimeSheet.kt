@@ -33,10 +33,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.Surface
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.ui.Accent
 import com.example.mytodoapp.ui.cardBorderColorFor
@@ -57,13 +59,13 @@ fun SwapTimeActionButton(
     ) {
         Icon(
             imageVector = Icons.Outlined.SwapHoriz,
-            contentDescription = "Swap Time",
+            contentDescription = stringResource(R.string.swap_time),
             tint = Accent,
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.size(6.dp))
         Text(
-            text = "Swap Time",
+            text = stringResource(R.string.swap_time),
             color = Accent,
             fontWeight = FontWeight.SemiBold,
             style = MaterialTheme.typography.labelMedium
@@ -93,21 +95,21 @@ fun SwapTimePickerSheet(
                 .padding(bottom = 28.dp)
         ) {
             Text(
-                text = "Swap Time",
+                text = stringResource(R.string.swap_time),
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleLarge,
                 color = textPrimaryFor(isDark)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Select a task to swap with:",
+                text = stringResource(R.string.select_task_swap),
                 style = MaterialTheme.typography.bodyMedium,
                 color = textSecondaryFor(isDark)
             )
             Spacer(modifier = Modifier.height(16.dp))
             if (candidates.isEmpty()) {
                 Text(
-                    text = "No other scheduled tasks are available to swap with.",
+                    text = stringResource(R.string.no_eligible_swap_tasks),
                     style = MaterialTheme.typography.bodyMedium,
                     color = textSecondaryFor(isDark)
                 )
@@ -170,7 +172,7 @@ fun SwapTimeConfirmDialog(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "Swap time?",
+                    text = stringResource(R.string.swap_time_question),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
                     color = textPrimaryFor(isDark)
@@ -194,14 +196,14 @@ fun SwapTimeConfirmDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel", color = textSecondaryFor(isDark))
+                        Text(stringResource(R.string.cancel), color = textSecondaryFor(isDark))
                     }
                     Button(
                         onClick = onConfirm,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Accent)
                     ) {
-                        Text("Swap", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.swap_time), fontWeight = FontWeight.Bold)
                     }
                 }
             }

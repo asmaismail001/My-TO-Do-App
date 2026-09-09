@@ -11,7 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Priority
 import com.example.mytodoapp.ui.PriorityHigh
 import com.example.mytodoapp.ui.PriorityLow
@@ -20,10 +22,15 @@ import com.example.mytodoapp.ui.TextSecondary
 
 @Composable
 fun PriorityBadge(priority: Priority) {
-    val (dotColor, label) = when (priority) {
-        Priority.HIGH -> PriorityHigh to "High"
-        Priority.MEDIUM -> PriorityMedium to "Medium"
-        Priority.LOW -> PriorityLow to "Low"
+    val dotColor = when (priority) {
+        Priority.HIGH -> PriorityHigh
+        Priority.MEDIUM -> PriorityMedium
+        Priority.LOW -> PriorityLow
+    }
+    val label = when (priority) {
+        Priority.HIGH -> stringResource(R.string.priority_high)
+        Priority.MEDIUM -> stringResource(R.string.priority_medium)
+        Priority.LOW -> stringResource(R.string.priority_low)
     }
 
     Row(verticalAlignment = Alignment.CenterVertically) {
