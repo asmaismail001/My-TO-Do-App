@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import com.example.mytodoapp.notification.ReminderReceiver
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,23 +26,53 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mytodoapp.repository.AuthRepository
 import com.example.mytodoapp.repository.TodoRepository
 import com.example.mytodoapp.ui.LocalIsDarkTheme
 import com.example.mytodoapp.ui.SplashContent
 import com.example.mytodoapp.ui.TodoScreen
+import com.example.mytodoapp.ui.auth.BiometricLockScreen
+import com.example.mytodoapp.util.BiometricAuthenticator
+import com.example.mytodoapp.util.BiometricResult
 import com.example.mytodoapp.util.LocaleHelper
 import com.example.mytodoapp.util.PreferencesManager
+import com.example.mytodoapp.util.SessionManager
 import com.example.mytodoapp.viewmodel.TodoViewModel
 import com.example.mytodoapp.viewmodel.TodoViewModelFactory
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     private val pendingOpenTaskId = mutableStateOf<Int?>(null)
+    private val isAppLocked = mutableStateOf(false)
+    private val lockErrorMessage = mutableStateOf<String?>(null)
+    private var isPromptCurrentlyActive = false
+
+    private val sessionManager by lazy { SessionManager(applicationContext) }
+
+    private val lifecycleObserver = object : DefaultLifecycleObserver {
+        override fun onStop(owner: LifecycleOwner) {
+            // App entered background or screen locked
+            if (sessionManager.isLoggedIn() && sessionManager.isBiometricLockEnabled()) {
+                sessionManager.saveLastBackgroundTime(System.currentTimeMillis())
+            }
+        }
+
+        override fun onStart(owner: LifecycleOwner) {
+            // App returned to foreground
+            checkAndHandleAppLock()
+        }
+    }
 
     override fun attachBaseContext(newBase: Context) {
         val prefs = PreferencesManager(newBase)
@@ -74,6 +103,12 @@ class MainActivity : ComponentActivity() {
 
         pendingOpenTaskId.value = readTaskId(intent)
 
+        // Register process lifecycle observer for app background/foreground transitions
+        ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleObserver)
+
+        // Cold-start lock check
+        checkAndHandleAppLock()
+
         setContent {
             val activity = this@MainActivity
             val prefs = remember { PreferencesManager(activity) }
@@ -95,6 +130,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
             val taskIdToOpen by pendingOpenTaskId
+            val locked by isAppLocked
+            val errorMsg by lockErrorMessage
 
             CompositionLocalProvider(
                 LocalContext provides localizedContext,
@@ -105,58 +142,132 @@ class MainActivity : ComponentActivity() {
             ) {
                 com.example.mytodoapp.ui.theme.MyTODoAppTheme(darkTheme = isDarkTheme, dynamicColor = false) {
                     Surface(modifier = Modifier.fillMaxSize()) {
-                        var showSplash by remember { mutableStateOf(true) }
-
-                        if (showSplash) {
-                            SplashContent()
-                            LaunchedEffect(Unit) {
-                                delay(1600)
-                                showSplash = false
-                                if (pendingOpenTaskId.value == null) {
-                                    requestIgnoreBatteryOptimizations()
-                                }
-                            }
+                        if (locked) {
+                            BiometricLockScreen(
+                                onAuthenticateClick = { triggerBiometricPrompt() },
+                                onLogoutClick = { performLockedLogout() },
+                                errorMessage = errorMsg,
+                                isDark = isDarkTheme
+                            )
                         } else {
-                            val repository = TodoRepository(applicationContext)
-                            val authRepository = com.example.mytodoapp.repository.AuthRepository(applicationContext)
-                            val profileRepository = com.example.mytodoapp.repository.ProfileRepository(applicationContext)
-                            val weatherRepository = com.example.mytodoapp.repository.WeatherRepository()
+                            var showSplash by remember { mutableStateOf(true) }
 
-                            val viewModel: TodoViewModel = viewModel(
-                                factory = TodoViewModelFactory(repository, applicationContext)
-                            )
-                            val authViewModel: com.example.mytodoapp.viewmodel.AuthViewModel = viewModel(
-                                factory = com.example.mytodoapp.viewmodel.AuthViewModelFactory(authRepository, repository)
-                            )
-                            val profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel = viewModel(
-                                factory = com.example.mytodoapp.viewmodel.ProfileViewModelFactory(authRepository, profileRepository)
-                            )
-                            val weatherViewModel: com.example.mytodoapp.viewmodel.WeatherViewModel = viewModel(
-                                factory = com.example.mytodoapp.viewmodel.WeatherViewModelFactory(weatherRepository, applicationContext)
-                            )
-
-                            TodoScreen(
-                                viewModel = viewModel,
-                                authViewModel = authViewModel,
-                                profileViewModel = profileViewModel,
-                                weatherViewModel = weatherViewModel,
-                                openTaskId = taskIdToOpen,
-                                onOpenTaskConsumed = { pendingOpenTaskId.value = null },
-                                themeMode = themeMode,
-                                onThemeModeChange = { mode ->
-                                    themeMode = mode
-                                    prefs.setThemeMode(mode)
-                                },
-                                currentLanguage = currentLanguage,
-                                onLanguageChange = { lang ->
-                                    currentLanguage = lang
-                                    prefs.setLanguage(lang)
+                            if (showSplash) {
+                                SplashContent()
+                                LaunchedEffect(Unit) {
+                                    delay(1600)
+                                    showSplash = false
+                                    if (pendingOpenTaskId.value == null) {
+                                        requestIgnoreBatteryOptimizations()
+                                    }
                                 }
-                            )
+                            } else {
+                                val repository = TodoRepository(applicationContext)
+                                val authRepository = AuthRepository(applicationContext)
+                                val profileRepository = com.example.mytodoapp.repository.ProfileRepository(applicationContext)
+                                val weatherRepository = com.example.mytodoapp.repository.WeatherRepository()
+
+                                val viewModel: TodoViewModel = viewModel(
+                                    factory = TodoViewModelFactory(repository, applicationContext)
+                                )
+                                val authViewModel: com.example.mytodoapp.viewmodel.AuthViewModel = viewModel(
+                                    factory = com.example.mytodoapp.viewmodel.AuthViewModelFactory(authRepository, repository)
+                                )
+                                val profileViewModel: com.example.mytodoapp.viewmodel.ProfileViewModel = viewModel(
+                                    factory = com.example.mytodoapp.viewmodel.ProfileViewModelFactory(authRepository, profileRepository)
+                                )
+                                val weatherViewModel: com.example.mytodoapp.viewmodel.WeatherViewModel = viewModel(
+                                    factory = com.example.mytodoapp.viewmodel.WeatherViewModelFactory(weatherRepository, applicationContext)
+                                )
+
+                                TodoScreen(
+                                    viewModel = viewModel,
+                                    authViewModel = authViewModel,
+                                    profileViewModel = profileViewModel,
+                                    weatherViewModel = weatherViewModel,
+                                    openTaskId = taskIdToOpen,
+                                    onOpenTaskConsumed = { pendingOpenTaskId.value = null },
+                                    themeMode = themeMode,
+                                    onThemeModeChange = { mode ->
+                                        themeMode = mode
+                                        prefs.setThemeMode(mode)
+                                    },
+                                    currentLanguage = currentLanguage,
+                                    onLanguageChange = { lang ->
+                                        currentLanguage = lang
+                                        prefs.setLanguage(lang)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+
+    private fun checkAndHandleAppLock() {
+        if (sessionManager.isLoggedIn() && sessionManager.isBiometricLockEnabled()) {
+            val lastBgTime = sessionManager.getLastBackgroundTime()
+            if (lastBgTime > 0L) {
+                val elapsed = System.currentTimeMillis() - lastBgTime
+                if (elapsed >= BACKGROUND_TIMEOUT_MILLIS) {
+                    isAppLocked.value = true
+                    triggerBiometricPrompt()
+                }
+            }
+        }
+    }
+
+    private fun triggerBiometricPrompt() {
+        if (!sessionManager.isLoggedIn() || !sessionManager.isBiometricLockEnabled()) {
+            isAppLocked.value = false
+            return
+        }
+        if (isPromptCurrentlyActive) return
+        isPromptCurrentlyActive = true
+        lockErrorMessage.value = null
+
+        BiometricAuthenticator.authenticate(
+            activity = this,
+            title = getString(R.string.app_locked),
+            subtitle = getString(R.string.app_locked_desc),
+            negativeButtonText = getString(R.string.cancel)
+        ) { result ->
+            isPromptCurrentlyActive = false
+            when (result) {
+                is BiometricResult.Success -> {
+                    isAppLocked.value = false
+                    lockErrorMessage.value = null
+                    sessionManager.clearLastBackgroundTime()
+                }
+                is BiometricResult.Cancelled -> {
+                    // User dismissed or cancelled: remain locked
+                    lockErrorMessage.value = null
+                }
+                is BiometricResult.Failed -> {
+                    lockErrorMessage.value = getString(R.string.biometric_auth_failed)
+                }
+                is BiometricResult.Error -> {
+                    // Only show if not cancelled
+                    if (result.errorCode != androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED &&
+                        result.errorCode != androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
+                        result.errorCode != androidx.biometric.BiometricPrompt.ERROR_CANCELED
+                    ) {
+                        lockErrorMessage.value = result.message
+                    }
+                }
+            }
+        }
+    }
+
+    private fun performLockedLogout() {
+        val authRepository = AuthRepository(applicationContext)
+        lifecycleScope.launch {
+            authRepository.logout()
+            isAppLocked.value = false
+            lockErrorMessage.value = null
+            isPromptCurrentlyActive = false
         }
     }
 
@@ -190,6 +301,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_TASK_ID = "taskId"
+        const val BACKGROUND_TIMEOUT_MILLIS = 15 * 60 * 1000L // 15 minutes = 900,000 ms
 
         fun taskDetailsIntent(context: Context, taskId: Int): Intent {
             return Intent(context, MainActivity::class.java).apply {

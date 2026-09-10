@@ -35,6 +35,9 @@ import androidx.compose.ui.unit.sp
 import com.example.mytodoapp.R
 import com.example.mytodoapp.ui.*
 import com.example.mytodoapp.util.LocaleHelper
+import androidx.compose.ui.platform.LocalContext
+import com.example.mytodoapp.util.BiometricAuthenticator
+import com.example.mytodoapp.util.BiometricStatus
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +45,8 @@ import java.util.Date
 fun SettingsScreen(
     themeMode: String,
     onThemeModeChange: (String) -> Unit,
+    biometricLockEnabled: Boolean = false,
+    onBiometricLockEnabledChange: (Boolean) -> Unit = {},
     notificationsEnabled: Boolean,
     onNotificationsEnabledChange: (Boolean) -> Unit,
     defaultReminderMinutes: Int,
@@ -53,8 +58,28 @@ fun SettingsScreen(
     onImportClick: () -> Unit,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val isDark = LocalIsDarkTheme.current
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var biometricErrorDialogMessage by remember { mutableStateOf<String?>(null) }
+
+    val handleBiometricToggle: (Boolean) -> Unit = { shouldEnable ->
+        if (shouldEnable) {
+            when (val status = BiometricAuthenticator.canAuthenticate(context)) {
+                is BiometricStatus.Available -> {
+                    onBiometricLockEnabledChange(true)
+                }
+                is BiometricStatus.NotEnrolled -> {
+                    biometricErrorDialogMessage = context.getString(R.string.biometric_not_enrolled)
+                }
+                is BiometricStatus.Unavailable -> {
+                    biometricErrorDialogMessage = context.getString(R.string.biometric_unavailable)
+                }
+            }
+        } else {
+            onBiometricLockEnabledChange(false)
+        }
+    }
 
     Scaffold(
         containerColor = backgroundColorFor(isDark),
@@ -103,7 +128,19 @@ fun SettingsScreen(
                 )
             }
 
-            // 2. Notifications Category
+            // 2. Security Category (Biometric App Lock)
+            SettingsCategorySection(
+                title = stringResource(R.string.security),
+                isDark = isDark
+            ) {
+                SecuritySettingCard(
+                    biometricLockEnabled = biometricLockEnabled,
+                    onBiometricLockToggle = handleBiometricToggle,
+                    isDark = isDark
+                )
+            }
+
+            // 3. Notifications Category
             SettingsCategorySection(
                 title = stringResource(R.string.notifications),
                 isDark = isDark
@@ -168,6 +205,105 @@ fun SettingsScreen(
             onDismiss = { showLanguageDialog = false },
             isDark = isDark
         )
+    }
+
+    if (biometricErrorDialogMessage != null) {
+        AlertDialog(
+            onDismissRequest = { biometricErrorDialogMessage = null },
+            shape = RoundedCornerShape(22.dp),
+            containerColor = surfaceColorFor(isDark),
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Security,
+                        contentDescription = null,
+                        tint = Accent,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = stringResource(R.string.security),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = textPrimaryFor(isDark)
+                    )
+                }
+            },
+            text = {
+                Text(
+                    text = biometricErrorDialogMessage ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = textPrimaryFor(isDark)
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { biometricErrorDialogMessage = null }) {
+                    Text(
+                        text = stringResource(R.string.done),
+                        color = Accent,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun SecuritySettingCard(
+    biometricLockEnabled: Boolean,
+    onBiometricLockToggle: (Boolean) -> Unit,
+    isDark: Boolean
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = surfaceColorFor(isDark)),
+        border = BorderStroke(1.dp, cardBorderColorFor(isDark))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Accent.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Fingerprint,
+                        contentDescription = null,
+                        tint = Accent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.biometric_app_lock),
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = textPrimaryFor(isDark)
+                    )
+                    Text(
+                        text = stringResource(R.string.biometric_app_lock_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = textMutedFor(isDark)
+                    )
+                }
+                Switch(
+                    checked = biometricLockEnabled,
+                    onCheckedChange = onBiometricLockToggle,
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = Accent,
+                        checkedThumbColor = Color.White,
+                        uncheckedTrackColor = textMutedFor(isDark).copy(alpha = 0.3f),
+                        uncheckedBorderColor = Color.Transparent
+                    )
+                )
+            }
+        }
     }
 }
 

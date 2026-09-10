@@ -253,4 +253,16 @@
     <string name="snooze_30_min">30 دقيقة</string>
     <string name="snooze_1_hour">ساعة واحدة</string>
     <string name="added_date">أضيف في: %1$s</string>
+
+    <!-- Security & Biometric Lock -->
+    <string name="security">الأمان</string>
+    <string name="biometric_app_lock">قفل التطبيق بالبصمة</string>
+    <string name="biometric_app_lock_desc">حماية التطبيق بعد 15 دقيقة من عدم النشاط</string>
+    <string name="app_locked">التطبيق مقفل</string>
+    <string name="app_locked_desc">يرجى التحقق من بصمة إصبعك لمتابعة استخدام تطبيق المهام.</string>
+    <string name="try_again">إعادة المحاولة</string>
+    <string name="log_out_instead">تسجيل الخروج بدلاً من ذلك</string>
+    <string name="biometric_not_enrolled">يرجى تسجيل بصمة الإصبع في إعدادات جهازك قبل تفعيل قفل التطبيق.</string>
+    <string name="biometric_unavailable">المصادقة البيومترية غير متوفرة على هذا الجهاز.</string>
+    <string name="biometric_auth_failed">فشلت المصادقة. يرجى المحاولة مرة أخرى.</string>
 </resources>

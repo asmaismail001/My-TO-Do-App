@@ -99,6 +99,8 @@ fun TodoScreen(
     }
 
     val isDarkTheme = LocalIsDarkTheme.current
+    val sessionManager = remember { com.example.mytodoapp.util.SessionManager(context) }
+    var biometricLockEnabled by remember { mutableStateOf(sessionManager.isBiometricLockEnabled()) }
     var notificationsEnabled by remember { mutableStateOf(prefs.areNotificationsEnabled()) }
     var defaultReminderMinutes by remember { mutableIntStateOf(prefs.getDefaultReminderMinutes()) }
     var lastBackupTime by remember { mutableStateOf(prefs.getLastBackupTime()) }
@@ -460,6 +462,11 @@ fun TodoScreen(
                         SettingsScreen(
                             themeMode = themeMode,
                             onThemeModeChange = onThemeModeChange,
+                            biometricLockEnabled = biometricLockEnabled,
+                            onBiometricLockEnabledChange = { enabled ->
+                                biometricLockEnabled = enabled
+                                sessionManager.setBiometricLockEnabled(enabled)
+                            },
                             notificationsEnabled = notificationsEnabled,
                             onNotificationsEnabledChange = { enabled ->
                                 notificationsEnabled = enabled

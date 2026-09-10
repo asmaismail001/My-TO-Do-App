@@ -253,4 +253,16 @@
     <string name="snooze_30_min">30 分钟</string>
     <string name="snooze_1_hour">1 小时</string>
     <string name="added_date">添加于：%1$s</string>
+
+    <!-- Security & Biometric Lock -->
+    <string name="security">安全</string>
+    <string name="biometric_app_lock">指纹应用锁</string>
+    <string name="biometric_app_lock_desc">在应用闲置 15 分钟后自动锁定保护</string>
+    <string name="app_locked">应用已锁定</string>
+    <string name="app_locked_desc">请验证您的指纹以继续使用任务管理器。</string>
+    <string name="try_again">重试</string>
+    <string name="log_out_instead">改为退出登录</string>
+    <string name="biometric_not_enrolled">在开启应用锁前，请先在设备设置中录入指纹或受支持的生物识别。</string>
+    <string name="biometric_unavailable">此设备不支持生物识别身份验证。</string>
+    <string name="biometric_auth_failed">身份验证失败，请重试。</string>
 </resources>

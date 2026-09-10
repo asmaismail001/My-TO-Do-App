@@ -253,4 +253,16 @@
     <string name="snooze_30_min">30 منٹ</string>
     <string name="snooze_1_hour">1 گھنٹہ</string>
     <string name="added_date">شامل کیا گیا: %1$s</string>
+
+    <!-- Security & Biometric Lock -->
+    <string name="security">سیکیورٹی</string>
+    <string name="biometric_app_lock">بایومیٹرک ایپ لاک</string>
+    <string name="biometric_app_lock_desc">15 منٹ کی غیر موجودگی کے بعد ایپ کو محفوظ کریں</string>
+    <string name="app_locked">ایپ مقفل ہے</string>
+    <string name="app_locked_desc">ٹاسک مینیجر جاری رکھنے کے لیے اپنے فنگر پرنٹ کی تصدیق کریں۔</string>
+    <string name="try_again">دوبارہ کوشش کریں</string>
+    <string name="log_out_instead">لاگ آؤٹ کریں</string>
+    <string name="biometric_not_enrolled">ایپ لاک فعال کرنے سے پہلے براہ کرم اپنے آلے کی ترتیبات میں فنگر پرنٹ درج کریں۔</string>
+    <string name="biometric_unavailable">اس آلے پر بایومیٹرک تصدیق دستیاب نہیں ہے۔</string>
+    <string name="biometric_auth_failed">تصدیق ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔</string>
 </resources>

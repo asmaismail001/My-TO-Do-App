@@ -253,4 +253,16 @@
     <string name="snooze_30_min">30 minutes</string>
     <string name="snooze_1_hour">1 hour</string>
     <string name="added_date">Added: %1$s</string>
+
+    <!-- Security & Biometric Lock -->
+    <string name="security">Security</string>
+    <string name="biometric_app_lock">Biometric App Lock</string>
+    <string name="biometric_app_lock_desc">Protect the app after 15 minutes of inactivity</string>
+    <string name="app_locked">App Locked</string>
+    <string name="app_locked_desc">Verify your fingerprint to continue using Task Manager.</string>
+    <string name="try_again">Try Again</string>
+    <string name="log_out_instead">Log out instead</string>
+    <string name="biometric_not_enrolled">Please enroll a fingerprint or supported biometric in your device settings before enabling App Lock.</string>
+    <string name="biometric_unavailable">Biometric authentication is not available on this device.</string>
+    <string name="biometric_auth_failed">Authentication failed. Please try again.</string>
 </resources>

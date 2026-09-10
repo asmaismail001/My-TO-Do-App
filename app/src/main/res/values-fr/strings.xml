@@ -253,4 +253,16 @@
     <string name="snooze_30_min">30 minutes</string>
     <string name="snooze_1_hour">1 heure</string>
     <string name="added_date">Ajouté le : %1$s</string>
+
+    <!-- Security & Biometric Lock -->
+    <string name="security">Sécurité</string>
+    <string name="biometric_app_lock">Verrouillage biométrique</string>
+    <string name="biometric_app_lock_desc">Protéger l\'application après 15 minutes d\'inactivité</string>
+    <string name="app_locked">Application verrouillée</string>
+    <string name="app_locked_desc">Veuillez vérifier votre empreinte pour continuer à utiliser l\'application.</string>
+    <string name="try_again">Réessayer</string>
+    <string name="log_out_instead">Se déconnecter à la place</string>
+    <string name="biometric_not_enrolled">Veuillez enregistrer une empreinte digitale dans les paramètres de votre appareil avant d\'activer le verrouillage.</string>
+    <string name="biometric_unavailable">L\'authentification biométrique n\'est pas disponible sur cet appareil.</string>
+    <string name="biometric_auth_failed">Échec de l\'authentification. Veuillez réessayer.</string>
 </resources>

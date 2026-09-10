@@ -83,8 +83,39 @@ class SessionManager(context: Context) {
 
     fun getUserPhone(): String? = prefs.getString(KEY_USER_PHONE, null)
 
+    fun isBiometricLockEnabled(): Boolean {
+        return prefs.getBoolean(KEY_BIOMETRIC_LOCK_ENABLED, false)
+    }
+
+    fun setBiometricLockEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_BIOMETRIC_LOCK_ENABLED, enabled).apply()
+        if (!enabled) {
+            clearLastBackgroundTime()
+        }
+    }
+
+    fun saveLastBackgroundTime(timestamp: Long = System.currentTimeMillis()) {
+        prefs.edit().putLong(KEY_LAST_BACKGROUND_TIME, timestamp).apply()
+    }
+
+    fun getLastBackgroundTime(): Long {
+        return prefs.getLong(KEY_LAST_BACKGROUND_TIME, 0L)
+    }
+
+    fun clearLastBackgroundTime() {
+        prefs.edit().remove(KEY_LAST_BACKGROUND_TIME).apply()
+    }
+
     fun logout() {
-        prefs.edit().clear().apply()
+        prefs.edit().apply {
+            remove(KEY_TOKEN)
+            remove(KEY_USER_ID)
+            remove(KEY_USER_NAME)
+            remove(KEY_USER_EMAIL)
+            remove(KEY_USER_PHONE)
+            remove(KEY_LAST_BACKGROUND_TIME)
+            apply()
+        }
     }
 
     fun isLoggedIn(): Boolean {
@@ -97,5 +128,7 @@ class SessionManager(context: Context) {
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_USER_EMAIL = "user_email"
         private const val KEY_USER_PHONE = "user_phone"
+        private const val KEY_BIOMETRIC_LOCK_ENABLED = "biometric_lock_enabled"
+        private const val KEY_LAST_BACKGROUND_TIME = "last_background_timestamp"
     }
 }
