@@ -8,14 +8,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.List
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.HourglassEmpty
-import androidx.compose.material.icons.outlined.List
-import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -100,7 +101,7 @@ fun SettingsDrawerContent(
 
             CompactNavigationItem(
                 label = stringResource(R.string.all_tasks),
-                icon = Icons.Outlined.List,
+                icon = Icons.AutoMirrored.Outlined.List,
                 isSelected = currentScreen == Screen.ALL,
                 isDarkTheme = isDarkTheme,
                 onClick = { onScreenSelect(Screen.ALL) }
@@ -146,6 +147,16 @@ fun SettingsDrawerContent(
                 onClick = { onScreenSelect(Screen.PROFILE) }
             )
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CompactNavigationItem(
+                label = stringResource(R.string.settings),
+                icon = Icons.Outlined.Settings,
+                isSelected = currentScreen == Screen.SETTINGS,
+                isDarkTheme = isDarkTheme,
+                onClick = { onScreenSelect(Screen.SETTINGS) }
+            )
+
             Spacer(modifier = Modifier.height(28.dp))
             HorizontalDivider(color = cardBorderColorFor(isDarkTheme).copy(alpha = 0.5f))
             Spacer(modifier = Modifier.height(20.dp))
@@ -162,7 +173,7 @@ fun SettingsDrawerContent(
 
             CompactDrawerItem(
                 label = stringResource(R.string.logout),
-                icon = Icons.Outlined.Logout,
+                icon = Icons.AutoMirrored.Outlined.Logout,
                 isDarkTheme = isDarkTheme,
                 onClick = onLogoutClick
             )

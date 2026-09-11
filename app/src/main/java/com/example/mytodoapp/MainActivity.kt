@@ -1,6 +1,7 @@
 package com.example.mytodoapp
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import androidx.core.net.toUri
 import com.example.mytodoapp.notification.ReminderReceiver
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -284,15 +286,16 @@ class MainActivity : FragmentActivity() {
         return intent.data?.lastPathSegment?.toIntOrNull()?.takeIf { it > 0 }
     }
 
+    @SuppressLint("BatteryLife")
     private fun requestIgnoreBatteryOptimizations() {
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
             try {
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:$packageName")
+                    data = "package:$packageName".toUri()
                 }
                 startActivity(intent)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Some OEMs block this intent; fail silently, user can still
                 // enable it manually from system Settings > Battery.
             }
@@ -306,7 +309,7 @@ class MainActivity : FragmentActivity() {
         fun taskDetailsIntent(context: Context, taskId: Int): Intent {
             return Intent(context, MainActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
-                data = Uri.parse("todo://task/$taskId")
+                data = "todo://task/$taskId".toUri()
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                     Intent.FLAG_ACTIVITY_CLEAR_TOP or
                     Intent.FLAG_ACTIVITY_SINGLE_TOP

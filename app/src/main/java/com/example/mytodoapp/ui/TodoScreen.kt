@@ -253,10 +253,18 @@ fun TodoScreen(
         showDeleteDialog = true
     }
 
-    if (currentScreen == Screen.TASK_DETAILS || currentScreen == Screen.SETTINGS) {
+    if (currentScreen in listOf(Screen.TASK_DETAILS, Screen.SETTINGS, Screen.PROFILE, Screen.EDIT_PROFILE)) {
         BackHandler {
-            currentScreen = previousScreen
-            selectedTodoForDetails = null
+            when (currentScreen) {
+                Screen.EDIT_PROFILE -> currentScreen = Screen.PROFILE
+                Screen.PROFILE -> currentScreen = previousScreen
+                Screen.SETTINGS -> currentScreen = previousScreen
+                Screen.TASK_DETAILS -> {
+                    currentScreen = previousScreen
+                    selectedTodoForDetails = null
+                }
+                else -> {}
+            }
         }
     }
 
@@ -349,6 +357,9 @@ fun TodoScreen(
             SettingsDrawerContent(
                 currentScreen = currentScreen,
                 onScreenSelect = { screen ->
+                    if (screen == Screen.SETTINGS || screen == Screen.PROFILE) {
+                        previousScreen = if (currentScreen in listOf(Screen.SETTINGS, Screen.PROFILE, Screen.EDIT_PROFILE, Screen.TASK_DETAILS)) previousScreen else currentScreen
+                    }
                     currentScreen = screen
                     scope.launch { drawerState.close() }
                 },
@@ -437,7 +448,7 @@ fun TodoScreen(
                     Screen.PROFILE -> {
                         com.example.mytodoapp.ui.profile.ProfileScreen(
                             viewModel = profileViewModel,
-                            onBack = { currentScreen = Screen.DASHBOARD },
+                            onBack = { currentScreen = previousScreen },
                             onNavigateToEditProfile = { currentScreen = Screen.EDIT_PROFILE },
                             onNavigateToSettings = {
                                 previousScreen = currentScreen
@@ -501,7 +512,10 @@ fun TodoScreen(
                             },
                             onFocusOpen = { focusTimerTodo = it },
                             onTodoClick = navigateToDetails,
-                            onProfileClick = { currentScreen = Screen.PROFILE }
+                            onProfileClick = {
+                                previousScreen = currentScreen
+                                currentScreen = Screen.PROFILE
+                            }
                         )
                     }
 
