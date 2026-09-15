@@ -3,6 +3,7 @@ package com.example.mytodoapp.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.mytodoapp.R
@@ -186,6 +188,46 @@ fun TaskDetailsScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = textPrimaryFor(isDark)
                             )
+                        }
+                    }
+
+                    // Recurrence (if present)
+                    if (todo.recurrence != com.example.mytodoapp.model.RecurrenceType.NONE) {
+                        HorizontalDivider(color = Accent.copy(alpha = 0.2f), thickness = 1.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.repeat),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = textSecondaryFor(isDark)
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Accent.copy(alpha = if (isDark) 0.2f else 0.12f),
+                                border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(text = "🔁", fontSize = 11.sp)
+                                    Text(
+                                        text = when (todo.recurrence) {
+                                            com.example.mytodoapp.model.RecurrenceType.DAILY -> stringResource(R.string.repeats_daily)
+                                            com.example.mytodoapp.model.RecurrenceType.WEEKLY -> stringResource(R.string.repeats_weekly)
+                                            com.example.mytodoapp.model.RecurrenceType.MONTHLY -> stringResource(R.string.repeats_monthly)
+                                            else -> ""
+                                        },
+                                        color = Accent,
+                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
+                            }
                         }
                     }
                 }

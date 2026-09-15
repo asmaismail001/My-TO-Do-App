@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.mytodoapp.R
 import com.example.mytodoapp.model.LocationData
 import com.example.mytodoapp.ui.*
@@ -53,7 +54,10 @@ fun LocationPickerDialog(
         )
     }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Surface(
             shape = RoundedCornerShape(24.dp),
             color = surfaceColorFor(isDark),
@@ -61,6 +65,8 @@ fun LocationPickerDialog(
             tonalElevation = 6.dp,
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 24.dp)
+                .imePadding()
                 .heightIn(max = 560.dp)
         ) {
             Column(

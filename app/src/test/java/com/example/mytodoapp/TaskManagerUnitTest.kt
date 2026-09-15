@@ -200,36 +200,75 @@ class TaskManagerUnitTest {
         assertTrue(noMatch.isEmpty())
     }
 
-    // 7. Focus Timer
+    // 8. Daily Recurring Tasks & Occurrence Logic
     @Test
-    fun testFocusTimer_startAndResetBehavior() {
-        // Test the main timer behavior such as starting and resetting the timer.
-        val defaultMinutes = 25
-        val customFocusMinutes = defaultMinutes
-        var timeLeftMillis = customFocusMinutes * 60 * 1000L
-        var isRunning = false
-        var isBreak = false
+    fun testDailyRecurringTask_occurrenceCompletionStatus() {
+        val today = System.currentTimeMillis()
+        val yesterday = today - 24 * 60 * 60 * 1000L
 
-        // Initial state: 25 minutes, not running
-        assertEquals(25 * 60 * 1000L, timeLeftMillis)
-        assertFalse(isRunning)
+        // Daily recurring task not completed yet today
+        val recurringTask = Todo(
+            id = 5,
+            title = "Morning Run",
+            recurrence = com.example.mytodoapp.model.RecurrenceType.DAILY,
+            completed = false,
+            lastCompletedDateMillis = null
+        )
+        assertFalse(recurringTask.isCompletedForToday())
 
-        // Start timer
-        isRunning = true
-        assertTrue(isRunning)
+        // Completed yesterday -> should NOT be completed for today
+        val completedYesterdayTask = recurringTask.copy(
+            lastCompletedDateMillis = yesterday,
+            completed = true
+        )
+        assertFalse(completedYesterdayTask.isCompletedForToday())
 
-        // Simulate tick
-        timeLeftMillis -= 5000L
-        assertEquals(25 * 60 * 1000L - 5000L, timeLeftMillis)
+        // Completed today -> should be completed for today
+        val completedTodayTask = recurringTask.copy(
+            lastCompletedDateMillis = today,
+            completed = true
+        )
+        assertTrue(completedTodayTask.isCompletedForToday())
+    }
 
-        // Reset timer
-        isRunning = false
-        isBreak = false
-        timeLeftMillis = customFocusMinutes * 60 * 1000L
+    // 9. Tag and Multi-Filter Search
+    @Test
+    fun testTagsAndPriorityFiltering() {
+        val tasks = listOf(
+            Todo(id = 1, title = "Design Sprint", priority = Priority.HIGH, tags = listOf("Work", "Design"), completed = false),
+            Todo(id = 2, title = "Math Homework", priority = Priority.MEDIUM, tags = listOf("Study"), completed = false),
+            Todo(id = 3, title = "Grocery List", priority = Priority.LOW, tags = listOf("Personal", "Shopping"), completed = true)
+        )
 
-        // Verify state is restored after reset
-        assertFalse(isRunning)
-        assertFalse(isBreak)
-        assertEquals(25 * 60 * 1000L, timeLeftMillis)
+        // Filter by Tag "Work"
+        val workTasks = tasks.filter { it.tags.any { t -> t.equals("Work", ignoreCase = true) } }
+        assertEquals(1, workTasks.size)
+        assertEquals("Design Sprint", workTasks[0].title)
+
+        // Filter by Priority HIGH
+        val highTasks = tasks.filter { it.priority == Priority.HIGH }
+        assertEquals(1, highTasks.size)
+        assertEquals(1, highTasks[0].id)
+
+        // Combined Tag and Search
+        val search = "Design"
+        val filtered = tasks.filter { it.tags.contains(search) || it.title.contains(search) }
+        assertEquals(1, filtered.size)
+        assertEquals("Design Sprint", filtered[0].title)
+    }
+
+    // 10. Recurrence Trigger Calculation
+    @Test
+    fun testDailyRecurrenceNextTriggerCalculation() {
+        val dueTime = 1700000000000L
+        val nextTrigger = com.example.mytodoapp.notification.NotificationScheduler.calculateNextTriggerMillis(
+            dueTimeMillis = dueTime,
+            endTimeMillis = null,
+            minutesBefore = 10,
+            recurrence = com.example.mytodoapp.model.RecurrenceType.DAILY,
+            currentTime = 1700000000000L
+        )
+        assertNotNull(nextTrigger)
+        assertTrue(nextTrigger!! > 1700000000000L)
     }
 }

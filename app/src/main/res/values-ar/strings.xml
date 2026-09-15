@@ -265,4 +265,5 @@
     <string name="biometric_not_enrolled">يرجى تسجيل بصمة الإصبع في إعدادات جهازك قبل تفعيل قفل التطبيق.</string>
     <string name="biometric_unavailable">المصادقة البيومترية غير متوفرة على هذا الجهاز.</string>
     <string name="biometric_auth_failed">فشلت المصادقة. يرجى المحاولة مرة أخرى.</string>
+    <string name="splash_tagline">تنظيم • تركيز • إنجاز</string>
 </resources>

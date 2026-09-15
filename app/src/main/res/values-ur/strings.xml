@@ -265,4 +265,5 @@
     <string name="biometric_not_enrolled">ایپ لاک فعال کرنے سے پہلے براہ کرم اپنے آلے کی ترتیبات میں فنگر پرنٹ درج کریں۔</string>
     <string name="biometric_unavailable">اس آلے پر بایومیٹرک تصدیق دستیاب نہیں ہے۔</string>
     <string name="biometric_auth_failed">تصدیق ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔</string>
+    <string name="splash_tagline">منظم کریں • توجہ مرکوز کریں • مکمل کریں</string>
 </resources>

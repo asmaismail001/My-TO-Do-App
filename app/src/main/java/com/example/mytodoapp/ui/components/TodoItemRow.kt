@@ -4,7 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -149,6 +151,46 @@ fun TodoItemRow(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.padding(top = 4.dp)
                         )
+                    }
+
+                    if (todo.recurrence != com.example.mytodoapp.model.RecurrenceType.NONE) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Accent.copy(alpha = if (isDark) 0.18f else 0.1f),
+                            border = BorderStroke(0.6.dp, Accent.copy(alpha = 0.35f)),
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Text(text = "🔁", fontSize = 10.sp)
+                                Text(
+                                    text = when (todo.recurrence) {
+                                        com.example.mytodoapp.model.RecurrenceType.DAILY -> stringResource(R.string.repeats_daily)
+                                        com.example.mytodoapp.model.RecurrenceType.WEEKLY -> stringResource(R.string.repeats_weekly)
+                                        com.example.mytodoapp.model.RecurrenceType.MONTHLY -> stringResource(R.string.repeats_monthly)
+                                        else -> ""
+                                    },
+                                    color = Accent,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                                )
+                            }
+                        }
+                    }
+
+                    if (todo.tags.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            todo.tags.forEach { tag ->
+                                TagChip(tag = tag, isDark = isDark)
+                            }
+                        }
                     }
 
                     // Metadata row (Start Time and Due Time stacked vertically)

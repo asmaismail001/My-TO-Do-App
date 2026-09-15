@@ -31,17 +31,19 @@ class BootReceiver : BroadcastReceiver() {
                 val dao = AppDatabase.getDatabase(appContext).todoDao()
                 val todos = dao.getAllTodos()
                 todos.forEach { todo ->
-                    if (!todo.completed &&
-                        todo.notificationEnabled &&
-                        (todo.endTimeMillis != null || todo.dueTimeMillis != null)
-                    ) {
+                    val shouldSchedule = todo.notificationEnabled &&
+                        (todo.endTimeMillis != null || todo.dueTimeMillis != null) &&
+                        (!todo.completed || todo.recurrence != com.example.mytodoapp.model.RecurrenceType.NONE)
+
+                    if (shouldSchedule) {
                         NotificationScheduler.scheduleReminder(
                             appContext,
                             todo.id,
                             todo.title,
                             todo.dueTimeMillis ?: 0L,
                             todo.endTimeMillis,
-                            todo.notificationMinutesBefore
+                            todo.notificationMinutesBefore,
+                            todo.recurrence
                         )
                     }
                 }

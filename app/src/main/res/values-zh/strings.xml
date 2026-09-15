@@ -265,4 +265,5 @@
     <string name="biometric_not_enrolled">在开启应用锁前，请先在设备设置中录入指纹或受支持的生物识别。</string>
     <string name="biometric_unavailable">此设备不支持生物识别身份验证。</string>
     <string name="biometric_auth_failed">身份验证失败，请重试。</string>
+    <string name="splash_tagline">规划 • 专注 • 达成</string>
 </resources>

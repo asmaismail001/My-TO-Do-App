@@ -131,7 +131,24 @@ fun CalendarView(
                     val isToday = CalendarUtil.isSameDay(day.timeInMillis, Calendar.getInstance().timeInMillis)
 
                     val hasTasks = tasks.any {
-                        it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, day.timeInMillis)
+                        if (it.recurrence == com.example.mytodoapp.model.RecurrenceType.DAILY) {
+                            val startCal = Calendar.getInstance().apply {
+                                timeInMillis = it.dueTimeMillis ?: it.createdAt
+                                set(Calendar.HOUR_OF_DAY, 0)
+                                set(Calendar.MINUTE, 0)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+                            val checkCal = (day.clone() as Calendar).apply {
+                                set(Calendar.HOUR_OF_DAY, 0)
+                                set(Calendar.MINUTE, 0)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+                            checkCal.timeInMillis >= startCal.timeInMillis
+                        } else {
+                            it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, day.timeInMillis)
+                        }
                     }
 
                     Box(

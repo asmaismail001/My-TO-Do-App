@@ -37,6 +37,7 @@ import java.util.Date
 import java.util.Locale
 
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.window.DialogProperties
 import com.example.mytodoapp.R
 
 @Composable
@@ -47,6 +48,10 @@ fun EditTaskDialog(
     onDescriptionChange: (String) -> Unit,
     priority: Priority,
     onPriorityChange: (Priority) -> Unit,
+    tags: List<String> = emptyList(),
+    onTagsChange: (List<String>) -> Unit = {},
+    recurrence: com.example.mytodoapp.model.RecurrenceType = com.example.mytodoapp.model.RecurrenceType.NONE,
+    onRecurrenceChange: (com.example.mytodoapp.model.RecurrenceType) -> Unit = {},
     taskType: TaskType = TaskType.FLEXIBLE,
     onTaskTypeChange: (TaskType) -> Unit = {},
     dueTimeMillis: Long?,
@@ -86,16 +91,23 @@ fun EditTaskDialog(
         }
     }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Surface(
             shape = RoundedCornerShape(24.dp),
             color = surfaceColorFor(isDark),
             border = BorderStroke(1.dp, Accent.copy(alpha = 0.35f)),
-            tonalElevation = 6.dp
+            tonalElevation = 6.dp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+                .imePadding()
         ) {
             Column(
                 modifier = Modifier
-                    .padding(24.dp)
+                    .padding(20.dp)
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
             ) {
@@ -110,7 +122,7 @@ fun EditTaskDialog(
                     text = stringResource(R.string.added_date, DateTimePickerUtil.formatDateTime(createdAt)),
                     style = MaterialTheme.typography.labelSmall,
                     color = textMutedFor(isDark),
-                    modifier = Modifier.padding(top = 4.dp, bottom = 20.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 18.dp)
                 )
 
                 OutlinedTextField(
@@ -133,7 +145,7 @@ fun EditTaskDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 OutlinedTextField(
                     value = description,
@@ -142,7 +154,7 @@ fun EditTaskDialog(
                     placeholder = { Text(stringResource(R.string.task_desc_hint), color = textMutedFor(isDark)) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp),
+                        .height(95.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Accent,
@@ -156,15 +168,31 @@ fun EditTaskDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 PrioritySelector(selected = priority, onSelect = onPriorityChange)
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+
+                TagInputSection(
+                    tags = tags,
+                    onTagsChange = onTagsChange,
+                    isDark = isDark
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                RecurrenceSelector(
+                    selected = recurrence,
+                    onSelect = onRecurrenceChange,
+                    isDark = isDark
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 TaskTypeSelector(selectedType = taskType, onTypeSelected = onTaskTypeChange)
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),

@@ -46,8 +46,14 @@ class ReminderReceiver : BroadcastReceiver() {
                 try {
                     val todo = dao.getTodoById(taskId)
                     if (todo != null) {
-                        dao.updateTodo(todo.copy(completed = true))
-                        NotificationScheduler.cancelReminder(context, taskId)
+                        if (todo.recurrence == com.example.mytodoapp.model.RecurrenceType.DAILY) {
+                            val updated = todo.copy(lastCompletedDateMillis = System.currentTimeMillis(), completed = true)
+                            dao.updateTodo(updated)
+                            NotificationScheduler.scheduleNextOccurrence(context, updated)
+                        } else {
+                            dao.updateTodo(todo.copy(completed = true))
+                            NotificationScheduler.cancelReminder(context, taskId)
+                        }
                         val refreshIntent = Intent("com.example.mytodoapp.REFRESH_TODOS").apply {
                             `package` = context.packageName
                         }
@@ -78,13 +84,19 @@ class ReminderReceiver : BroadcastReceiver() {
                     "DB lookup taskId=$taskId found=${todo != null} completed=${todo?.completed == true}"
                 )
                 when {
-                    todo != null && todo.completed -> {
-                        android.util.Log.d("ReminderReceiver", "Task $taskId already completed. Skipping.")
+                    todo != null && todo.isCompletedForToday() -> {
+                        android.util.Log.d("ReminderReceiver", "Task $taskId already completed for today. Skipping.")
+                        if (todo.recurrence != com.example.mytodoapp.model.RecurrenceType.NONE) {
+                            NotificationScheduler.scheduleNextOccurrence(context, todo)
+                        }
                     }
                     todo != null -> {
                         val start = todo.dueTimeMillis ?: dueTimeMillis
                         val end = todo.endTimeMillis ?: endTimeMillis
                         showNotification(context, todo, todo.title, start, end)
+                        if (todo.recurrence != com.example.mytodoapp.model.RecurrenceType.NONE) {
+                            NotificationScheduler.scheduleNextOccurrence(context, todo)
+                        }
                     }
                     taskId > 0 -> {
                         android.util.Log.w(

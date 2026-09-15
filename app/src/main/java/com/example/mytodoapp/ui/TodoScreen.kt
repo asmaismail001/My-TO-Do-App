@@ -162,6 +162,8 @@ fun TodoScreen(
     var newNotificationEnabled by remember { mutableStateOf(false) }
     var newNotificationMinutesBefore by remember { mutableIntStateOf(defaultReminderMinutes) }
     var newAttachmentUri by remember { mutableStateOf<String?>(null) }
+    var newTags by remember { mutableStateOf<List<String>>(emptyList()) }
+    var newRecurrence by remember { mutableStateOf(com.example.mytodoapp.model.RecurrenceType.NONE) }
 
     var showEditDialog by remember { mutableStateOf(false) }
     var editingTodo by remember { mutableStateOf<Todo?>(null) }
@@ -174,6 +176,8 @@ fun TodoScreen(
     var editNotificationEnabled by remember { mutableStateOf(false) }
     var editNotificationMinutesBefore by remember { mutableIntStateOf(10) }
     var editAttachmentUri by remember { mutableStateOf<String?>(null) }
+    var editTags by remember { mutableStateOf<List<String>>(emptyList()) }
+    var editRecurrence by remember { mutableStateOf(com.example.mytodoapp.model.RecurrenceType.NONE) }
 
     var showReschedulePickerForDetails by remember { mutableStateOf(false) }
 
@@ -244,6 +248,8 @@ fun TodoScreen(
         editNotificationEnabled = todo.notificationEnabled
         editNotificationMinutesBefore = todo.notificationMinutesBefore
         editAttachmentUri = todo.attachmentUri
+        editTags = todo.tags
+        editRecurrence = todo.recurrence
         weatherViewModel?.loadTaskWeather(todo.dueTimeMillis ?: todo.createdAt, todo.taskType)
         showEditDialog = true
     }
@@ -522,7 +528,13 @@ fun TodoScreen(
                     Screen.ALL -> {
                         TodoSearchBar(
                             query = viewModel.searchQuery,
-                            onQueryChange = { viewModel.onSearchQueryChange(it) }
+                            onQueryChange = { viewModel.onSearchQueryChange(it) },
+                            selectedPriority = viewModel.selectedPriorityFilter,
+                            onPrioritySelect = { viewModel.onPriorityFilterChange(it) },
+                            selectedTag = viewModel.selectedTagFilter,
+                            onTagSelect = { viewModel.onTagFilterChange(it) },
+                            availableTags = viewModel.allUniqueTags,
+                            onClearFilters = { viewModel.clearFilters() }
                         )
                         val list = viewModel.allTasks
                         val completedCount = viewModel.todoList.count { it.completed }
@@ -589,9 +601,10 @@ fun TodoScreen(
                             }
                         }
 
+                        val isFiltered = viewModel.searchQuery.isNotBlank() || viewModel.selectedPriorityFilter != null || viewModel.selectedTagFilter != null
                         TaskListContent(
                             tasks = list,
-                            emptyMessage = stringResource(R.string.no_tasks_found),
+                            emptyMessage = if (isFiltered) stringResource(R.string.no_tasks_match_search) else stringResource(R.string.no_tasks_found),
                             onToggle = { viewModel.toggleTodo(it) },
                             onEditClick = { openEdit(it) },
                             onDeleteClick = { openDelete(it) },
@@ -603,11 +616,18 @@ fun TodoScreen(
                     Screen.COMPLETED -> {
                         TodoSearchBar(
                             query = viewModel.searchQuery,
-                            onQueryChange = { viewModel.onSearchQueryChange(it) }
+                            onQueryChange = { viewModel.onSearchQueryChange(it) },
+                            selectedPriority = viewModel.selectedPriorityFilter,
+                            onPrioritySelect = { viewModel.onPriorityFilterChange(it) },
+                            selectedTag = viewModel.selectedTagFilter,
+                            onTagSelect = { viewModel.onTagFilterChange(it) },
+                            availableTags = viewModel.allUniqueTags,
+                            onClearFilters = { viewModel.clearFilters() }
                         )
+                        val isFiltered = viewModel.searchQuery.isNotBlank() || viewModel.selectedPriorityFilter != null || viewModel.selectedTagFilter != null
                         TaskListContent(
                             tasks = viewModel.completedTasks,
-                            emptyMessage = stringResource(R.string.no_completed_tasks),
+                            emptyMessage = if (isFiltered) stringResource(R.string.no_tasks_match_search) else stringResource(R.string.no_completed_tasks),
                             onToggle = { viewModel.toggleTodo(it) },
                             onEditClick = { openEdit(it) },
                             onDeleteClick = { openDelete(it) },
@@ -619,11 +639,18 @@ fun TodoScreen(
                     Screen.PENDING -> {
                         TodoSearchBar(
                             query = viewModel.searchQuery,
-                            onQueryChange = { viewModel.onSearchQueryChange(it) }
+                            onQueryChange = { viewModel.onSearchQueryChange(it) },
+                            selectedPriority = viewModel.selectedPriorityFilter,
+                            onPrioritySelect = { viewModel.onPriorityFilterChange(it) },
+                            selectedTag = viewModel.selectedTagFilter,
+                            onTagSelect = { viewModel.onTagFilterChange(it) },
+                            availableTags = viewModel.allUniqueTags,
+                            onClearFilters = { viewModel.clearFilters() }
                         )
+                        val isFiltered = viewModel.searchQuery.isNotBlank() || viewModel.selectedPriorityFilter != null || viewModel.selectedTagFilter != null
                         TaskListContent(
                             tasks = viewModel.pendingTasks,
-                            emptyMessage = stringResource(R.string.no_pending_tasks),
+                            emptyMessage = if (isFiltered) stringResource(R.string.no_tasks_match_search) else stringResource(R.string.no_pending_tasks),
                             onToggle = { viewModel.toggleTodo(it) },
                             onEditClick = { openEdit(it) },
                             onDeleteClick = { openDelete(it) },
@@ -644,7 +671,8 @@ fun TodoScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         val tasksForSelectedDay = viewModel.todoList.filter {
-                            it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, selectedDay.timeInMillis)
+                            (it.dueTimeMillis != null && CalendarUtil.isSameDay(it.dueTimeMillis, selectedDay.timeInMillis)) ||
+                            (it.recurrence == com.example.mytodoapp.model.RecurrenceType.DAILY)
                         }
 
                         TaskListContent(
@@ -721,6 +749,8 @@ fun TodoScreen(
         newNotificationEnabled = false
         newNotificationMinutesBefore = defaultReminderMinutes
         newAttachmentUri = null
+        newTags = emptyList()
+        newRecurrence = com.example.mytodoapp.model.RecurrenceType.NONE
         weatherViewModel?.clearTaskWeather()
     }
 
@@ -779,6 +809,10 @@ fun TodoScreen(
             onNotificationMinutesBeforeChange = { newNotificationMinutesBefore = it },
             attachmentUri = newAttachmentUri,
             onAttachmentChange = { newAttachmentUri = it },
+            tags = newTags,
+            onTagsChange = { newTags = it },
+            recurrence = newRecurrence,
+            onRecurrenceChange = { newRecurrence = it },
             weatherUiState = weatherViewModel?.taskWeatherState ?: WeatherUiState.Idle,
             onCheckWeatherClick = {
                 weatherViewModel?.loadTaskWeather(newDueTime, newTaskType)
@@ -806,7 +840,9 @@ fun TodoScreen(
                                 newAttachmentUri,
                                 newNotificationEnabled,
                                 newNotificationMinutesBefore,
-                                newTaskType
+                                newTaskType,
+                                newTags,
+                                newRecurrence
                             )
                             clearAddStates()
                             showAddDialog = false
@@ -822,7 +858,9 @@ fun TodoScreen(
                             newAttachmentUri,
                             newNotificationEnabled,
                             newNotificationMinutesBefore,
-                            newTaskType
+                            newTaskType,
+                            newTags,
+                            newRecurrence
                         )
                         clearAddStates()
                         showAddDialog = false
@@ -891,6 +929,10 @@ fun TodoScreen(
             onNotificationMinutesBeforeChange = { editNotificationMinutesBefore = it },
             attachmentUri = editAttachmentUri,
             onAttachmentChange = { editAttachmentUri = it },
+            tags = editTags,
+            onTagsChange = { editTags = it },
+            recurrence = editRecurrence,
+            onRecurrenceChange = { editRecurrence = it },
             createdAt = editingTodo?.createdAt ?: System.currentTimeMillis(),
             weatherUiState = weatherViewModel?.taskWeatherState ?: WeatherUiState.Idle,
             onCheckWeatherClick = {
@@ -921,7 +963,9 @@ fun TodoScreen(
                                     editAttachmentUri,
                                     editNotificationEnabled,
                                     editNotificationMinutesBefore,
-                                    editTaskType
+                                    editTaskType,
+                                    editTags,
+                                    editRecurrence
                                 )
                             }
                             showEditDialog = false
@@ -940,7 +984,9 @@ fun TodoScreen(
                                 editAttachmentUri,
                                 editNotificationEnabled,
                                 editNotificationMinutesBefore,
-                                editTaskType
+                                editTaskType,
+                                editTags,
+                                editRecurrence
                             )
                         }
                         showEditDialog = false

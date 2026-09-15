@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mytodoapp.model.Priority
+import com.example.mytodoapp.model.RecurrenceType
 import com.example.mytodoapp.model.TaskType
 import com.example.mytodoapp.model.Todo
 import com.example.mytodoapp.notification.NotificationScheduler
@@ -94,8 +95,26 @@ class TodoViewModel(
 
     fun getTasksForDate(date: Calendar): List<Todo> {
         return todoList.filter { todo ->
-            val targetTime = todo.dueTimeMillis ?: todo.createdAt
-            com.example.mytodoapp.util.CalendarUtil.isSameDay(targetTime, date.timeInMillis)
+            if (todo.recurrence == RecurrenceType.DAILY) {
+                val targetTime = todo.dueTimeMillis ?: todo.createdAt
+                val startCal = Calendar.getInstance().apply {
+                    timeInMillis = targetTime
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val checkCal = (date.clone() as Calendar).apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                checkCal.timeInMillis >= startCal.timeInMillis
+            } else {
+                val targetTime = todo.dueTimeMillis ?: todo.createdAt
+                com.example.mytodoapp.util.CalendarUtil.isSameDay(targetTime, date.timeInMillis)
+            }
         }
     }
 
@@ -112,17 +131,28 @@ class TodoViewModel(
                     set(Calendar.MILLISECOND, 999)
                 }
                 todoList.filter { todo ->
-                    val targetTime = todo.dueTimeMillis ?: todo.createdAt
-                    targetTime >= start.timeInMillis && targetTime <= end.timeInMillis
+                    if (todo.recurrence == RecurrenceType.DAILY) {
+                        val targetTime = todo.dueTimeMillis ?: todo.createdAt
+                        targetTime <= end.timeInMillis
+                    } else {
+                        val targetTime = todo.dueTimeMillis ?: todo.createdAt
+                        targetTime >= start.timeInMillis && targetTime <= end.timeInMillis
+                    }
                 }
             }
             DashboardPeriod.MONTHLY -> {
                 val year = date.get(Calendar.YEAR)
                 val month = date.get(Calendar.MONTH)
                 todoList.filter { todo ->
-                    val targetTime = todo.dueTimeMillis ?: todo.createdAt
-                    val todoCal = Calendar.getInstance().apply { timeInMillis = targetTime }
-                    todoCal.get(Calendar.YEAR) == year && todoCal.get(Calendar.MONTH) == month
+                    if (todo.recurrence == RecurrenceType.DAILY) {
+                        val targetTime = todo.dueTimeMillis ?: todo.createdAt
+                        val todoCal = Calendar.getInstance().apply { timeInMillis = targetTime }
+                        todoCal.get(Calendar.YEAR) < year || (todoCal.get(Calendar.YEAR) == year && todoCal.get(Calendar.MONTH) <= month)
+                    } else {
+                        val targetTime = todo.dueTimeMillis ?: todo.createdAt
+                        val todoCal = Calendar.getInstance().apply { timeInMillis = targetTime }
+                        todoCal.get(Calendar.YEAR) == year && todoCal.get(Calendar.MONTH) == month
+                    }
                 }
             }
         }
@@ -131,7 +161,7 @@ class TodoViewModel(
     fun getStatsForPeriod(period: DashboardPeriod, date: Calendar): PeriodStats {
         val tasks = getTasksForPeriod(period, date)
         val total = tasks.size
-        val completed = tasks.count { it.completed }
+        val completed = tasks.count { it.isEffectiveCompleted(date.timeInMillis) }
         val pending = total - completed
         val percentage = if (total > 0) (completed * 100) / total else 0
         return PeriodStats(total, completed, pending, percentage)
@@ -147,7 +177,7 @@ class TodoViewModel(
                 add(Calendar.DAY_OF_MONTH, offset)
             }
             val dayTasks = getTasksForDate(dayCal)
-            val completed = dayTasks.count { it.completed }
+            val completed = dayTasks.count { it.isEffectiveCompleted(dayCal.timeInMillis) }
             val pending = dayTasks.size - completed
             DailyChartData(
                 dayName = dayNames[offset],
@@ -164,9 +194,15 @@ class TodoViewModel(
         val month = date.get(Calendar.MONTH)
 
         val monthTasks = todoList.filter { todo ->
-            val targetTime = todo.dueTimeMillis ?: todo.createdAt
-            val todoCal = Calendar.getInstance().apply { timeInMillis = targetTime }
-            todoCal.get(Calendar.YEAR) == year && todoCal.get(Calendar.MONTH) == month
+            if (todo.recurrence == RecurrenceType.DAILY) {
+                val targetTime = todo.dueTimeMillis ?: todo.createdAt
+                val todoCal = Calendar.getInstance().apply { timeInMillis = targetTime }
+                todoCal.get(Calendar.YEAR) < year || (todoCal.get(Calendar.YEAR) == year && todoCal.get(Calendar.MONTH) <= month)
+            } else {
+                val targetTime = todo.dueTimeMillis ?: todo.createdAt
+                val todoCal = Calendar.getInstance().apply { timeInMillis = targetTime }
+                todoCal.get(Calendar.YEAR) == year && todoCal.get(Calendar.MONTH) == month
+            }
         }
 
         val segments = listOf(
@@ -182,7 +218,7 @@ class TodoViewModel(
                 val todoCal = Calendar.getInstance().apply { timeInMillis = targetTime }
                 todoCal.get(Calendar.DAY_OF_MONTH) in dayRange
             }
-            val completed = segmentTasks.count { it.completed }
+            val completed = segmentTasks.count { it.isCompletedForToday() }
             val pending = segmentTasks.size - completed
             MonthlyChartData(label, completed, pending)
         }
@@ -194,32 +230,74 @@ class TodoViewModel(
     var searchQuery by mutableStateOf("")
         private set
 
-    val allTasks: List<Todo>
-        get() = applySearch(todoList)
+    var selectedPriorityFilter by mutableStateOf<Priority?>(null)
+        private set
 
-    val completedTasks: List<Todo>
-        get() = applySearch(todoList.filter { it.completed })
-
-    val pendingTasks: List<Todo>
-        get() = applySearch(todoList.filter { !it.completed })
-
-    init {
-        loadTodos()
-    }
+    var selectedTagFilter by mutableStateOf<String?>(null)
+        private set
 
     fun onSearchQueryChange(query: String) {
         searchQuery = query
     }
 
-    private fun applySearch(list: List<Todo>): List<Todo> {
-        if (searchQuery.isBlank()) return list
-        val query = searchQuery.trim().lowercase()
-        return list.filter {
-            it.title.lowercase().contains(query) ||
-                    it.description.lowercase().contains(query) ||
-                    it.priority.name.lowercase().contains(query)
+    fun onPriorityFilterChange(priority: Priority?) {
+        selectedPriorityFilter = if (selectedPriorityFilter == priority) null else priority
+    }
+
+    fun onTagFilterChange(tag: String?) {
+        selectedTagFilter = if (selectedTagFilter.equals(tag, ignoreCase = true)) null else tag
+    }
+
+    fun clearFilters() {
+        searchQuery = ""
+        selectedPriorityFilter = null
+        selectedTagFilter = null
+    }
+
+    fun clearSearchQuery() {
+        searchQuery = ""
+    }
+
+    val isFilterActive: Boolean
+        get() = searchQuery.isNotBlank() || selectedPriorityFilter != null || !selectedTagFilter.isNullOrBlank()
+
+    val allUniqueTags: List<String>
+        get() = todoList.flatMap { it.tags }.map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted()
+
+    fun filterTasks(list: List<Todo>): List<Todo> {
+        if (!isFilterActive) return list
+        val trimmedQuery = searchQuery.trim().lowercase()
+
+        return list.filter { todo ->
+            // 1. Priority match
+            val matchesPriority = selectedPriorityFilter == null || todo.priority == selectedPriorityFilter
+
+            // 2. Tag filter chip match (if selectedTagFilter is set)
+            val matchesTagFilter = selectedTagFilter.isNullOrBlank() ||
+                    todo.tags.any { it.equals(selectedTagFilter, ignoreCase = true) }
+
+            // 3. Search query match (searches title, description, tags, and priority name)
+            val matchesQuery = if (trimmedQuery.isBlank()) {
+                true
+            } else {
+                todo.title.lowercase().contains(trimmedQuery) ||
+                        todo.description.lowercase().contains(trimmedQuery) ||
+                        todo.tags.any { it.lowercase().contains(trimmedQuery) } ||
+                        todo.priority.name.lowercase().startsWith(trimmedQuery)
+            }
+
+            matchesPriority && matchesTagFilter && matchesQuery
         }
     }
+
+    val allTasks: List<Todo>
+        get() = filterTasks(todoList)
+
+    val completedTasks: List<Todo>
+        get() = filterTasks(todoList.filter { it.isCompletedForToday() })
+
+    val pendingTasks: List<Todo>
+        get() = filterTasks(todoList.filter { !it.isCompletedForToday() })
 
     fun loadTodos() {
         viewModelScope.launch {
@@ -341,17 +419,18 @@ class TodoViewModel(
 
     private fun rescheduleReminderFor(todo: Todo) {
         NotificationScheduler.cancelReminder(appContext, todo.id)
-        if (!todo.completed &&
-            todo.notificationEnabled &&
-            (todo.dueTimeMillis != null || todo.endTimeMillis != null)
-        ) {
+        val shouldSchedule = todo.notificationEnabled &&
+            (todo.dueTimeMillis != null || todo.endTimeMillis != null) &&
+            (!todo.completed || todo.recurrence != RecurrenceType.NONE)
+        if (shouldSchedule) {
             NotificationScheduler.scheduleReminder(
                 appContext,
                 todo.id,
                 todo.title,
                 todo.dueTimeMillis ?: 0L,
                 todo.endTimeMillis,
-                todo.notificationMinutesBefore
+                todo.notificationMinutesBefore,
+                todo.recurrence
             )
         }
     }
@@ -365,7 +444,9 @@ class TodoViewModel(
         attachmentUri: String? = null,
         notificationEnabled: Boolean = false,
         notificationMinutesBefore: Int = 10,
-        taskType: TaskType = TaskType.FLEXIBLE
+        taskType: TaskType = TaskType.FLEXIBLE,
+        tags: List<String> = emptyList(),
+        recurrence: RecurrenceType = RecurrenceType.NONE
     ) {
         if (title.isBlank()) return
         viewModelScope.launch {
@@ -381,13 +462,15 @@ class TodoViewModel(
                 notificationEnabled,
                 notificationMinutesBefore,
                 userId,
-                taskType
+                taskType,
+                tags,
+                recurrence
             )
             if (notificationEnabled && (dueTimeMillis != null || endTimeMillis != null)) {
                 android.util.Log.d(
                     "TodoViewModel",
                     "Task created id=${savedTodo.id} notificationEnabled=true " +
-                        "start=$dueTimeMillis minutesBefore=$notificationMinutesBefore"
+                        "start=$dueTimeMillis minutesBefore=$notificationMinutesBefore recurrence=$recurrence"
                 )
                 NotificationScheduler.scheduleReminder(
                     appContext,
@@ -395,7 +478,8 @@ class TodoViewModel(
                     savedTodo.title,
                     dueTimeMillis ?: 0L,
                     endTimeMillis,
-                    notificationMinutesBefore
+                    notificationMinutesBefore,
+                    recurrence
                 )
             } else {
                 android.util.Log.d(
@@ -409,21 +493,21 @@ class TodoViewModel(
 
     fun toggleTodo(todo: Todo) {
         viewModelScope.launch {
+            val wasCompletedToday = todo.isCompletedForToday()
             repository.toggleTodo(todo)
-            if (!todo.completed) {
-                // If it was incomplete, it is now completed -> cancel the reminder
-                NotificationScheduler.cancelReminder(appContext, todo.id)
+            if (todo.recurrence == RecurrenceType.DAILY) {
+                if (wasCompletedToday) {
+                    rescheduleReminderFor(todo.copy(lastCompletedDateMillis = null))
+                } else {
+                    val updated = todo.copy(lastCompletedDateMillis = System.currentTimeMillis())
+                    NotificationScheduler.scheduleNextOccurrence(appContext, updated)
+                }
             } else {
-                // If it was completed, it is now incomplete -> reschedule if enabled
-                if (todo.notificationEnabled && (todo.dueTimeMillis != null || todo.endTimeMillis != null)) {
-                    NotificationScheduler.scheduleReminder(
-                        appContext,
-                        todo.id,
-                        todo.title,
-                        todo.dueTimeMillis ?: 0L,
-                        todo.endTimeMillis,
-                        todo.notificationMinutesBefore
-                    )
+                if (!todo.completed) {
+                    // If it was incomplete, it is now completed -> cancel reminder
+                    NotificationScheduler.cancelReminder(appContext, todo.id)
+                } else {
+                    rescheduleReminderFor(todo.copy(completed = false))
                 }
             }
             loadTodos()
@@ -440,7 +524,9 @@ class TodoViewModel(
         newAttachmentUri: String? = todo.attachmentUri,
         newNotificationEnabled: Boolean = todo.notificationEnabled,
         newNotificationMinutesBefore: Int = todo.notificationMinutesBefore,
-        newTaskType: TaskType = todo.taskType
+        newTaskType: TaskType = todo.taskType,
+        newTags: List<String> = todo.tags,
+        newRecurrence: RecurrenceType = todo.recurrence
     ) {
         if (newTitle.isBlank()) return
         viewModelScope.launch {
@@ -460,7 +546,9 @@ class TodoViewModel(
                 finalAttachmentUri,
                 newNotificationEnabled,
                 newNotificationMinutesBefore,
-                newTaskType
+                newTaskType,
+                newTags,
+                newRecurrence
             )
             NotificationScheduler.cancelReminder(appContext, todo.id)
             if (newNotificationEnabled && (newDueTimeMillis != null || newEndTimeMillis != null)) {
@@ -470,7 +558,8 @@ class TodoViewModel(
                     newTitle.trim(),
                     newDueTimeMillis ?: 0L,
                     newEndTimeMillis,
-                    newNotificationMinutesBefore
+                    newNotificationMinutesBefore,
+                    newRecurrence
                 )
             }
             loadTodos()
@@ -498,14 +587,18 @@ class TodoViewModel(
 
     private fun rescheduleEnabledReminders(todos: List<Todo>) {
         todos.forEach { todo ->
-            if (!todo.completed && todo.notificationEnabled && (todo.dueTimeMillis != null || todo.endTimeMillis != null)) {
+            val shouldSchedule = todo.notificationEnabled &&
+                (todo.dueTimeMillis != null || todo.endTimeMillis != null) &&
+                (!todo.completed || todo.recurrence != RecurrenceType.NONE)
+            if (shouldSchedule) {
                 NotificationScheduler.scheduleReminder(
                     appContext,
                     todo.id,
                     todo.title,
                     todo.dueTimeMillis ?: 0L,
                     todo.endTimeMillis,
-                    todo.notificationMinutesBefore
+                    todo.notificationMinutesBefore,
+                    todo.recurrence
                 )
             }
         }
@@ -567,9 +660,11 @@ class TodoViewModel(
                             attachmentUri = it.attachmentUri,
                             notificationEnabled = it.notificationEnabled,
                             notificationMinutesBefore = if (it.notificationMinutesBefore > 0) it.notificationMinutesBefore else 10,
-                            taskType = it.taskType ?: TaskType.FLEXIBLE
+                            taskType = it.taskType ?: TaskType.FLEXIBLE,
+                            tags = it.tags ?: emptyList(),
+                            recurrence = it.recurrence ?: RecurrenceType.NONE
                         )
-                        if (saved.notificationEnabled && !saved.completed &&
+                        if (saved.notificationEnabled && (!saved.completed || saved.recurrence != RecurrenceType.NONE) &&
                             (saved.endTimeMillis != null || saved.dueTimeMillis != null)
                         ) {
                             NotificationScheduler.scheduleReminder(
@@ -578,7 +673,8 @@ class TodoViewModel(
                                 saved.title,
                                 saved.dueTimeMillis ?: 0L,
                                 saved.endTimeMillis,
-                                saved.notificationMinutesBefore
+                                saved.notificationMinutesBefore,
+                                saved.recurrence
                             )
                         }
                         importedCount++

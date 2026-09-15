@@ -213,7 +213,7 @@ fun DashboardScreen(
                                 text = if (dailyTasks.isEmpty()) {
                                     stringResource(R.string.no_tasks_today)
                                 } else {
-                                    val completed = dailyTasks.count { it.completed }
+                                    val completed = dailyTasks.count { it.isCompletedForToday() }
                                     stringResource(R.string.tasks_completed_summary, completed, dailyTasks.size)
                                 },
                                 style = MaterialTheme.typography.bodySmall,
@@ -449,7 +449,6 @@ fun DashboardScreen(
                             DashboardPeriod.DAILY -> stringResource(R.string.daily_completion)
                             DashboardPeriod.WEEKLY -> stringResource(R.string.weekly_progress)
                             DashboardPeriod.MONTHLY -> stringResource(R.string.monthly_performance)
-                            else -> stringResource(R.string.task_overview)
                         },
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
@@ -574,28 +573,60 @@ fun DashboardScreen(
             }
         }
 
-        // 6. Selected Date's Tasks Section Header & Items (Only shown in DAILY mode)
-        if (period == DashboardPeriod.DAILY) {
+        // 6. Search Bar & Filter Chips on Dashboard
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            TodoSearchBar(
+                query = viewModel.searchQuery,
+                onQueryChange = { viewModel.onSearchQueryChange(it) },
+                selectedPriority = viewModel.selectedPriorityFilter,
+                onPrioritySelect = { viewModel.onPriorityFilterChange(it) },
+                selectedTag = viewModel.selectedTagFilter,
+                onTagSelect = { viewModel.onTagFilterChange(it) },
+                availableTags = viewModel.allUniqueTags,
+                onClearFilters = { viewModel.clearFilters() },
+                showFiltersRow = true
+            )
+        }
+
+        val currentPeriodTasks = when (period) {
+            DashboardPeriod.DAILY -> dailyTasks
+            DashboardPeriod.WEEKLY -> viewModel.getTasksForPeriod(DashboardPeriod.WEEKLY, selectedDate)
+            DashboardPeriod.MONTHLY -> viewModel.getTasksForPeriod(DashboardPeriod.MONTHLY, selectedDate)
+        }
+        val displayedTasks = if (viewModel.isFilterActive) {
+            val matched = viewModel.filterTasks(currentPeriodTasks)
+            if (matched.isEmpty() && currentPeriodTasks.isEmpty()) viewModel.filterTasks(viewModel.todoList) else matched
+        } else {
+            currentPeriodTasks
+        }
+
+        // 7. Tasks Section Header & Items (Shown in DAILY mode or whenever filtering/searching)
+        if (period == DashboardPeriod.DAILY || viewModel.isFilterActive) {
             item {
                 val formattedDate = SimpleDateFormat("MMM d", Locale.getDefault()).format(selectedDate.time)
+                val sectionHeader = when {
+                    viewModel.isFilterActive -> stringResource(R.string.search_tasks) + " (${displayedTasks.size})"
+                    else -> stringResource(R.string.tasks_for_date, formattedDate)
+                }
                 Text(
-                    text = stringResource(R.string.tasks_for_date, formattedDate),
+                    text = sectionHeader,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
                     color = textPrimaryFor(isDark),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, top = 20.dp, end = 16.dp, bottom = 8.dp)
+                        .padding(start = 16.dp, top = 14.dp, end = 16.dp, bottom = 8.dp)
                 )
             }
 
-            // Selected Date's Task Items
-            if (dailyTasks.isEmpty()) {
+            // Task Items or Empty State
+            if (displayedTasks.isEmpty()) {
                 item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 32.dp, horizontal = 24.dp),
+                            .padding(vertical = 28.dp, horizontal = 24.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -603,29 +634,65 @@ fun DashboardScreen(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = "✦",
+                                text = if (viewModel.isFilterActive) "🔍" else "✦",
                                 fontSize = 32.sp,
                                 color = Accent
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
+                            val emptyTitle = when {
+                                viewModel.isFilterActive && viewModel.selectedPriorityFilter != null && viewModel.searchQuery.isBlank() && viewModel.selectedTagFilter == null -> {
+                                    val pName = when (viewModel.selectedPriorityFilter!!) {
+                                        com.example.mytodoapp.model.Priority.HIGH -> stringResource(R.string.priority_high)
+                                        com.example.mytodoapp.model.Priority.MEDIUM -> stringResource(R.string.priority_medium)
+                                        com.example.mytodoapp.model.Priority.LOW -> stringResource(R.string.priority_low)
+                                    }
+                                    stringResource(R.string.no_priority_tasks_found, pName)
+                                }
+                                viewModel.isFilterActive && !viewModel.selectedTagFilter.isNullOrBlank() && viewModel.searchQuery.isBlank() -> {
+                                    stringResource(R.string.no_tasks_match_tag)
+                                }
+                                viewModel.isFilterActive -> {
+                                    stringResource(R.string.no_tasks_match_search)
+                                }
+                                else -> {
+                                    stringResource(R.string.no_tasks_found)
+                                }
+                            }
                             Text(
-                                text = stringResource(R.string.no_tasks_found),
+                                text = emptyTitle,
                                 fontWeight = FontWeight.Bold,
                                 style = MaterialTheme.typography.titleMedium,
-                                color = textPrimaryFor(isDark)
+                                color = textPrimaryFor(isDark),
+                                textAlign = TextAlign.Center
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = stringResource(R.string.no_tasks_today_msg),
+                                text = if (viewModel.isFilterActive) {
+                                    stringResource(R.string.no_matching_tasks_msg)
+                                } else {
+                                    stringResource(R.string.no_tasks_today_msg)
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = textSecondaryFor(isDark),
                                 textAlign = TextAlign.Center
                             )
+
+                            if (viewModel.isFilterActive) {
+                                Spacer(modifier = Modifier.height(14.dp))
+                                OutlinedButton(
+                                    onClick = { viewModel.clearFilters() },
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Accent),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Accent)
+                                ) {
+                                    Text(stringResource(R.string.clear_filters), fontWeight = FontWeight.SemiBold)
+                                }
+                            }
                         }
                     }
                 }
             } else {
-                items(dailyTasks, key = { it.id }) { todo ->
+                items(displayedTasks, key = { it.id }) { todo ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()

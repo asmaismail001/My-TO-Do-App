@@ -4,9 +4,11 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.example.mytodoapp.model.Todo
 
-@Database(entities = [Todo::class], version = 7, exportSchema = false)
+@Database(entities = [Todo::class], version = 9, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun todoDao(): TodoDao
 

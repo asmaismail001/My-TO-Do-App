@@ -265,4 +265,41 @@
     <string name="biometric_not_enrolled">Please enroll a fingerprint or supported biometric in your device settings before enabling App Lock.</string>
     <string name="biometric_unavailable">Biometric authentication is not available on this device.</string>
     <string name="biometric_auth_failed">Authentication failed. Please try again.</string>
+
+    <!-- Tags & Filter Strings -->
+    <string name="tags">Tags</string>
+    <string name="add_tag">Add Tag</string>
+    <string name="enter_tag">Enter tag…</string>
+    <string name="add_tag_hint">Type a tag and tap +</string>
+    <string name="no_tags">No tags</string>
+    <string name="suggested_tags">Suggested Tags</string>
+    <string name="tag_work">Work</string>
+    <string name="tag_study">Study</string>
+    <string name="tag_personal">Personal</string>
+    <string name="tag_meeting">Meeting</string>
+    <string name="tag_urgent">Urgent</string>
+    <string name="tag_shopping">Shopping</string>
+    <string name="tag_project">Project</string>
+    <string name="filter_all">All</string>
+    <string name="filter_priority">Priority</string>
+    <string name="filter_tags">Tags</string>
+    <string name="clear_filters">Clear Filters</string>
+    <string name="clear_search">Clear Search</string>
+    <string name="search_hint">Search title, description, tags…</string>
+    <string name="no_tasks_match_search">No tasks match your search</string>
+    <string name="no_tasks_match_tag">No tasks match this tag</string>
+    <string name="no_priority_tasks_found">No %1$s priority tasks found</string>
+    <string name="no_matching_tasks_msg">Try adjusting your search query or filters.</string>
+
+    <!-- Recurrence Strings -->
+    <string name="repeat">Repeat</string>
+    <string name="does_not_repeat">Does not repeat</string>
+    <string name="every_day">Every Day</string>
+    <string name="every_week">Every Week</string>
+    <string name="every_month">Every Month</string>
+    <string name="repeats_daily">Repeats Daily</string>
+    <string name="repeats_weekly">Repeats Weekly</string>
+    <string name="repeats_monthly">Repeats Monthly</string>
+    <string name="daily_task">Daily Task</string>
+    <string name="splash_tagline">Organize • Focus • Complete</string>
 </resources>

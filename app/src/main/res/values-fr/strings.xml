@@ -265,4 +265,5 @@
     <string name="biometric_not_enrolled">Veuillez enregistrer une empreinte digitale dans les paramètres de votre appareil avant d\'activer le verrouillage.</string>
     <string name="biometric_unavailable">L\'authentification biométrique n\'est pas disponible sur cet appareil.</string>
     <string name="biometric_auth_failed">Échec de l\'authentification. Veuillez réessayer.</string>
+    <string name="splash_tagline">Organiser • Concentrer • Accomplir</string>
 </resources>

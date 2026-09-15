@@ -3,8 +3,8 @@ package com.example.mytodoapp.repository
 import android.content.Context
 import androidx.room.withTransaction
 import com.example.mytodoapp.model.Priority
+import com.example.mytodoapp.model.RecurrenceType
 import com.example.mytodoapp.model.Todo
-
 import com.example.mytodoapp.model.TaskType
 
 class TodoRepository(private val context: Context) {
@@ -34,7 +34,9 @@ class TodoRepository(private val context: Context) {
         notificationEnabled: Boolean = false,
         notificationMinutesBefore: Int = 10,
         userId: String? = null,
-        taskType: TaskType = TaskType.FLEXIBLE
+        taskType: TaskType = TaskType.FLEXIBLE,
+        tags: List<String> = emptyList(),
+        recurrence: RecurrenceType = RecurrenceType.NONE
     ): Todo {
         val todo = Todo(
             title = title,
@@ -48,14 +50,27 @@ class TodoRepository(private val context: Context) {
             notificationEnabled = notificationEnabled,
             notificationMinutesBefore = notificationMinutesBefore,
             userId = userId,
-            taskType = taskType
+            taskType = taskType,
+            tags = tags,
+            recurrence = recurrence,
+            lastCompletedDateMillis = null
         )
         val newId = dao.insertTodo(todo)
         return todo.copy(id = newId.toInt())
     }
 
     suspend fun toggleTodo(todo: Todo) {
-        dao.updateTodo(todo.copy(completed = !todo.completed))
+        if (todo.recurrence == RecurrenceType.DAILY) {
+            val isCompToday = todo.isCompletedForToday()
+            val updated = if (isCompToday) {
+                todo.copy(lastCompletedDateMillis = null, completed = false)
+            } else {
+                todo.copy(lastCompletedDateMillis = System.currentTimeMillis(), completed = true)
+            }
+            dao.updateTodo(updated)
+        } else {
+            dao.updateTodo(todo.copy(completed = !todo.completed))
+        }
     }
 
     suspend fun updateTodo(
@@ -68,7 +83,9 @@ class TodoRepository(private val context: Context) {
         newAttachmentUri: String? = todo.attachmentUri,
         newNotificationEnabled: Boolean = todo.notificationEnabled,
         newNotificationMinutesBefore: Int = todo.notificationMinutesBefore,
-        newTaskType: TaskType = todo.taskType
+        newTaskType: TaskType = todo.taskType,
+        newTags: List<String> = todo.tags,
+        newRecurrence: RecurrenceType = todo.recurrence
     ) {
         dao.updateTodo(
             todo.copy(
@@ -80,7 +97,9 @@ class TodoRepository(private val context: Context) {
                 attachmentUri = newAttachmentUri,
                 notificationEnabled = newNotificationEnabled,
                 notificationMinutesBefore = newNotificationMinutesBefore,
-                taskType = newTaskType
+                taskType = newTaskType,
+                tags = newTags,
+                recurrence = newRecurrence
             )
         )
     }

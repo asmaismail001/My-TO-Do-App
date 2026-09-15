@@ -1,7 +1,6 @@
 package com.example.mytodoapp
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
@@ -9,8 +8,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
-import android.provider.Settings
 import androidx.core.net.toUri
 import com.example.mytodoapp.notification.ReminderReceiver
 import androidx.activity.compose.setContent
@@ -155,14 +152,12 @@ class MainActivity : FragmentActivity() {
                             var showSplash by remember { mutableStateOf(true) }
 
                             if (showSplash) {
-                                SplashContent()
-                                LaunchedEffect(Unit) {
-                                    delay(1600)
-                                    showSplash = false
-                                    if (pendingOpenTaskId.value == null) {
-                                        requestIgnoreBatteryOptimizations()
+                                SplashContent(
+                                    isDark = isDarkTheme,
+                                    onAnimationFinished = {
+                                        showSplash = false
                                     }
-                                }
+                                )
                             } else {
                                 val repository = TodoRepository(applicationContext)
                                 val authRepository = AuthRepository(applicationContext)
@@ -284,22 +279,6 @@ class MainActivity : FragmentActivity() {
         val extraId = intent.getIntExtra(EXTRA_TASK_ID, -1)
         if (extraId > 0) return extraId
         return intent.data?.lastPathSegment?.toIntOrNull()?.takeIf { it > 0 }
-    }
-
-    @SuppressLint("BatteryLife")
-    private fun requestIgnoreBatteryOptimizations() {
-        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
-        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
-            try {
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = "package:$packageName".toUri()
-                }
-                startActivity(intent)
-            } catch (_: Exception) {
-                // Some OEMs block this intent; fail silently, user can still
-                // enable it manually from system Settings > Battery.
-            }
-        }
     }
 
     companion object {
