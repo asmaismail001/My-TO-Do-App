@@ -49,9 +49,6 @@ import kotlinx.coroutines.launch
 
 class MainActivity : FragmentActivity() {
 
-    private val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
-
     private val pendingOpenTaskId = mutableStateOf<Int?>(null)
     private val isAppLocked = mutableStateOf(false)
     private val lockErrorMessage = mutableStateOf<String?>(null)
@@ -82,15 +79,8 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Ensure notification channel is initialized
         ReminderReceiver.ensureChannel(this)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager

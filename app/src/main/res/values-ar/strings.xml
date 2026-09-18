@@ -111,6 +111,12 @@
     <string name="permission_required">الإذن مطلوب</string>
     <string name="notification_permission_msg">إذن الإشعارات مطلوب لإرسال تذكيرات بمهامك.</string>
     <string name="exact_alarm_permission_msg">إذن المنبه الدقيق مطلوب لتقديم تذكيرات دقيقة في الوقت المحدد.</string>
+    <string name="notifications_enabled_msg">تم تفعيل الإشعارات</string>
+    <string name="notifications_disabled_msg">تم تعطيل الإشعارات</string>
+    <string name="notifications_settings_desc">الإشعارات معطلة لتطبيق Task Manager. يرجى تفعيلها في إعدادات Android.</string>
+    <string name="open_settings">فتح الإعدادات</string>
+    <string name="enable_in_settings">تفعيل في الإعدادات</string>
+    <string name="allow_task_reminders">السماح بتذكيرات المهام</string>
 
     <!-- Focus Timer -->
     <string name="focus_timer">مؤقت التركيز</string>
@@ -266,4 +272,5 @@
     <string name="biometric_unavailable">المصادقة البيومترية غير متوفرة على هذا الجهاز.</string>
     <string name="biometric_auth_failed">فشلت المصادقة. يرجى المحاولة مرة أخرى.</string>
     <string name="splash_tagline">تنظيم • تركيز • إنجاز</string>
+    <string name="disabled">معطل</string>
 </resources>

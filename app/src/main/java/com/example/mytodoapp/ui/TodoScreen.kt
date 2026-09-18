@@ -5,6 +5,8 @@ import android.app.AlarmManager
 import android.provider.Settings
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationManagerCompat
+import com.example.mytodoapp.util.NotificationPermissionHelper
 import android.net.Uri
 import android.widget.Toast
 import android.content.Context
@@ -20,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.foundation.background
@@ -88,7 +91,8 @@ fun TodoScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (!LocationHelper.hasLocationPermission(context)) {
+        if (!LocationHelper.hasLocationPermission(context) && !prefs.hasRequestedLocationPermission()) {
+            prefs.setLocationPermissionRequested(true)
             locationPermissionLauncher.launch(
                 arrayOf(
                     Manifest.permission.ACCESS_FINE_LOCATION,
@@ -195,10 +199,12 @@ fun TodoScreen(
     var validationErrorTitle by remember { mutableStateOf("") }
 
     var showExactAlarmSettingsDialog by remember { mutableStateOf(false) }
+    var showNotificationSettingsDialog by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
+        prefs.setNotificationPermissionRequested(true)
         if (isGranted) {
             val hasExactAlarm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -214,15 +220,13 @@ fun TodoScreen(
                 if (showEditDialog) editNotificationEnabled = true
             }
         } else {
-            validationErrorTitle = context.getString(R.string.permission_required)
-            validationErrorMessage = context.getString(R.string.notification_permission_msg)
-            showValidationErrorDialog = true
             if (showAddDialog) {
                 newNotificationEnabled = false
             }
             if (showEditDialog) {
                 editNotificationEnabled = false
             }
+            Toast.makeText(context, context.getString(R.string.notifications_disabled_msg), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -392,6 +396,18 @@ fun TodoScreen(
                         navigationIcon = {
                             IconButton(onClick = { scope.launch { drawerState.open() } }) {
                                 Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.menu), tint = textPrimaryFor(isDarkTheme))
+                            }
+                        },
+                        actions = {
+                            IconButton(onClick = {
+                                previousScreen = if (currentScreen in listOf(Screen.SETTINGS, Screen.PROFILE, Screen.EDIT_PROFILE, Screen.TASK_DETAILS)) previousScreen else currentScreen
+                                currentScreen = Screen.SETTINGS
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Settings,
+                                    contentDescription = stringResource(R.string.settings),
+                                    tint = textPrimaryFor(isDarkTheme)
+                                )
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(
@@ -781,12 +797,7 @@ fun TodoScreen(
             notificationEnabled = newNotificationEnabled,
             onNotificationEnabledChange = { enabled ->
                 if (enabled) {
-                    val hasPostNotification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-                    } else {
-                        true
-                    }
-
+                    val hasPermission = NotificationPermissionHelper.hasNotificationPermission(context)
                     val hasExactAlarm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                         alarmManager.canScheduleExactAlarms()
@@ -794,8 +805,21 @@ fun TodoScreen(
                         true
                     }
 
-                    if (!hasPostNotification && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    if (!hasPermission) {
+                        val activity = NotificationPermissionHelper.findActivity(context)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (NotificationPermissionHelper.shouldShowSettingsRedirect(activity, prefs)) {
+                                showNotificationSettingsDialog = true
+                            } else {
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                        } else {
+                            if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                                showNotificationSettingsDialog = true
+                            } else {
+                                newNotificationEnabled = true
+                            }
+                        }
                     } else if (!hasExactAlarm && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         showExactAlarmSettingsDialog = true
                     } else {
@@ -816,6 +840,11 @@ fun TodoScreen(
             weatherUiState = weatherViewModel?.taskWeatherState ?: WeatherUiState.Idle,
             onCheckWeatherClick = {
                 weatherViewModel?.loadTaskWeather(newDueTime, newTaskType)
+            },
+            onNavigateToSettings = {
+                showAddDialog = false
+                previousScreen = if (currentScreen in listOf(Screen.SETTINGS, Screen.PROFILE, Screen.EDIT_PROFILE, Screen.TASK_DETAILS)) previousScreen else currentScreen
+                currentScreen = Screen.SETTINGS
             },
             onConfirm = {
                 if (newNotificationEnabled && newDueTime == null) {
@@ -901,12 +930,7 @@ fun TodoScreen(
             notificationEnabled = editNotificationEnabled,
             onNotificationEnabledChange = { enabled ->
                 if (enabled) {
-                    val hasPostNotification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-                    } else {
-                        true
-                    }
-
+                    val hasPermission = NotificationPermissionHelper.hasNotificationPermission(context)
                     val hasExactAlarm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                         alarmManager.canScheduleExactAlarms()
@@ -914,8 +938,21 @@ fun TodoScreen(
                         true
                     }
 
-                    if (!hasPostNotification && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    if (!hasPermission) {
+                        val activity = NotificationPermissionHelper.findActivity(context)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            if (NotificationPermissionHelper.shouldShowSettingsRedirect(activity, prefs)) {
+                                showNotificationSettingsDialog = true
+                            } else {
+                                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                        } else {
+                            if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                                showNotificationSettingsDialog = true
+                            } else {
+                                editNotificationEnabled = true
+                            }
+                        }
                     } else if (!hasExactAlarm && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         showExactAlarmSettingsDialog = true
                     } else {
@@ -937,6 +974,11 @@ fun TodoScreen(
             weatherUiState = weatherViewModel?.taskWeatherState ?: WeatherUiState.Idle,
             onCheckWeatherClick = {
                 weatherViewModel?.loadTaskWeather(editDueTime, editTaskType)
+            },
+            onNavigateToSettings = {
+                showEditDialog = false
+                previousScreen = if (currentScreen in listOf(Screen.SETTINGS, Screen.PROFILE, Screen.EDIT_PROFILE, Screen.TASK_DETAILS)) previousScreen else currentScreen
+                currentScreen = Screen.SETTINGS
             },
             onConfirm = {
                 if (editNotificationEnabled && editDueTime == null) {
@@ -1189,6 +1231,52 @@ fun TodoScreen(
             },
             shape = RoundedCornerShape(24.dp),
             containerColor = surfaceColorFor(isDarkTheme)
+        )
+    }
+
+    if (showNotificationSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = { showNotificationSettingsDialog = false },
+            shape = RoundedCornerShape(22.dp),
+            containerColor = surfaceColorFor(isDarkTheme),
+            title = {
+                Text(
+                    text = stringResource(R.string.notifications),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = textPrimaryFor(isDarkTheme)
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.notifications_settings_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = textSecondaryFor(isDarkTheme)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showNotificationSettingsDialog = false
+                        NotificationPermissionHelper.openNotificationSettings(context)
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Accent)
+                ) {
+                    Text(
+                        text = stringResource(R.string.open_settings),
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNotificationSettingsDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = textMutedFor(isDarkTheme)
+                    )
+                }
+            }
         )
     }
 

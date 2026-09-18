@@ -111,6 +111,12 @@
     <string name="permission_required">Permission Required</string>
     <string name="notification_permission_msg">Notification permission is required to send reminders for your tasks.</string>
     <string name="exact_alarm_permission_msg">Exact alarm permission is needed to deliver accurate reminders.</string>
+    <string name="notifications_enabled_msg">Notifications enabled</string>
+    <string name="notifications_disabled_msg">Notifications are disabled</string>
+    <string name="notifications_settings_desc">Notifications are disabled for Task Manager. Please enable them in Android Settings.</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="enable_in_settings">Enable in Settings</string>
+    <string name="allow_task_reminders">Allow task reminders</string>
 
     <!-- Focus Timer -->
     <string name="focus_timer">Focus Timer</string>
@@ -302,4 +308,5 @@
     <string name="repeats_monthly">Repeats Monthly</string>
     <string name="daily_task">Daily Task</string>
     <string name="splash_tagline">Organize • Focus • Complete</string>
+    <string name="disabled">Disabled</string>
 </resources>

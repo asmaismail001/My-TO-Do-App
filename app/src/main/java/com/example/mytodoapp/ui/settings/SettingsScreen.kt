@@ -1,6 +1,10 @@
 package com.example.mytodoapp.ui.settings
 
+import android.Manifest
+import android.os.Build
 import android.text.format.DateFormat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -28,16 +32,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.mytodoapp.R
 import com.example.mytodoapp.ui.*
-import com.example.mytodoapp.util.LocaleHelper
-import androidx.compose.ui.platform.LocalContext
 import com.example.mytodoapp.util.BiometricAuthenticator
 import com.example.mytodoapp.util.BiometricStatus
+import com.example.mytodoapp.util.LocaleHelper
+import com.example.mytodoapp.util.NotificationPermissionHelper
+import com.example.mytodoapp.util.PreferencesManager
+import kotlinx.coroutines.launch
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,6 +71,8 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val isDark = LocalIsDarkTheme.current
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     var showLanguageDialog by remember { mutableStateOf(false) }
     var biometricErrorDialogMessage by remember { mutableStateOf<String?>(null) }
 
@@ -83,6 +96,7 @@ fun SettingsScreen(
 
     Scaffold(
         containerColor = backgroundColorFor(isDark),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -150,6 +164,9 @@ fun SettingsScreen(
                     onNotificationsEnabledChange = onNotificationsEnabledChange,
                     defaultReminderMinutes = defaultReminderMinutes,
                     onDefaultReminderMinutesChange = onDefaultReminderMinutesChange,
+                    onShowFeedback = { msg ->
+                        coroutineScope.launch { snackbarHostState.showSnackbar(msg) }
+                    },
                     isDark = isDark
                 )
             }
@@ -461,9 +478,54 @@ private fun NotificationSettingCard(
     onNotificationsEnabledChange: (Boolean) -> Unit,
     defaultReminderMinutes: Int,
     onDefaultReminderMinutesChange: (Int) -> Unit,
+    onShowFeedback: (String) -> Unit,
     isDark: Boolean
 ) {
+    val context = LocalContext.current
+    val prefs = remember { PreferencesManager(context) }
+    val activity = remember(context) { NotificationPermissionHelper.findActivity(context) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    var hasSystemPermission by remember {
+        mutableStateOf(NotificationPermissionHelper.hasNotificationPermission(context))
+    }
     var expandedIntervals by remember { mutableStateOf(false) }
+    var showSettingsRedirectDialog by remember { mutableStateOf(false) }
+
+    // Synchronize permission state when returning from system settings
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val currentPerm = NotificationPermissionHelper.hasNotificationPermission(context)
+                hasSystemPermission = currentPerm
+                if (currentPerm && !notificationsEnabled && prefs.areNotificationsEnabled()) {
+                    onNotificationsEnabledChange(true)
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // Direct runtime permission launcher for POST_NOTIFICATIONS (Android 13+)
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        prefs.setNotificationPermissionRequested(true)
+        val currentPerm = NotificationPermissionHelper.hasNotificationPermission(context)
+        hasSystemPermission = currentPerm
+        if (isGranted || currentPerm) {
+            onNotificationsEnabledChange(true)
+            onShowFeedback(context.getString(R.string.notifications_enabled_msg))
+        } else {
+            onNotificationsEnabledChange(false)
+            onShowFeedback(context.getString(R.string.notifications_disabled_msg))
+        }
+    }
+
+    val isActuallyEnabled = notificationsEnabled && hasSystemPermission
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -499,14 +561,38 @@ private fun NotificationSettingCard(
                         color = textPrimaryFor(isDark)
                     )
                     Text(
-                        text = stringResource(R.string.manage_reminders),
+                        text = stringResource(R.string.allow_task_reminders),
                         style = MaterialTheme.typography.bodySmall,
                         color = textMutedFor(isDark)
                     )
                 }
                 Switch(
-                    checked = notificationsEnabled,
-                    onCheckedChange = onNotificationsEnabledChange,
+                    checked = isActuallyEnabled,
+                    onCheckedChange = { shouldEnable ->
+                        if (shouldEnable) {
+                            if (hasSystemPermission) {
+                                onNotificationsEnabledChange(true)
+                                onShowFeedback(context.getString(R.string.notifications_enabled_msg))
+                            } else {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    if (NotificationPermissionHelper.shouldShowSettingsRedirect(activity, prefs)) {
+                                        showSettingsRedirectDialog = true
+                                    } else {
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                } else {
+                                    if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                                        showSettingsRedirectDialog = true
+                                    } else {
+                                        onNotificationsEnabledChange(true)
+                                        onShowFeedback(context.getString(R.string.notifications_enabled_msg))
+                                    }
+                                }
+                            }
+                        } else {
+                            onNotificationsEnabledChange(false)
+                        }
+                    },
                     colors = SwitchDefaults.colors(
                         checkedTrackColor = Accent,
                         checkedThumbColor = Color.White,
@@ -516,9 +602,48 @@ private fun NotificationSettingCard(
                 )
             }
 
+            // Show "Enable in Settings" action only when notifications are blocked in OS
+            if (!hasSystemPermission && prefs.hasRequestedNotificationPermission()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Accent.copy(alpha = 0.08f))
+                        .clickable { NotificationPermissionHelper.openNotificationSettings(context) }
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = null,
+                            tint = Accent,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.enable_in_settings),
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+                            color = Accent
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Outlined.ChevronRight,
+                        contentDescription = null,
+                        tint = Accent,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+
             // Expandable default reminder time row
             AnimatedVisibility(
-                visible = notificationsEnabled,
+                visible = isActuallyEnabled,
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
@@ -602,6 +727,60 @@ private fun NotificationSettingCard(
                 }
             }
         }
+    }
+
+    if (showSettingsRedirectDialog) {
+        AlertDialog(
+            onDismissRequest = { showSettingsRedirectDialog = false },
+            shape = RoundedCornerShape(22.dp),
+            containerColor = surfaceColorFor(isDark),
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.NotificationsOff,
+                    contentDescription = null,
+                    tint = Accent,
+                    modifier = Modifier.size(28.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.notifications),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = textPrimaryFor(isDark)
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.notifications_settings_desc),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = textSecondaryFor(isDark)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showSettingsRedirectDialog = false
+                        NotificationPermissionHelper.openNotificationSettings(context)
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Accent)
+                ) {
+                    Text(
+                        text = stringResource(R.string.open_settings),
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSettingsRedirectDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        color = textMutedFor(isDark)
+                    )
+                }
+            }
+        )
     }
 }
 

@@ -271,4 +271,58 @@ class TaskManagerUnitTest {
         assertNotNull(nextTrigger)
         assertTrue(nextTrigger!! > 1700000000000L)
     }
+
+    // 11. Daily Recurring Reminder Lead Time (e.g. 6:00 PM task with 10 min reminder -> 5:50 PM)
+    @Test
+    fun testDailyRecurringTask_reminderLeadTime() {
+        val calendar = java.util.Calendar.getInstance(java.util.TimeZone.getDefault()).apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 18) // 6:00 PM
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val dueTime = calendar.timeInMillis
+
+        // Current time is 12:00 PM on the same day
+        val nowCal = java.util.Calendar.getInstance(java.util.TimeZone.getDefault()).apply {
+            timeInMillis = dueTime
+            set(java.util.Calendar.HOUR_OF_DAY, 12)
+            set(java.util.Calendar.MINUTE, 0)
+        }
+        val now = nowCal.timeInMillis
+
+        val triggerTime = com.example.mytodoapp.notification.NotificationScheduler.calculateNextTriggerMillis(
+            dueTimeMillis = dueTime,
+            endTimeMillis = null,
+            minutesBefore = 10,
+            recurrence = com.example.mytodoapp.model.RecurrenceType.DAILY,
+            currentTime = now
+        )
+        assertNotNull(triggerTime)
+
+        val triggerCal = java.util.Calendar.getInstance(java.util.TimeZone.getDefault()).apply {
+            timeInMillis = triggerTime!!
+        }
+        assertEquals(17, triggerCal.get(java.util.Calendar.HOUR_OF_DAY)) // 5:00 PM
+        assertEquals(50, triggerCal.get(java.util.Calendar.MINUTE))      // 50 minutes (5:50 PM)
+    }
+
+    // 12. Lead Time Reminders for 5, 10, 15, 30, 60 minutes
+    @Test
+    fun testLeadTimeCalculation_variousIntervals() {
+        val due = 1700071200000L // arbitrary fixed timestamp
+        val now = due - 2 * 3600_000L // 2 hours before
+
+        val trigger5 = com.example.mytodoapp.util.ReminderTime.alarmTriggerMillis(due, 5, now)
+        val trigger10 = com.example.mytodoapp.util.ReminderTime.alarmTriggerMillis(due, 10, now)
+        val trigger15 = com.example.mytodoapp.util.ReminderTime.alarmTriggerMillis(due, 15, now)
+        val trigger30 = com.example.mytodoapp.util.ReminderTime.alarmTriggerMillis(due, 30, now)
+        val trigger60 = com.example.mytodoapp.util.ReminderTime.alarmTriggerMillis(due, 60, now)
+
+        assertEquals(due - 5 * 60_000L, trigger5)
+        assertEquals(due - 10 * 60_000L, trigger10)
+        assertEquals(due - 15 * 60_000L, trigger15)
+        assertEquals(due - 30 * 60_000L, trigger30)
+        assertEquals(due - 60 * 60_000L, trigger60)
+    }
 }

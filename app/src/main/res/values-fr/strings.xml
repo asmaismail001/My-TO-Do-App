@@ -111,6 +111,12 @@
     <string name="permission_required">Permission requise</string>
     <string name="notification_permission_msg">La permission de notification est nécessaire pour envoyer des rappels.</string>
     <string name="exact_alarm_permission_msg">La permission d\'alarme exacte est nécessaire pour des rappels précis.</string>
+    <string name="notifications_enabled_msg">Notifications activées</string>
+    <string name="notifications_disabled_msg">Les notifications sont désactivées</string>
+    <string name="notifications_settings_desc">Les notifications sont désactivées pour Task Manager. Veuillez les activer dans les paramètres Android.</string>
+    <string name="open_settings">Ouvrir les paramètres</string>
+    <string name="enable_in_settings">Activer dans les paramètres</string>
+    <string name="allow_task_reminders">Autoriser les rappels de tâches</string>
 
     <!-- Focus Timer -->
     <string name="focus_timer">Minuteur de concentration</string>
@@ -266,4 +272,5 @@
     <string name="biometric_unavailable">L\'authentification biométrique n\'est pas disponible sur cet appareil.</string>
     <string name="biometric_auth_failed">Échec de l\'authentification. Veuillez réessayer.</string>
     <string name="splash_tagline">Organiser • Concentrer • Accomplir</string>
+    <string name="disabled">Désactivé</string>
 </resources>

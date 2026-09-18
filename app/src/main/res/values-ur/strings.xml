@@ -111,6 +111,12 @@
     <string name="permission_required">اجازت درکار ہے</string>
     <string name="notification_permission_msg">آپ کے کاموں کی یاد دہانی کے لیے نوٹیفکیشن کی اجازت درکار ہے۔</string>
     <string name="exact_alarm_permission_msg">درست وقت پر یاد دہانی بھیجنے کے لیے الارم کی اجازت درکار ہے۔</string>
+    <string name="notifications_enabled_msg">اطلاعات فعال ہو گئیں</string>
+    <string name="notifications_disabled_msg">اطلاعات غیر فعال ہیں</string>
+    <string name="notifications_settings_desc">Task Manager کے لیے اطلاعات غیر فعال ہیں۔ برائے مہربانی Android سیٹنگز میں انہیں فعال کریں۔</string>
+    <string name="open_settings">سیٹنگز کھولیں</string>
+    <string name="enable_in_settings">سیٹنگز میں فعال کریں</string>
+    <string name="allow_task_reminders">کام کی یاد دہانیوں کی اجازت دیں</string>
 
     <!-- Focus Timer -->
     <string name="focus_timer">فوکس ٹائمر</string>
@@ -266,4 +272,5 @@
     <string name="biometric_unavailable">اس آلے پر بایومیٹرک تصدیق دستیاب نہیں ہے۔</string>
     <string name="biometric_auth_failed">تصدیق ناکام ہو گئی۔ براہ کرم دوبارہ کوشش کریں۔</string>
     <string name="splash_tagline">منظم کریں • توجہ مرکوز کریں • مکمل کریں</string>
+    <string name="disabled">غیر فعال</string>
 </resources>

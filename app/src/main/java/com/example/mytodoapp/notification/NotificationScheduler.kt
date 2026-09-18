@@ -215,7 +215,6 @@ object NotificationScheduler {
             action = ReminderReceiver.ACTION_REMINDER
             data = reminderUri(taskId)
             setPackage(context.packageName)
-            addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
             putExtra("taskTitle", taskTitle)
             putExtra("taskId", taskId)
             putExtra("dueTimeMillis", dueTimeMillis)

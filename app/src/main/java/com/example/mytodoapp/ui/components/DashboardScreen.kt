@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import com.example.mytodoapp.R
 import com.example.mytodoapp.model.Todo
+import com.example.mytodoapp.model.WeatherUiState
 import com.example.mytodoapp.ui.*
 import com.example.mytodoapp.util.CalendarUtil
 import com.example.mytodoapp.viewmodel.DailyChartData
@@ -53,6 +54,7 @@ import com.example.mytodoapp.viewmodel.TodoViewModel
 import com.example.mytodoapp.ui.weather.DashboardWeatherSection
 import com.example.mytodoapp.ui.weather.WeatherDetailsDialog
 import com.example.mytodoapp.ui.weather.LocationPickerDialog
+import com.example.mytodoapp.ui.weather.WeatherIcon
 import com.example.mytodoapp.viewmodel.WeatherViewModel
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -127,6 +129,7 @@ fun DashboardScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
+                // Greeting & Profile Avatar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -147,13 +150,6 @@ fun DashboardScreen(
                                 color = textPrimaryFor(isDark)
                             ),
                             maxLines = 2
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = fullDateLabel,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = textMutedFor(isDark)
-                            )
                         )
                     }
 
@@ -186,53 +182,107 @@ fun DashboardScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Stats Summary Quick Card
-                Card(
+                // Search Bar & Filter Chips
+                TodoSearchBar(
+                    query = viewModel.searchQuery,
+                    onQueryChange = { viewModel.onSearchQueryChange(it) },
+                    selectedPriority = viewModel.selectedPriorityFilter,
+                    onPrioritySelect = { viewModel.onPriorityFilterChange(it) },
+                    selectedTag = viewModel.selectedTagFilter,
+                    onTagSelect = { viewModel.onTagFilterChange(it) },
+                    availableTags = viewModel.allUniqueTags,
+                    onClearFilters = { viewModel.clearFilters() },
+                    showFiltersRow = true
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Date Row with Compact Weather Action Icon
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = surfaceColorFor(isDark)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, cardBorderColorFor(isDark))
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f, fill = false)
                     ) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = stringResource(R.string.todays_status),
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = textPrimaryFor(isDark)
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = if (dailyTasks.isEmpty()) {
-                                    stringResource(R.string.no_tasks_today)
-                                } else {
-                                    val completed = dailyTasks.count { it.isCompletedForToday() }
-                                    stringResource(R.string.tasks_completed_summary, completed, dailyTasks.size)
-                                },
-                                style = MaterialTheme.typography.bodySmall,
+                        Icon(
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            tint = Accent,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = fullDateLabel,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
                                 color = textSecondaryFor(isDark)
                             )
+                        )
+                    }
+
+                    if (weatherViewModel != null) {
+                        val weatherState = weatherViewModel.currentWeatherState
+                        Surface(
+                            shape = RoundedCornerShape(18.dp),
+                            color = if (isDark) Color(0xFF182026) else Color(0xFFF0FDF4),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Accent.copy(alpha = 0.35f)),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(18.dp))
+                                .clickable { showWeatherDetails = true }
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                            ) {
+                                when (weatherState) {
+                                    is WeatherUiState.Loading -> {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(13.dp),
+                                            color = Accent,
+                                            strokeWidth = 1.5.dp
+                                        )
+                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Text(
+                                            text = stringResource(R.string.weather),
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
+                                            color = textSecondaryFor(isDark)
+                                        )
+                                    }
+                                    is WeatherUiState.Success -> {
+                                        val data = weatherState.data
+                                        WeatherIcon(iconType = data.condition.iconType, modifier = Modifier.size(16.dp))
+                                        Text(
+                                            text = "${data.temperatureC.toInt()}°C",
+                                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold),
+                                            color = textPrimaryFor(isDark)
+                                        )
+                                    }
+                                    is WeatherUiState.Error -> {
+                                        Text(text = "🌤️", fontSize = 14.sp)
+                                        Text(
+                                            text = stringResource(R.string.retry),
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
+                                            color = Accent
+                                        )
+                                    }
+                                    else -> {
+                                        Text(text = "🌤️", fontSize = 14.sp)
+                                        Text(
+                                            text = stringResource(R.string.weather),
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold),
+                                            color = textSecondaryFor(isDark)
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-
-                if (weatherViewModel != null) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    val outdoorSummary = weatherViewModel.getOutdoorSummary(dailyTasks)
-                    DashboardWeatherSection(
-                        weatherUiState = weatherViewModel.currentWeatherState,
-                        locationData = weatherViewModel.currentLocation,
-                        outdoorSummary = outdoorSummary,
-                        onClick = { showWeatherDetails = true },
-                        onRefresh = { weatherViewModel.loadCurrentWeather(context, forceRefresh = true) }
-                    )
                 }
             }
         }
@@ -573,21 +623,6 @@ fun DashboardScreen(
             }
         }
 
-        // 6. Search Bar & Filter Chips on Dashboard
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            TodoSearchBar(
-                query = viewModel.searchQuery,
-                onQueryChange = { viewModel.onSearchQueryChange(it) },
-                selectedPriority = viewModel.selectedPriorityFilter,
-                onPrioritySelect = { viewModel.onPriorityFilterChange(it) },
-                selectedTag = viewModel.selectedTagFilter,
-                onTagSelect = { viewModel.onTagFilterChange(it) },
-                availableTags = viewModel.allUniqueTags,
-                onClearFilters = { viewModel.clearFilters() },
-                showFiltersRow = true
-            )
-        }
 
         val currentPeriodTasks = when (period) {
             DashboardPeriod.DAILY -> dailyTasks

@@ -63,4 +63,14 @@ class PreferencesManager(private val context: Context) {
             .putBoolean("weather_is_manual", isManual)
             .apply()
     }
+
+    fun hasRequestedNotificationPermission(): Boolean = prefs.getBoolean("has_requested_notification_perm", false)
+    fun setNotificationPermissionRequested(requested: Boolean = true) {
+        prefs.edit().putBoolean("has_requested_notification_perm", requested).apply()
+    }
+
+    fun hasRequestedLocationPermission(): Boolean = prefs.getBoolean("has_requested_location_perm", false)
+    fun setLocationPermissionRequested(requested: Boolean = true) {
+        prefs.edit().putBoolean("has_requested_location_perm", requested).apply()
+    }
 }

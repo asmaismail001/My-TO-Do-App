@@ -111,6 +111,12 @@
     <string name="permission_required">需要权限</string>
     <string name="notification_permission_msg">需要通知权限以便为您的任务发送提醒。</string>
     <string name="exact_alarm_permission_msg">需要精确闹钟权限以准确发送提醒。</string>
+    <string name="notifications_enabled_msg">已启用通知</string>
+    <string name="notifications_disabled_msg">通知已停用</string>
+    <string name="notifications_settings_desc">Task Manager 的通知已被停用。请在 Android 设置中启用它们。</string>
+    <string name="open_settings">打开设置</string>
+    <string name="enable_in_settings">在设置中启用</string>
+    <string name="allow_task_reminders">允许任务提醒</string>
 
     <!-- Focus Timer -->
     <string name="focus_timer">专注计时器</string>
@@ -266,4 +272,5 @@
     <string name="biometric_unavailable">此设备不支持生物识别身份验证。</string>
     <string name="biometric_auth_failed">身份验证失败，请重试。</string>
     <string name="splash_tagline">规划 • 专注 • 达成</string>
+    <string name="disabled">已禁用</string>
 </resources>
