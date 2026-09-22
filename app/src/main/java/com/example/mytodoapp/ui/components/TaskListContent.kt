@@ -44,7 +44,7 @@ fun TaskListContent(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 12.dp)
+            .padding(horizontal = 16.dp)
     ) {
         items(tasks, key = { it.id }) { todo ->
             TodoItemRow(

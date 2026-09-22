@@ -11,6 +11,10 @@ object CalendarUtil {
                 cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
     }
 
+    fun isToday(millis: Long): Boolean {
+        return isSameDay(millis, System.currentTimeMillis())
+    }
+
     fun monthYearLabel(calendar: Calendar): String {
         val sdf = java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.getDefault())
         return sdf.format(calendar.time)

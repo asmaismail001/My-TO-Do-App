@@ -85,6 +85,9 @@
     <string name="view_task">View Task</string>
     <string name="reschedule">Reschedule</string>
     <string name="reschedule_task">Reschedule Task</string>
+    <string name="select_date">Select Date</string>
+    <string name="show_dates">Show Dates</string>
+    <string name="hide_dates">Hide Dates</string>
     <string name="select_date_time">Select Date &amp; Time</string>
     <string name="conflict_detected">Schedule Conflict</string>
     <string name="invalid_time">Invalid Task Time</string>

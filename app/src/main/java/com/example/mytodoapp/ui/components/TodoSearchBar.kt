@@ -50,39 +50,39 @@ fun TodoSearchBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 16.dp, vertical = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        // Search bar card
-        Card(
+        // Compact modern search bar
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(46.dp),
-            shape = RoundedCornerShape(23.dp),
-            colors = CardDefaults.cardColors(containerColor = searchBarBackgroundFor(isDark)),
-            border = BorderStroke(1.dp, Accent.copy(alpha = 0.45f))
+                .height(42.dp),
+            shape = RoundedCornerShape(14.dp),
+            color = searchBarBackgroundFor(isDark),
+            border = BorderStroke(1.dp, cardBorderColorFor(isDark))
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 14.dp),
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Filled.Search,
                     contentDescription = stringResource(R.string.search_tasks),
                     tint = Accent,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Box(modifier = Modifier.weight(1f)) {
                     if (query.isEmpty()) {
                         Text(
                             text = placeholder,
                             color = textMutedFor(isDark),
-                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.5.sp),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                             maxLines = 1
                         )
                     }
@@ -92,7 +92,7 @@ fun TodoSearchBar(
                         singleLine = true,
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
                             color = textPrimaryFor(isDark),
-                            fontSize = 13.5.sp
+                            fontSize = 13.sp
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -101,13 +101,13 @@ fun TodoSearchBar(
                 if (query.isNotEmpty()) {
                     IconButton(
                         onClick = { onQueryChange("") },
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Close,
                             contentDescription = stringResource(R.string.cancel),
                             tint = textSecondaryFor(isDark),
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                     }
                 }

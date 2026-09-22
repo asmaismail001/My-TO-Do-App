@@ -1,10 +1,14 @@
 package com.example.mytodoapp.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -104,6 +108,11 @@ fun EditTaskDialog(
             notificationEnabled
 
     var isAdvancedExpanded by rememberSaveable { mutableStateOf(hasActiveAdvancedOptions) }
+    val advancedArrowRotation by animateFloatAsState(
+        targetValue = if (isAdvancedExpanded) 180f else 0f,
+        animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+        label = "advancedArrowRotation"
+    )
 
     val formatDateOnly = remember {
         { millis: Long ->
@@ -506,10 +515,12 @@ fun EditTaskDialog(
                         }
 
                         Icon(
-                            imageVector = if (isAdvancedExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            imageVector = Icons.Default.KeyboardArrowDown,
                             contentDescription = if (isAdvancedExpanded) "Collapse" else "Expand",
                             tint = textSecondaryFor(isDark),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier
+                                .size(20.dp)
+                                .rotate(advancedArrowRotation)
                         )
                     }
                 }

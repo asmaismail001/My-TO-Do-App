@@ -16,9 +16,19 @@ import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
@@ -424,14 +434,27 @@ fun TodoScreen(
             },
             floatingActionButton = {
                 if (showMainBars) {
+                    val fabInteractionSource = remember { MutableInteractionSource() }
+                    val isFabPressed by fabInteractionSource.collectIsPressedAsState()
+                    val fabScale by animateFloatAsState(
+                        targetValue = if (isFabPressed) 0.92f else 1.0f,
+                        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+                        label = "fabScale"
+                    )
+
                     FloatingActionButton(
                         onClick = {
                             newNotificationMinutesBefore = defaultReminderMinutes
                             showAddDialog = true
                         },
+                        interactionSource = fabInteractionSource,
                         containerColor = Accent,
                         contentColor = Color.White,
-                        shape = androidx.compose.foundation.shape.CircleShape
+                        shape = androidx.compose.foundation.shape.CircleShape,
+                        modifier = Modifier.graphicsLayer {
+                            scaleX = fabScale
+                            scaleY = fabScale
+                        }
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_task))
                     }
@@ -444,7 +467,15 @@ fun TodoScreen(
                     .fillMaxSize()
                     .padding(if (showMainBars) paddingValues else PaddingValues(0.dp))
             ) {
-                when (currentScreen) {
+                AnimatedContent(
+                    targetState = currentScreen,
+                    label = "screenTransition",
+                    transitionSpec = {
+                        fadeIn(tween(220, easing = FastOutSlowInEasing)) togetherWith
+                                fadeOut(tween(180, easing = FastOutSlowInEasing))
+                    }
+                ) { screen ->
+                    when (screen) {
                     Screen.LOGIN -> {
                         com.example.mytodoapp.ui.auth.LoginScreen(
                             viewModel = authViewModel,
@@ -754,6 +785,7 @@ fun TodoScreen(
             }
         }
     }
+}
 
     val clearAddStates = {
         newTitle = ""
